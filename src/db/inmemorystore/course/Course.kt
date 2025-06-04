@@ -17,10 +17,10 @@ open class Course (
     var courseType: CourseType,
     var isFreeCourse: Boolean,
     var status: ResourceStatus,
-    var categoryIds: List<Int>,
+    var categoryIds: List<Int>? = null,
     var prerequisites: List<String>? = null,
-    val moduleIds: List<Int> = mutableListOf<Int>(),
-    val priceDetailsIds: List<Int>? = null, // null - means no price details(free course)
+    var moduleIds: List<Int> = mutableListOf<Int>(),
+    var priceDetailsIds: List<Int>? = null, // null - means no price details(free course)
 ) : Timeline() {
     companion object {
         private val records = mutableMapOf<Int, Course>()

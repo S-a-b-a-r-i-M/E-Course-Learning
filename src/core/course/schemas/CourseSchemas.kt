@@ -5,7 +5,6 @@ import db.CourseType
 import db.ResourceStatus
 import java.util.UUID
 
-
 data class NewCourseData (
     var title: String,
     var description: String,
@@ -16,7 +15,6 @@ data class NewCourseData (
     var courseType: CourseType,
     var isFreeCourse: Boolean,
     var status: ResourceStatus,
-    var categoryIds: List<Int>,
     var prerequisites: List<String>? = null,
     val priceDetailsIds: List<Int>? = null
 )
