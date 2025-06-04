@@ -2,10 +2,8 @@ import core.auth.schemas.SignInData
 import core.auth.schemas.SignUpData
 import core.auth.services.AuthService
 import core.user.repositories.UserRepo
-import db.UserRole
-import db.inmemorystore.Student
-import db.inmemorystore.Trainer
-import db.inmemorystore.User
+import core.user.services.UserService
+import db.inmemorystore.user.User
 
 fun authFlow(authService: AuthService): User? {
     while (true) {
@@ -79,14 +77,11 @@ fun main() {
     // Object Creation
     val userRepo = UserRepo()
     val authService = AuthService(userRepo)
+    val userService = UserService(userRepo)
 
-    var user: User? = authFlow(authService)
+    // App Flow
+    val user: User? = authFlow(authService)
     println("User from auth flow : $user")
-
-    if (user != null){
-        // Next flow
-
-    }
 
     println("Welcome..visit again 😊")
 }

@@ -1,7 +1,7 @@
 package core.user.services
 
-import core.user.repositories.UserRepo
+import core.user.repositories.AbstractUserRepo
 
-class UserService (userRepo: UserRepo) {
+class UserService (userRepo: AbstractUserRepo) {
 
 }

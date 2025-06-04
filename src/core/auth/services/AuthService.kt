@@ -8,7 +8,7 @@ import core.user.schemas.UserUpdateData
 import core.user.repositories.AbstractUserRepo
 import db.UserRole
 import db.UserStatus
-import db.inmemorystore.User
+import db.inmemorystore.user.User
 import utils.PasswordHasher
 import java.time.LocalDateTime
 

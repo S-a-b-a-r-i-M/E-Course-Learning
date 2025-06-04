@@ -1,4 +1,4 @@
-package db.inmemorystore
+package db.inmemorystore.user
 
 import db.UserRole
 import db.UserStatus

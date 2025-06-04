@@ -3,7 +3,7 @@ package core.user.repositories
 import core.user.schemas.NewUserData
 import core.user.schemas.UserUpdateData
 import db.UserStatus
-import db.inmemorystore.User
+import db.inmemorystore.user.User
 import java.time.LocalDateTime
 import java.util.UUID
 

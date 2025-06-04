@@ -1,9 +1,8 @@
 package core.user.repositories
 
 import core.user.schemas.NewUserData
-import core.user.schemas.UserData
 import core.user.schemas.UserUpdateData
-import db.inmemorystore.User
+import db.inmemorystore.user.User
 import java.util.UUID
 
 interface AbstractUserRepo {
