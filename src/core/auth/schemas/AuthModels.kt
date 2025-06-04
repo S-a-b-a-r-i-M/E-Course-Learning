@@ -1,15 +1,15 @@
-package core.auth.models
+package core.auth.schemas
 
 import java.util.UUID
 
-data class SignUpModel(
+data class SignUpData(
     val firstName: String,
     val lastName: String,
     val email: String,
     val password: String,
 )
 
-data class SignInModel(
+data class SignInData(
     val email: String,
     val password: String,
 )

@@ -1,18 +1,20 @@
 package core.auth.services
 
-import core.auth.models.LogOutModel
-import core.auth.models.SignInModel
-import core.auth.models.SignUpModel
-import core.user.models.NewUserModel
-import core.user.models.UserModel
-import core.user.repositories.UserRepo
-import db.tables.UserRole
-import db.tables.UserStatus
+import core.auth.schemas.LogOutModel
+import core.auth.schemas.SignInData
+import core.auth.schemas.SignUpData
+import core.user.schemas.NewUserData
+import core.user.schemas.UserUpdateData
+import core.user.repositories.AbstractUserRepo
+import db.UserRole
+import db.UserStatus
+import db.inmemorystore.User
 import utils.PasswordHasher
+import java.time.LocalDateTime
 
-class AuthService (val userRepo: UserRepo) {
-    fun signUp(signUpData: SignUpModel): Boolean {
-        // Check email is already exists or not
+class AuthService (val userRepo: AbstractUserRepo) {
+    fun signUp(signUpData: SignUpData): Boolean {
+        // Check email is already exists
         if (userRepo.isEmailExists(signUpData.email)){
             println("AuthService(signUp): Email Already exists!!!")
             return false // TODO: Throw appropriate exception
@@ -20,7 +22,7 @@ class AuthService (val userRepo: UserRepo) {
 
         // Create User
         val hashedPassword = PasswordHasher.getHashPassword(signUpData.password)
-        val newUserData = NewUserModel(
+        val newUserData = NewUserData(
             firstName = signUpData.firstName,
             lastName = signUpData.lastName,
             email = signUpData.email,
@@ -28,43 +30,33 @@ class AuthService (val userRepo: UserRepo) {
             role = UserRole.STUDENT // Student only can sign up directly
         )
         val result = userRepo.createUser(newUserData)
-        println("New User(${newUserData.email} creation result is $result")
+        println("New User(${newUserData.email}) creation result is $result")
         return result
     }
 
-    fun signIn(signInData: SignInModel): UserModel? {
-        val hashedPassword = userRepo.getPasswordByEmail(signInData.email)
-        if(hashedPassword == null){
-            println("User with email(${signInData.email} is not found!!!")
+    fun signIn(signInData: SignInData): User? {
+        val user: User? = userRepo.getUserByEmail(signInData.email)
+        if(user == null){
+            println("User with email(${signInData.email}) is not found!!!")
             return null // TODO: Throw appropriate exception
         }
 
-        // Check Password match
-        if (!PasswordHasher.checkPasswordMatch(signInData.password,hashedPassword)) {
-            println("User with email(${signInData.email} password is not matched!!!")
+        // Validate Password
+        if (!PasswordHasher.checkPasswordMatch(signInData.password,user.hashPassword)) {
+            println("User with email(${signInData.email}) password is not matched!!!")
             return null // TODO: Throw appropriate exception
         }
 
-        // Get User from db
-        val user = userRepo.getUserByEmail(signInData.email)
         if (user.status == UserStatus.SUSPENDED) {
-            println("User(${user.userId} account is suspended!!!")
+            println("User(${user.id}) account is suspended!!!")
             return null // TODO: Throw appropriate exception
         }
-        userRepo.updateUserLastLogin()
+        userRepo.updateUser(user.id, UserUpdateData(lastLoginAt = LocalDateTime.now()))
 
         return user
     }
 
     fun logOut(logOutData: LogOutModel): Boolean {
         return true
-    }
-
-    fun forgetPassword(){
-        TODO("Need to confirm")
-    }
-
-    fun resetPassword(){
-        TODO("Need to confirm")
     }
 }

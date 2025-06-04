@@ -1,12 +1,15 @@
 package core.user.repositories
 
-import core.user.models.BaseUser
-import core.user.models.NewUserModel
-import core.user.models.UserModel
+import core.user.schemas.NewUserData
+import core.user.schemas.UserData
+import core.user.schemas.UserUpdateData
+import db.inmemorystore.User
+import java.util.UUID
 
 interface AbstractUserRepo {
-    fun createUser(newUserData: NewUserModel): Boolean
-    fun getPasswordByEmail(email: String): String?
-    fun getUserByEmail(email: String): UserModel
-    fun updateUserLastLogin()
+    fun isEmailExists(email: String): Boolean
+    fun createUser(userData: NewUserData): Boolean
+//    fun getUserPasswordByEmail(email: String): String?
+    fun getUserByEmail(email: String): User?
+    fun updateUser(userId: UUID, updateDate: UserUpdateData): Boolean
 }

@@ -1,40 +1,30 @@
-package core.user.models
+package core.user.schemas
 
-import db.tables.Timeline
-import db.tables.UserRole
-import db.tables.UserStatus
+import db.UserRole
+import db.UserStatus
 
-import java.time.LocalDateTime
 import java.util.UUID
 
-/*
-Why I choose 'sealed class',
-1. Nobody shouldn't create object of my base user (opt: abstract, interface, sealed)
-2. Exhaustive when expression (opt: sealed)
-3. Apart from this file/package BaseUser shouldn't extend any other types (opt: sealed)
-*/
-
-sealed class BaseUser {
+abstract class BaseUserData {
     abstract val userId: UUID
     abstract var firstName: String
     abstract var lastName: String
     abstract var email: String
     abstract var role: UserRole
     abstract var status: UserStatus
-    val createdAt: LocalDateTime = LocalDateTime.now()
-    var modifiedAt: LocalDateTime = LocalDateTime.now()
 }
 
-data class UserModel(
+data class UserData (
     override val userId: UUID,
     override var firstName: String,
     override var lastName: String,
     override var email: String,
     override var role: UserRole,
     override var status: UserStatus,
-) : BaseUser()
+    var hashedPassword: String,
+) : BaseUserData()
 
-data class StudentUserModel(
+data class StudentUserData (
     override val userId: UUID,
     override var firstName: String,
     override var lastName: String,
@@ -43,22 +33,22 @@ data class StudentUserModel(
     override var status: UserStatus,
     var gitHubUrl: String?,
     var linkedInUrl: String?,
-) : BaseUser()
+) : BaseUserData()
 
-data class TrainerUserModel (
+data class TrainerUserData (
     override val userId: UUID,
     override var firstName: String,
     override var lastName: String,
     override var email: String,
     override var role: UserRole,
     override var status: UserStatus,
-    val educations: List<EducationModel> = mutableListOf<EducationModel>(),
-    val workExperiences: List<WorkExperienceModel> = mutableListOf<WorkExperienceModel>(),
+    val educations: List<EducationData> = mutableListOf<EducationData>(),
+    val workExperiences: List<WorkExperienceData> = mutableListOf<WorkExperienceData>(),
     var technicalSkills: List<String>,
     var softSkills: List<String> = mutableListOf<String>(),
-) : BaseUser()
+) : BaseUserData()
 
-data class EducationModel(
+data class EducationData (
     val id: Int, // PK
     val trainerId: UUID, // Foreign Key from User Table
     var institution: String,
@@ -68,9 +58,9 @@ data class EducationModel(
     var endMonth: Int?,
     var endYear: Int?,
     var isCurrent: Boolean = false, // "by default false. If this is true, end dates will be null"
-) : Timeline()
+)
 
-data class WorkExperienceModel (
+data class WorkExperienceData (
     val id: Int, // PK
     val trainerId: UUID, // Foreign Key from User Table
     var company: String,
@@ -80,12 +70,4 @@ data class WorkExperienceModel (
     var endMonth: Int?,
     var endYear: Int?,
     var isCurrent: Boolean = false, // "by default false. If this is true, end dates will be null"
-) : Timeline()
-
-class NewUserModel (
-    val firstName: String,
-    val lastName: String,
-    val email: String,
-    val hashedPassword: String,
-    val role: UserRole,
 )

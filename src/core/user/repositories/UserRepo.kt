@@ -1,28 +1,47 @@
 package core.user.repositories
 
-import core.user.models.NewUserModel
-import core.user.models.UserModel
+import core.user.schemas.NewUserData
+import core.user.schemas.UserUpdateData
+import db.UserStatus
+import db.inmemorystore.User
+import java.time.LocalDateTime
+import java.util.UUID
 
 class UserRepo : AbstractUserRepo {
 
-    fun isEmailExists(email: String): Boolean {
-        TODO("Not yet implemented")
+    override fun isEmailExists(email: String): Boolean {
+        return User.getEmailToIdMap()[email] != null
     }
 
-    override fun createUser(newUserData: NewUserModel): Boolean {
-        TODO("Not yet implemented")
+    override fun createUser(userData: NewUserData): Boolean {
+        val user = User(
+            id = UUID.randomUUID(),
+            firstName = userData.firstName,
+            lastName = userData.lastName,
+            email = userData.email,
+            role = userData.role,
+            hashPassword = userData.hashedPassword,
+            status = UserStatus.ACTIVE,
+            lastLoginAt = LocalDateTime.now()
+        )
+
+        return User.create(user)
     }
 
-    override fun getPasswordByEmail(email: String): String? {
-        TODO("Not yet implemented")
+    override fun updateUser(userId: UUID, updateModel: UserUpdateData): Boolean {
+        val updateDateMap = mapOf<String, Any>()
+        return User.update(userId, updateDateMap)
     }
 
-    override fun getUserByEmail(email: String): UserModel {
-        TODO("Not yet implemented")
+    override fun getUserByEmail(email: String): User? {
+        val id = User.getEmailToIdMap()[email] ?: return null
+        return User.getRecords()[id]
     }
-
-    override fun updateUserLastLogin() {
-        TODO("Not yet implemented")
-    }
-
 }
+
+
+
+//    override fun getUserPasswordByEmail(email: String): String? {
+//        val userId: UUID? = UserTable.getEmailToIdMap()[email]
+//        return if(userId != null) UserTable.getRecords()[userId]?.hashPassword else null
+//    }

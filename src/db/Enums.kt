@@ -1,4 +1,4 @@
-package db.tables
+package db
 
 enum class UserRole {
     ADMIN,

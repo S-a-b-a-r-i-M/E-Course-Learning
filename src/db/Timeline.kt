@@ -1,4 +1,4 @@
-package db.tables
+package db
 
 import java.time.LocalDateTime
 
