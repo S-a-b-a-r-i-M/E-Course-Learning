@@ -2,9 +2,12 @@ import core.auth.schemas.SignInData
 import core.auth.schemas.SignUpData
 import core.auth.services.AuthService
 import core.user.repositories.UserRepo
+import db.UserRole
+import db.inmemorystore.Student
+import db.inmemorystore.Trainer
 import db.inmemorystore.User
 
-fun authFlow(authService: AuthService): Boolean {
+fun authFlow(authService: AuthService): User? {
     while (true) {
         println("\nOption to choose ⬇️,")
         println("1 -> Sign In")
@@ -14,7 +17,7 @@ fun authFlow(authService: AuthService): Boolean {
 
         // When - Auth Flow
         when (userInput) {
-            0 -> break
+            0 -> break // It will break the outer loop
             1 -> {
                 // Read Input
                 println("Enter email : ")
@@ -22,13 +25,13 @@ fun authFlow(authService: AuthService): Boolean {
                 println("Enter password : ")
                 val password = readln().trim()
 
-                val userData: User? = authService.signIn(SignInData(email, password))
+                val user: User? = authService.signIn(SignInData(email, password))
 
-                if (userData == null)
-                    println("login failed")
+                if (user == null)
+                    println("login failed. Try again...")
                 else {
                     println("login success")
-                    return true
+                    return user
                 }
             }
             2 -> {
@@ -49,7 +52,7 @@ fun authFlow(authService: AuthService): Boolean {
                     continue
                 }
 
-                val result = authService.signUp(
+                val user = authService.signUp(
                     SignUpData(
                         firstName = firstName,
                         lastName = lastName,
@@ -57,13 +60,18 @@ fun authFlow(authService: AuthService): Boolean {
                         password = password1,
                     )
                 )
-                if (result) return true
+                if (user == null)
+                    println("sign up failed. Try again...")
+                else {
+                    println("sign up success")
+                    return user
+                }
             }
             else -> println("Invalid input. Try again")
         }
     }
 
-    return false
+    return null
 }
 
 fun main() {
@@ -72,10 +80,11 @@ fun main() {
     val userRepo = UserRepo()
     val authService = AuthService(userRepo)
 
-    val isUserAuthenticated = authFlow(authService)
-    println("isUserAuthenticated $isUserAuthenticated")
+    var user: User? = authFlow(authService)
+    println("User from auth flow : $user")
 
-    if (isUserAuthenticated){
+    if (user != null){
+        // Next flow
 
     }
 

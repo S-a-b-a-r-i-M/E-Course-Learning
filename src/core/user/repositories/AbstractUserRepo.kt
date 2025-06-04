@@ -8,7 +8,7 @@ import java.util.UUID
 
 interface AbstractUserRepo {
     fun isEmailExists(email: String): Boolean
-    fun createUser(userData: NewUserData): Boolean
+    fun createUser(userData: NewUserData): User?
 //    fun getUserPasswordByEmail(email: String): String?
     fun getUserByEmail(email: String): User?
     fun updateUser(userId: UUID, updateDate: UserUpdateData): Boolean

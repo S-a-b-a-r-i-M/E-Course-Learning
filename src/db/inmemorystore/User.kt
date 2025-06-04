@@ -3,7 +3,6 @@ package db.inmemorystore
 import db.Timeline
 import db.UserRole
 import db.UserStatus
-import db.tables.UserTable
 import java.time.LocalDateTime
 import java.util.UUID
 

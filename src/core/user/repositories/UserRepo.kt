@@ -13,7 +13,7 @@ class UserRepo : AbstractUserRepo {
         return User.getEmailToIdMap()[email] != null
     }
 
-    override fun createUser(userData: NewUserData): Boolean {
+    override fun createUser(userData: NewUserData): User? {
         val user = User(
             id = UUID.randomUUID(),
             firstName = userData.firstName,
@@ -25,7 +25,7 @@ class UserRepo : AbstractUserRepo {
             lastLoginAt = LocalDateTime.now()
         )
 
-        return User.create(user)
+        return if (User.create(user)) user else null
     }
 
     override fun updateUser(userId: UUID, updateModel: UserUpdateData): Boolean {

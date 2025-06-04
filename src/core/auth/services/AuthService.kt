@@ -13,11 +13,11 @@ import utils.PasswordHasher
 import java.time.LocalDateTime
 
 class AuthService (val userRepo: AbstractUserRepo) {
-    fun signUp(signUpData: SignUpData): Boolean {
+    fun signUp(signUpData: SignUpData): User? {
         // Check email is already exists
         if (userRepo.isEmailExists(signUpData.email)){
             println("AuthService(signUp): Email Already exists!!!")
-            return false // TODO: Throw appropriate exception
+            return null // TODO: Throw appropriate exception
         }
 
         // Create User
@@ -29,9 +29,9 @@ class AuthService (val userRepo: AbstractUserRepo) {
             hashedPassword = hashedPassword,
             role = UserRole.STUDENT // Student only can sign up directly
         )
-        val result = userRepo.createUser(newUserData)
-        println("New User(${newUserData.email}) creation result is $result")
-        return result
+        val user: User? = userRepo.createUser(newUserData)
+        println("New User(${newUserData.email}) creation result is ${user != null}")
+        return user
     }
 
     fun signIn(signInData: SignInData): User? {
