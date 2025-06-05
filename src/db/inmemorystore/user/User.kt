@@ -1,5 +1,7 @@
 package db.inmemorystore.user
 
+import core.user.schemas.NewUserData
+import core.user.schemas.UserUpdateData
 import db.Timeline
 import db.UserRole
 import db.UserStatus
@@ -20,25 +22,31 @@ open class User (
         private val records = mutableMapOf<UUID, User>()
         private val emailToIdMap = mutableMapOf<String, UUID>()
 
-        fun create(user: User): Boolean {
+        fun create(newUserData: NewUserData): User {
+            val user = User(
+                id = UUID.randomUUID(),
+                firstName = newUserData.firstName,
+                lastName = newUserData.lastName,
+                email = newUserData.email,
+                role = newUserData.role,
+                hashPassword = newUserData.hashedPassword,
+                status = UserStatus.ACTIVE,
+                lastLoginAt = LocalDateTime.now()
+            )
+
             records[user.id] = user
             emailToIdMap[user.email] = user.id
-            return true
+            return user
         }
 
-        fun update(userId: UUID, updateDataMap: Map<String, Any>): Boolean {
+        fun update(userId: UUID, updateData: UserUpdateData): Boolean {
             val user = records[userId]
             if (user == null) return false
 
-            if ("firstName" in updateDataMap.keys)
-                user.firstName = updateDataMap["firstName"] as String
-            if ("lastName" in updateDataMap.keys)
-                user.lastName = updateDataMap["firstName"] as String
-            if ("firstName" in updateDataMap.keys)
-                user.status = updateDataMap["status"] as UserStatus
-            if ("lastLoginAt" in updateDataMap.keys)
-                user.lastLoginAt = updateDataMap["lastLoginAt"] as LocalDateTime
-
+            updateData.firstName?.let { user.firstName = it }
+            updateData.lastName?.let { user.lastName = it }
+            updateData.status?.let { user.status = it }
+            updateData.lastLoginAt?.let { user.lastLoginAt = it }
             return true
         }
 
