@@ -10,11 +10,11 @@ data class NewCourseBasicData (
     var skills: List<String>,
     var courseLevel: CourseLevel,
     var courseType: CourseType,
-    var prerequisites: List<String>? = null,
     var isFreeCourse: Boolean,
+    var categoryId: Int,
+    var prerequisites: List<String>? = null,
     val priceData: NewPriceData? = null,
     var status: ResourceStatus = ResourceStatus.DRAFT,
-    var categoryIds: List<Int> = listOf()
 )
 
 // TODO: Needs to improve this to handle other field values
@@ -34,4 +34,19 @@ data class NewPriceData (
     val currencyCode: String,
     val currencySymbol: String,
     var amount: Double,
+)
+
+data class NewModuleData (
+    val title: String,
+    val description: String?,
+    var sequenceNumber: Int = 0,
+    var status: ResourceStatus = ResourceStatus.PUBLISHED,
+)
+
+data class NewLessonData (
+    val title: String,
+    val resource: String,
+    var duration: Float, // note: "duration in minutes"
+    var sequenceNumber: Int = 0,
+    var status: ResourceStatus = ResourceStatus.PUBLISHED,
 )

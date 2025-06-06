@@ -19,17 +19,17 @@ open class Course (
     var courseType: CourseType,
     var isFreeCourse: Boolean,
     var status: ResourceStatus,
+    val categoryId: Int,
     var prerequisites: List<String>? = null,
     var priceDetailsId: Int? = null, // null - means no price details
-    var categoryIds: MutableList<Int> = mutableListOf<Int>(),
-    var moduleIds: MutableList<Int> = mutableListOf<Int>(),
+    val moduleIds: MutableList<Int> = mutableListOf(),
 ) : Timeline() {
     companion object {
         private var serialId = 1
         private val records = mutableMapOf<Int, Course>()
 
         fun createCourse(newCourseData: NewCourseBasicData, currentUserId: UUID): Course {
-            val course = Course (
+            val course = Course(
                 id = serialId++,
                 title = newCourseData.title,
                 description = newCourseData.description,
@@ -41,7 +41,7 @@ open class Course (
                 isFreeCourse = newCourseData.isFreeCourse,
                 status = ResourceStatus.DRAFT,
                 prerequisites = newCourseData.prerequisites,
-                categoryIds = newCourseData.categoryIds.toMutableList()
+                categoryId = newCourseData.categoryId
             )
 
             records[course.id] = course
@@ -49,42 +49,16 @@ open class Course (
             return course
         }
 
-        fun addPriceDetailsIds(courseId: Int, priceDetailsId: Int): Boolean {
-            val course = records[courseId]
-            if (course == null) return false
+        fun updatePriceDetailsId(courseId: Int, priceDetailsId: Int) {
+            records.getValue(courseId).priceDetailsId = priceDetailsId
+            println("Course.kt: Price details($priceDetailsId) updated into course($courseId)")
+        }
 
-            course.priceDetailsId = priceDetailsId
-            return true
+        fun addModuleId(courseId: Int, moduleId: Int) {
+            records.getValue(courseId).moduleIds.add(moduleId)
+            println("Course.kt: Module id($moduleId) added into Course($courseId)")
         }
 
         fun getRecords(): Map<Int, Course> = records.toMap()
-    }
-}
-
-class Category (
-    val id: Int,
-    val name: String
-) : Timeline() {
-    companion object {
-        private var serial = 1
-        private val records = mutableMapOf<Int, Category>()
-
-        init {
-            records[serial] = Category(serial++, "Software Development")
-            records[serial] = Category(serial++, "Testing")
-            records[serial] = Category(serial++, "English Communication")
-            records[serial] = Category(serial++, "Web Development")
-            records[serial] = Category(serial++, "Mobile App Development")
-            records[serial] = Category(serial++, "Drawing")
-            records[serial] = Category(serial++, "Others")
-        }
-
-        fun createCategory(name: String): Category {
-            val category = Category(serial++, name)
-            records[category.id] = category
-            return category
-        }
-
-        fun getRecords(): Map<Int, Category> = records.toMap()
     }
 }

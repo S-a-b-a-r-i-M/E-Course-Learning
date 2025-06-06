@@ -3,7 +3,8 @@ package core.course.repositories
 import core.course.schemas.*
 import db.inmemorystore.course.Category
 import db.inmemorystore.course.Course
-import db.inmemorystore.course.PriceDetails
+import db.inmemorystore.course.Lesson
+import db.inmemorystore.course.Module
 import java.util.UUID
 
 
@@ -11,17 +12,18 @@ interface AbstractCourseRepo {
     // ******************* CREATE *******************
     fun createCourse(newCourseData: NewCourseBasicData, currentUserId: UUID): Course
     fun createCategory(name: String): Category
-    fun createPriceDetails(newPriceData: NewPriceData): PriceDetails
+    fun createPriceDetails(courseId: Int, newPriceData: NewPriceData): Boolean
+    fun createModule(newModuleData: NewModuleData, courseId: Int): Module
+    fun createLesson(newLessonData: NewLessonData, moduleId: Int): Lesson
 
     // ******************* READ *********************
     fun getCategories(searchQuery: String, offset: Int, limit: Int): List<Category>
+
     fun getCourse()
 
     // ******************* UPDATE *******************
-    fun addPriceDetailsIdToCourse(courseId: Int, priceDetailsId: Int)
 
     // ******************* DELETE *******************
-
     // ******************* EXISTS *******************
     fun isCategoryExists(name: String): Boolean
 }

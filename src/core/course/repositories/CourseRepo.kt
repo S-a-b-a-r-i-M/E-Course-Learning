@@ -1,14 +1,36 @@
 package core.course.repositories
 
 import core.course.schemas.NewCourseBasicData
+import core.course.schemas.NewLessonData
+import core.course.schemas.NewModuleData
 import core.course.schemas.NewPriceData
 import db.inmemorystore.course.Category
 import db.inmemorystore.course.Course
+import db.inmemorystore.course.Lesson
+import db.inmemorystore.course.Module
 import db.inmemorystore.course.PriceDetails
 import java.util.UUID
 
 
 class CourseRepo : AbstractCourseRepo {
+    // ******************* READ *********************
+    override fun getCategories(searchQuery: String, offset: Int, limit: Int): List<Category> {
+        val endIndex = (offset + 1) * limit
+        val categories = Category.getRecords().values.toList()
+
+        // Apply filter & Pagination
+        return categories.filter {
+            it.name.contains(searchQuery, true)
+        }.let { filteredRes ->
+            filteredRes.subList(offset, if (endIndex > filteredRes.size) filteredRes.size else endIndex)
+        }
+    }
+
+    override fun getCourse() {
+        val courses = Course.getRecords()
+        println(courses)
+    }
+
     // ******************* CREATE *******************
     override fun createCourse(newCourseData: NewCourseBasicData, currentUserId: UUID): Course {
         return Course.createCourse(newCourseData, currentUserId)
@@ -18,24 +40,28 @@ class CourseRepo : AbstractCourseRepo {
         return Category.createCategory(name)
     }
 
-    override fun createPriceDetails(newPriceData: NewPriceData): PriceDetails {
-        return PriceDetails.createPriceDetails(newPriceData)
+    override fun createPriceDetails(courseId: Int, newPriceData: NewPriceData): Boolean {
+        val priceDetails = PriceDetails.createPriceDetails(newPriceData)
+        // Add price-details id into course
+        Course.updatePriceDetailsId(courseId, priceDetails.id)
+        return true
     }
 
-    // ******************* READ *********************
-    override fun getCategories(searchQuery: String, offset: Int, limit: Int): List<Category> {
-        // TODO: Needs to implement searchQuery & offset, limit
-        return Category.getRecords().values.toList()
+    override fun createModule(newModuleData: NewModuleData, courseId: Int): Module {
+        val module = Module.createModule(newModuleData)
+        // Add module id into course
+        Course.addModuleId(courseId, module.id)
+        return module
     }
 
-    override fun getCourse() {
-        println(Course.getRecords())
+    override fun createLesson(newLessonData: NewLessonData, moduleId: Int): Lesson {
+        val lesson = Lesson.createLesson(newLessonData)
+        // Add lesson id into module
+        Module.addLessonId(moduleId, lesson.id)
+        return lesson
     }
 
     // ******************* UPDATE *******************
-    override fun addPriceDetailsIdToCourse(courseId: Int, priceDetailsId: Int) {
-        Course.addPriceDetailsIds(courseId, priceDetailsId)
-    }
 
     // ******************* EXISTS *******************
     override fun isCategoryExists(name: String): Boolean {

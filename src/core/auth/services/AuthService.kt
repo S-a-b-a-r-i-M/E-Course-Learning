@@ -13,7 +13,33 @@ import utils.PasswordHasher
 import java.time.LocalDateTime
 
 class AuthService (val userRepo: AbstractUserRepo) {
-    fun signUp(signUpData: SignUpData): User? {
+    private fun getSignUpDataFromUser(): SignUpData {
+        print("Enter first name : ")
+        val firstName = readln().trim()
+        print("Enter last name : ")
+        val lastName = readln().trim()
+        print("Enter email : ")
+        val email = readln().trim()
+        print("Enter password : ")
+        val password1 = readln().trim()
+        print("Enter password again : ")
+        val password2 = readln().trim()
+
+        if (password1 != password2) {
+            println("Password didn't match.")
+            throw IllegalArgumentException("password didn't match") // TODO: invoke related error
+        }
+
+        return SignUpData(
+            firstName = firstName,
+            lastName = lastName,
+            email = email,
+            password = password1,
+        )
+    }
+
+    fun signUp(): User? {
+        val signUpData = getSignUpDataFromUser()
         // Check email is already exists
         if (userRepo.isEmailExists(signUpData.email)){
             println("AuthService(signUp): Email Already exists!!!")
@@ -30,11 +56,20 @@ class AuthService (val userRepo: AbstractUserRepo) {
             role = UserRole.STUDENT // Student only can sign up directly
         )
         val user: User? = userRepo.createUser(newUserData)
-        println("New User(${newUserData.email}) creation result is ${user != null}")
+        println("New User(${newUserData.firstName} ${newUserData.lastName}) creation result is ${user != null}")
         return user
     }
 
-    fun signIn(signInData: SignInData): User? {
+    private fun getSignInDataFromUser(): SignInData {
+        print("Enter email : ")
+        val email = readln().trim()
+        print("Enter password : ")
+        val password = readln().trim()
+        return SignInData(email, password)
+    }
+
+    fun signIn(): User? {
+        val signInData = getSignInDataFromUser()
         val user: User? = userRepo.getUserByEmail(signInData.email)
         if(user == null){
             println("User with email(${signInData.email}) is not found!!!")

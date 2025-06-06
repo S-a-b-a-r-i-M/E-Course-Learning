@@ -1,8 +1,20 @@
 Course:
-Title: Java Fundamentals
-Des: Java Fundamentals course will help you to understand about core java.
-Skills: Java, Collections
+title: Java Fundamentals
+description: Java Fundamentals course will help you to understand about core java.
+skills: [Java, Collections]
+courseLevel: BEGINNER, // or use an enum equivalent
 Prerequisites:
 Course Level: BEGINNER
 Course Type:
 
+Course2:
+title: Introduction to React,
+description: A beginner-friendly course to learn React basics.,
+duration: 90.0, // in minutes
+createdBy: 550e8400-e29b-41d4-a716-446655440000, // UUID of the admin
+skills: [React, JSX, Hooks],
+courseLevel: BEGINNER, // or use an enum equivalent
+courseType: SELF_PACED,     // e.g., VIDEO, ARTICLE, etc.
+isFreeCourse: true,
+status: ACTIVE,        // or DRAFT, INACTIVE, etc.
+prerequisites: [Basic HTML, JavaScript fundamentals]
