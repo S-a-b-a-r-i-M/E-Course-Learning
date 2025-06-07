@@ -45,5 +45,7 @@ class Lesson (
             println("Module.kt: New module added(id-${lesson.id})")
             return lesson
         }
+
+        fun getRecords() = records.toMap()
     }
 }

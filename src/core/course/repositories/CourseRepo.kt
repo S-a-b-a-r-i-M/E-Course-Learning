@@ -4,7 +4,6 @@ import core.course.schemas.NewCourseBasicData
 import core.course.schemas.NewLessonData
 import core.course.schemas.NewModuleData
 import core.course.schemas.NewPriceData
-import db.inmemorystore.course.CURRENT_FILE_NAME
 import db.inmemorystore.course.Category
 import db.inmemorystore.course.Course
 import db.inmemorystore.course.Lesson
@@ -19,28 +18,38 @@ class CourseRepo : AbstractCourseRepo {
         val endIndex = (offset + 1) * limit
         val categories = Category.getRecords().values.toList()
 
-        // Apply Search & Pagination
-        return categories.filter {
-            it.getName().contains(searchQuery, true)
-        }.let { filteredRes ->
-            filteredRes.subList(offset, endIndex.coerceAtMost(filteredRes.size))
-        }
+        // Apply Search
+        var result = categories.filter { it.getName().contains(searchQuery, true) }
+        // Apply Pagination
+        return result.subList(offset, endIndex.coerceAtMost(result.size))
     }
 
     override fun getPriceDetails(priceDetailsId: Int?): PriceDetails? {
         return PriceDetails.getRecords()[priceDetailsId]
     }
 
-    override fun getCourse(searchQuery: String, offset: Int, limit: Int): List<Course> {
+    override fun getCourses(searchQuery: String, offset: Int, limit: Int): List<Course> {
         val endIndex = (offset + 1) * limit
         val courses = Course.getRecords().values.toList()
 
-        // Apply Search & Pagination
-        return courses.filter {
-            it.getTitle().contains(searchQuery, true)
-        }.let { filteredRes ->
-            filteredRes.subList(offset, endIndex.coerceAtMost(filteredRes.size))
-        }
+        // Apply Search
+        var result  = courses.filter { it.getTitle().contains(searchQuery, true) }
+        // Apply Pagination
+        return result.subList(offset, endIndex.coerceAtMost(result.size))
+    }
+
+    override fun getCourse(courseId: Int): Course {
+        return Course.getRecords().getValue(courseId)
+    }
+
+    override fun getModules(moduleIds: List<Int>): List<Module> {
+        val moduleIdsSet = moduleIds.toSet() // For fast look up
+        return Module.getRecords().values.filter { moduleIdsSet.contains(it.getId()) }
+    }
+
+    override fun getLessons(lessonIds: List<Int>): List<Lesson> {
+        val lessonIdsSet = lessonIds.toSet()
+        return Lesson.getRecords().values.filter { lessonIdsSet.contains(it.getId()) }
     }
 
     // ******************* CREATE *******************

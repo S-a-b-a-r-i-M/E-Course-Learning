@@ -44,23 +44,19 @@ fun authFlow(authService: AuthService): User? {
     return null
 }
 
-fun courseFlow(courseService: CourseService, currentUserId: UUID) {
+fun courseFlow(courseService: CourseService, currentUser: User) {
     while (true) {
         println("\nOption to choose ⬇️")
+        println("0 -> Back")
         println("1 -> List Of Courses")
         println("2 -> Create Course")
-        println("0 -> Exit")
         val userInput = readln().toInt()
 
         // When - Course Flow
         when (userInput) {
-            0 -> break // It will break the outer loop
-            1 -> {
-                courseService.showCourses()
-            }
-            2 -> {
-                courseService.createCourse(currentUserId)
-            }
+            0 -> return // It will break the outer loop
+            1 -> courseService.showCourses(currentUser)
+            2 -> courseService.createCourse(currentUser)
         }
     }
 }
@@ -91,7 +87,7 @@ fun main() {
     val courseRepo = CourseRepo()
     val courseService = CourseService(courseRepo)
 
-    courseFlow(courseService, user.getUserId())
+    courseFlow(courseService, user)
 
     println("Welcome..visit again 😊")
 }

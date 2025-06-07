@@ -8,7 +8,7 @@ import db.Timeline
 import java.util.UUID
 import kotlin.collections.mutableMapOf
 
-val CURRENT_FILE_NAME = Throwable().stackTrace[0].fileName
+val CURRENT_FILE_NAME: String? = Throwable().stackTrace[0].fileName
 
 open class Course (
     private val id : Int,

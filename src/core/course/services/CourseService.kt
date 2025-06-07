@@ -12,8 +12,9 @@ import db.inmemorystore.course.Course
 import db.inmemorystore.course.Lesson
 import db.inmemorystore.course.Module
 import db.inmemorystore.course.PriceDetails
+import db.inmemorystore.user.User
+import utils.formatDurationMinutes
 import utils.getListInput
-import java.util.UUID
 
 val CURRENT_FILE_NAME: String? = Throwable().stackTrace[0].fileName
 
@@ -21,7 +22,7 @@ fun String.capitalize(): String = this[0].uppercase() + this.substring(1).lowerc
 
 class CourseService (val courseRepo: AbstractCourseRepo) {
 
-    private fun displayCourseCard(course: Course, priceDetails: PriceDetails?) {
+    private fun displayCourse(course: Course, priceDetails: PriceDetails?, isDetailedView: Boolean = false) {
         // TODO: Based on user role show different data in the card
         val cardWidth = 60
         val border = "═".repeat(cardWidth)
@@ -29,8 +30,7 @@ class CourseService (val courseRepo: AbstractCourseRepo) {
 
         // Format duration
         val durationText = when {
-            course.getDuration() > 60 ->
-                "${(course.getDuration() / 60).toInt()}h ${(course.getDuration() % 60).toInt()}m"
+            course.getDuration() > 60 -> formatDurationMinutes(course.getDuration())
             else -> "${course.getDuration()}m"
         }
 
@@ -41,48 +41,74 @@ class CourseService (val courseRepo: AbstractCourseRepo) {
 
         // Format skills (limit to avoid overflow)
         val skills = course.getSkills()
-        val skillsText = if (skills.size > 3) {
+        val skillsText = if (!isDetailedView && skills.size > 3) {
             skills.take(3).joinToString(", ") + " +${skills.size - 3} more"
         } else {
             skills.joinToString(", ")
         }
 
-        fun centerText(text: String) = "${" ".repeat((cardWidth - text.length) / 2)}$text"
+        // Format Prerequisites (limit to avoid overflow)
+        val prerequisites = course.getPrerequisites()
+        val prereqText = prerequisites?.let {
+            if (!isDetailedView && prerequisites.size > 2) {
+                prerequisites.take(2).joinToString(", ") + " +${prerequisites.size - 2} more"
+            } else {
+                prerequisites.joinToString(", ")
+            }
+        }
 
-        println(buildString {
-            appendLine("╔$border╗")
-            appendLine(centerText(course.getTitle()))
-            appendLine("╠${titleLine}╣")
-            appendLine(" ID: ${course.getId()}")
-            appendLine(" Level: ${course.getCourseLevel().toString().capitalize()}")
-            appendLine(" Type: ${course.getCourseType().toString().capitalize()}")
-            appendLine(" Duration: $durationText")
-            appendLine(" Price: $priceText")
-            appendLine(" Status: ${course.getStatus().toString().capitalize()}")
-            appendLine(" Modules: ${course.getModuleIds().size} module(s)")
-            if (skillsText.isNotEmpty()) {
-                appendLine(" Skills: $skillsText")
-            }
-            val prerequisites = course.getPrerequisites()
-            if (!prerequisites.isNullOrEmpty()) {
-                val prereqText = if (prerequisites.size > 2) {
-                    prerequisites.take(2).joinToString(", ") + " +${prerequisites.size - 2} more"
-                } else {
-                    prerequisites.joinToString(", ")
-                }
-                appendLine(" Prerequisites: $prereqText")
-            }
-            appendLine("╠$titleLine╣")
-            appendLine(" ${course.getDescription()}")
-            appendLine("╚$border╝")
-        })
+        fun centerText(text: String) = "${" ".repeat((cardWidth - text.length) / 2)}$text"
+        println("╔$border╗")
+        println(centerText(course.getTitle()))
+        println("╠${titleLine}╣")
+        println(" ID: ${course.getId()}")
+        println(" Description: ${course.getDescription()}")
+        println(" Level: ${course.getCourseLevel().toString().capitalize()}")
+        println(" Type: ${course.getCourseType().toString().capitalize()}")
+        println(" Duration: $durationText")
+        println(" Price: $priceText")
+        println(" Status: ${course.getStatus().toString().capitalize()}")
+        if (skillsText.isNotEmpty()) println(" Skills: $skillsText")
+        if (prereqText != null && prereqText.isNotEmpty()) println(" Prerequisites: $prerequisites")
+        if (!isDetailedView) println("╚$border╝")
     }
 
     fun getCourses(searchQuery: String, offset: Int, limit: Int): List<Course> {
-        return courseRepo.getCourse(searchQuery, offset, limit)
+        return courseRepo.getCourses(searchQuery, offset, limit)
     }
 
-    fun showCourses() {
+    /**
+     * Shows a course full details.
+     */
+    fun showCourse(courseId: Int) {
+        // Get Course Basic Details
+        val course: Course = courseRepo.getCourse(courseId)
+        // Get Price Details
+        var priceDetails: PriceDetails? = null
+            if (course.getPriceDetailsId() != null) {
+            priceDetails = courseRepo.getPriceDetails(course.getPriceDetailsId())
+        }
+        displayCourse(course, priceDetails, true)
+        val moduleIds = course.getModuleIds()
+        // Get Modules
+        if (moduleIds.isEmpty()) return
+        val modules: List<Module> = courseRepo.getModules(moduleIds)
+        for((index, module) in modules.withIndex()) {
+            val lessonIds = module.getLessonIds()
+            println(" $index. ${module.getTitle()} (${lessonIds.size} lessons)")
+            if (module.getDescription() != null) println("  Description: ${module.getDescription()}")
+            // Get Lessons
+            if (lessonIds.isEmpty()) continue
+            val lessons: List<Lesson> = courseRepo.getLessons(lessonIds)
+            for ((index, lesson) in lessons.withIndex())
+                println("\t$index. ${lesson.getTittle()}")
+        }
+    }
+
+    /**
+     * Shows list of courses. Each courses with its minimal details.
+     */
+    fun showCourses(currentUser: User) {
         /* Steps:
           1. Show First 10.
               1.1. Open a specific course
@@ -92,7 +118,7 @@ class CourseService (val courseRepo: AbstractCourseRepo) {
          */
         var searchQuery = ""
         var offset = 0
-        val limit = 1
+        val limit = 10
         var isHaveMore = false
 
         fun displayCourses() {
@@ -107,7 +133,7 @@ class CourseService (val courseRepo: AbstractCourseRepo) {
                 } else {
                     null
                 }
-                displayCourseCard(it, priceDetails)
+                displayCourse(it, priceDetails)
             }
             isHaveMore = courses.size == limit
         }
@@ -125,9 +151,11 @@ class CourseService (val courseRepo: AbstractCourseRepo) {
             when (userInput) {
                 // Go Back
                 0 -> return
-                // Select
+                // Open a Course
                 1 -> {
-
+                    print("Enter course id: ")
+                    val courseId = readln().toInt()
+                    showCourse(courseId)
                 }
                 // Search
                 2 -> {
@@ -357,10 +385,12 @@ class CourseService (val courseRepo: AbstractCourseRepo) {
         return module
     }
 
-    fun createCourse(currentUserId: UUID): Course {
+    fun createCourse(currentUser: User): Course {
+        // TODO: Role Check
+
         // Create course with basic details
         val courseData = getBasicCourseDataFromUser()
-        val course = courseRepo.createCourse(courseData, currentUserId)
+        val course = courseRepo.createCourse(courseData, currentUser.getUserId())
 
         // Attach PriceDetails to Course
         val courseId = course.getId()

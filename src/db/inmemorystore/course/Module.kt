@@ -64,5 +64,7 @@ class Module (
         fun addLessonId(moduleId: Int, lessonId: Int) {
             records.getValue(moduleId).lessonIds.add(lessonId)
         }
+
+        fun getRecords() = records.toMap()
     }
 }
