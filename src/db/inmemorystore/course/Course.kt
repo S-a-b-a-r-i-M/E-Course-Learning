@@ -58,6 +58,43 @@ open class Course (
         private var serialId = 1
         private val records = mutableMapOf<Int, Course>()
 
+        init {
+            // TODO: Move this into separate json file
+            records[serialId] = Course(
+                id = serialId++,
+                title = "Complete Kotlin Programming Course for Android Development",
+                description = "This is a comprehensive course covering Kotlin programming from basics to advanced topics including coroutines, database integration, and modern Android development practices.",
+                duration = 180.5f,
+                createdBy = UUID.randomUUID(),
+                skills = listOf("Kotlin", "Android", "Programming", "Mobile Development", "Database"),
+                courseLevel = CourseLevel.INTERMEDIATE,
+                courseType = CourseType.SELF_PACED,
+                isFreeCourse = true,
+                status = ResourceStatus.DRAFT,
+                categoryId = 1,
+                prerequisites = listOf("Basic programming knowledge", "Java fundamentals"),
+                priceDetailsId = null,
+                moduleIds = mutableListOf()
+            )
+
+            records[serialId] = Course(
+                id = serialId++,
+                title = "Mastering the Art of Cooking",
+                description = "A comprehensive course covering basic to advanced cooking techniques, including baking, grilling, and international cuisines.",
+                duration = 720f, // 12 hours
+                createdBy = UUID.fromString("123e4567-e89b-12d3-a456-426614174000"),
+                skills = listOf("Knife Skills", "Baking", "Grilling", "Recipe Planning", "Food Safety"),
+                courseLevel = CourseLevel.INTERMEDIATE,
+                courseType = CourseType.SELF_PACED,
+                isFreeCourse = false,
+                status = ResourceStatus.DRAFT,
+                categoryId = 9,
+                prerequisites = listOf("Basic kitchen tools knowledge"),
+                priceDetailsId = 2001,
+                moduleIds = mutableListOf(501, 502, 503)
+            )
+        }
+
         fun createCourse(newCourseData: NewCourseBasicData, currentUserId: UUID): Course {
             val course = Course(
                 id = serialId++,

@@ -5,6 +5,7 @@ import db.inmemorystore.course.Category
 import db.inmemorystore.course.Course
 import db.inmemorystore.course.Lesson
 import db.inmemorystore.course.Module
+import db.inmemorystore.course.PriceDetails
 import java.util.UUID
 
 
@@ -18,8 +19,8 @@ interface AbstractCourseRepo {
 
     // ******************* READ *********************
     fun getCategories(searchQuery: String, offset: Int, limit: Int): List<Category>
-
-    fun getCourse()
+    fun getPriceDetails(priceDetailsId: Int?): PriceDetails?
+    fun getCourse(searchQuery: String, offset: Int, limit: Int): List<Course>
 
     // ******************* UPDATE *******************
     fun updateModuleDuration(moduleId: Int, duration: Float): Float

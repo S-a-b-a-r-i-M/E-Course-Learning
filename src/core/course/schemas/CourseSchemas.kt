@@ -3,6 +3,10 @@ package core.course.schemas
 import db.CourseLevel
 import db.CourseType
 import db.ResourceStatus
+import db.inmemorystore.course.Category
+import db.inmemorystore.course.Lesson
+import db.inmemorystore.course.PriceDetails
+import java.util.UUID
 
 data class NewCourseBasicData (
     var title: String,
@@ -30,6 +34,23 @@ data class UpdateCourseBasicData (
     // TODO: Needs to add price details
 )
 
+data class CourseData(
+    val id : Int,
+    val title: String,
+    val description: String,
+    val duration : Float,
+    val createdBy: UUID,
+    val skills: List<String>,
+    val courseLevel: CourseLevel,
+    val courseType: CourseType,
+    val isFreeCourse: Boolean,
+    val status: ResourceStatus,
+    val categoryId: Category,
+    val prerequisites: List<String>? = null,
+    val priceDetails: PriceDetails? = null,
+    val modules: MutableList<ModuleData> = mutableListOf(),
+)
+
 data class NewPriceData (
     val currencyCode: String,
     val currencySymbol: String,
@@ -41,6 +62,16 @@ data class NewModuleData (
     val description: String?,
     var sequenceNumber: Int = 0,
     var status: ResourceStatus = ResourceStatus.PUBLISHED,
+)
+
+data class ModuleData(
+    val id : Int,
+    val title: String,
+    val description: String?,
+    val sequenceNumber: Int,
+    val duration : Float = 0.0f,
+    val status: ResourceStatus,
+    val lessons: MutableList<Lesson> = mutableListOf(),
 )
 
 data class UpdateModuleData (

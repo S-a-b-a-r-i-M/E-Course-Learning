@@ -55,9 +55,11 @@ fun courseFlow(courseService: CourseService, currentUserId: UUID) {
         // When - Course Flow
         when (userInput) {
             0 -> break // It will break the outer loop
-            1 -> courseService.getCourses()
+            1 -> {
+                courseService.showCourses()
+            }
             2 -> {
-                val course = courseService.createCourse(currentUserId)
+                courseService.createCourse(currentUserId)
             }
         }
     }

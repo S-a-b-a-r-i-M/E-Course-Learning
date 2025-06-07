@@ -17,6 +17,10 @@ class PriceDetails (
 
     fun getAmount() = amount
 
+    override fun toString(): String {
+        return "$currencySymbol$amount ($currencyCode)"
+    }
+
     companion object {
         private var serialId = 1
         private val records = mutableMapOf<Int, PriceDetails>()
@@ -33,5 +37,7 @@ class PriceDetails (
             println("New Price Details created.")
             return priceDetails
         }
+
+        fun getRecords() = records.toMap()
     }
 }
