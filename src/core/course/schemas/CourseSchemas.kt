@@ -43,6 +43,13 @@ data class NewModuleData (
     var status: ResourceStatus = ResourceStatus.PUBLISHED,
 )
 
+data class UpdateModuleData (
+    val title: String? = null,
+    val description: String? = null,
+    val sequenceNumber: Int? = null,
+    val status: ResourceStatus? = null,
+)
+
 data class NewLessonData (
     val title: String,
     val resource: String,

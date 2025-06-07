@@ -9,15 +9,33 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 open class User (
-    val id : UUID, // PK
-    var firstName: String,
-    var lastName: String,
-    val email: String,
-    var role: UserRole,
-    var hashPassword: String,
-    var status: UserStatus,
-    var lastLoginAt: LocalDateTime,
+    protected val id : UUID, // PK
+    protected var firstName: String,
+    protected var lastName: String,
+    protected val email: String,
+    protected var role: UserRole,
+    protected var hashPassword: String,
+    protected var status: UserStatus,
+    protected var lastLoginAt: LocalDateTime,
 ): Timeline() {
+    // Custom getters to avoid naming conflicts
+
+    fun getUserId() = id
+
+    fun getUserFirstName() = firstName
+
+    fun getUserLastName() = lastName
+
+    fun getUserEmail() = email
+
+    fun getUserRole() = role
+
+    fun getUserHashedPassword() = hashPassword
+
+    fun getUserStatus() = status
+
+    fun getUserLastLoginAt() = lastLoginAt
+
     companion object {
         private val records = mutableMapOf<UUID, User>()
         private val emailToIdMap = mutableMapOf<String, UUID>()
@@ -40,8 +58,7 @@ open class User (
         }
 
         fun update(userId: UUID, updateData: UserUpdateData): Boolean {
-            val user = records[userId]
-            if (user == null) return false
+            val user = records.getValue(userId)
 
             updateData.firstName?.let { user.firstName = it }
             updateData.lastName?.let { user.lastName = it }

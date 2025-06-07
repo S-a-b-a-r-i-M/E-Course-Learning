@@ -4,6 +4,7 @@ import core.course.schemas.NewCourseBasicData
 import core.course.schemas.NewLessonData
 import core.course.schemas.NewModuleData
 import core.course.schemas.NewPriceData
+import db.inmemorystore.course.CURRENT_FILE_NAME
 import db.inmemorystore.course.Category
 import db.inmemorystore.course.Course
 import db.inmemorystore.course.Lesson
@@ -20,7 +21,7 @@ class CourseRepo : AbstractCourseRepo {
 
         // Apply filter & Pagination
         return categories.filter {
-            it.name.contains(searchQuery, true)
+            it.getName().contains(searchQuery, true)
         }.let { filteredRes ->
             filteredRes.subList(offset, if (endIndex > filteredRes.size) filteredRes.size else endIndex)
         }
@@ -43,29 +44,36 @@ class CourseRepo : AbstractCourseRepo {
     override fun createPriceDetails(courseId: Int, newPriceData: NewPriceData): Boolean {
         val priceDetails = PriceDetails.createPriceDetails(newPriceData)
         // Add price-details id into course
-        Course.updatePriceDetailsId(courseId, priceDetails.id)
+        Course.updatePriceDetailsId(courseId, priceDetails.getId())
         return true
     }
 
     override fun createModule(newModuleData: NewModuleData, courseId: Int): Module {
         val module = Module.createModule(newModuleData)
         // Add module id into course
-        Course.addModuleId(courseId, module.id)
+        Course.addModuleId(courseId, module.getId())
         return module
     }
 
     override fun createLesson(newLessonData: NewLessonData, moduleId: Int): Lesson {
         val lesson = Lesson.createLesson(newLessonData)
         // Add lesson id into module
-        Module.addLessonId(moduleId, lesson.id)
+        Module.addLessonId(moduleId, lesson.getId())
         return lesson
     }
 
     // ******************* UPDATE *******************
+    override fun updateModuleDuration(moduleId: Int, duration: Float): Float {
+        return Module.updateDuration(moduleId, duration)
+    }
+
+    override fun updateCourseDuration(courseId: Int, duration: Float): Float {
+        return Course.updateDuration(courseId, duration)
+    }
 
     // ******************* EXISTS *******************
     override fun isCategoryExists(name: String): Boolean {
-        return Category.getRecords().values.any { it -> it.name == name }
+        return Category.getRecords().values.any { it -> it.getName() == name }
     }
 
     // ******************* DELETE *******************

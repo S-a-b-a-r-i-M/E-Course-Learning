@@ -8,13 +8,25 @@ import db.inmemorystore.user.Student
 import java.util.UUID
 
 class Lesson (
-    val id: Int,
-    var title: String,
-    var resource: String,
-    var duration: Float,  // note: "duration in minutes"
-    var sequenceNumber: Int,
-    var status: ResourceStatus,
+    private val id: Int,
+    private var title: String,
+    private var resource: String,
+    private var duration: Float,  // note: "duration in minutes"
+    private var sequenceNumber: Int,
+    private var status: ResourceStatus,
 ) : Timeline() {
+    fun getId() = id
+
+    fun getTittle() = title
+
+    fun getResource() = resource
+
+    fun getDuration() = duration
+
+    fun getSequenceNumber() = sequenceNumber
+
+    fun getStatus() = status
+
     companion object {
         private var serialId = 1
         private val records = mutableMapOf<Int, Lesson>()

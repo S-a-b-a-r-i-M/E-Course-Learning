@@ -22,8 +22,11 @@ interface AbstractCourseRepo {
     fun getCourse()
 
     // ******************* UPDATE *******************
+    fun updateModuleDuration(moduleId: Int, duration: Float): Float
+    fun updateCourseDuration(courseId: Int, duration: Float): Float
 
     // ******************* DELETE *******************
+
     // ******************* EXISTS *******************
     fun isCategoryExists(name: String): Boolean
 }

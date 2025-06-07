@@ -14,9 +14,9 @@ class Student (
     hashPassword: String,
     status: UserStatus,
     lastLoginAt: LocalDateTime,
-    var gitHubUrl: String?,
-    var linkedInUrl: String?,
-    var interestedCategories: List<String> = mutableListOf<String>()
+    private var gitHubUrl: String?,
+    private var linkedInUrl: String?,
+    private var interestedCategories: List<String> = mutableListOf<String>()
 ) : User(
     id,
     firstName,
@@ -27,6 +27,13 @@ class Student (
     status,
     lastLoginAt,
 ) {
+
+    fun getGitHubUrl() = gitHubUrl
+
+    fun getLinkedInUrl() = linkedInUrl
+
+    fun getInterestedCategories() = interestedCategories.toList() // returns a copy (immutable view)
+
     companion object {
         private val records = mutableMapOf<UUID, Student>()
     }

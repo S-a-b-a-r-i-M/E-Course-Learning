@@ -14,8 +14,10 @@ import db.inmemorystore.course.Module
 import utils.getListInput
 import java.util.UUID
 
+val CURRENT_FILE_NAME: String? = Throwable().stackTrace[0].fileName
+
 class CourseService (val courseRepo: AbstractCourseRepo) {
-    fun getCourse() {
+    fun getCourses() {
         courseRepo.getCourse()
     }
 
@@ -44,7 +46,7 @@ class CourseService (val courseRepo: AbstractCourseRepo) {
         val isFree = isFreeInput == "y"
         var priceData: NewPriceData? = null
         if (!isFree) {
-            println("----- Enter Price Details -----")
+            println("\n----- Enter Price Details -----")
             val currencyMap = mapOf<String, String>(
                 "INR" to "₹",
                 "USD" to "$",
@@ -54,7 +56,7 @@ class CourseService (val courseRepo: AbstractCourseRepo) {
             val currencyCode = readln().trim().uppercase()
             val currencySymbol = currencyMap.getOrDefault(currencyCode, "₹")
 
-            print("Enter amount:")
+            print("Enter amount: ")
             val amount = readln().trim().toDoubleOrNull() ?: run {
                 println("Invalid amount entered. Setting base price as 0")
                 0.0
@@ -63,7 +65,7 @@ class CourseService (val courseRepo: AbstractCourseRepo) {
         }
 
         // Get Category ID
-        val categoryId = getSelectedCategoryIdFromUser().id
+        val categoryId = getSelectedCategoryIdFromUser().getId()
 
         return NewCourseBasicData(
             title=title,
@@ -87,7 +89,7 @@ class CourseService (val courseRepo: AbstractCourseRepo) {
                    Go to step 1
                    1.3.1. If no categories found then create and ask user to search again to get the id
          */
-        println("----- Choose Course Category -----")
+        println("\n----- Choose Course Category -----")
         var searchQuery = ""
         var offset = 0
         val limit = 10
@@ -99,7 +101,7 @@ class CourseService (val courseRepo: AbstractCourseRepo) {
             println(String.format("%-5s | %-20s", "ID", "Category"))
             println("-".repeat(35))
             categories.forEach {
-                println(String.format("%-5d | %-20s", it.id, it.name))
+                println(String.format("%-5d | %-20s", it.getId(), it.getName()))
             }
             println("\nTotal ${categories.size} categories" +
                     if (searchQuery.isNotEmpty()) " for '$searchQuery'" else "")
@@ -117,14 +119,14 @@ class CourseService (val courseRepo: AbstractCourseRepo) {
             when (userInput) {
                 // Select
                 1 -> {
-                    print("Enter a category:")
-                    val input = readln()
+                    print("Enter a category name: ")
+                    val input = readln().trim()
                     if (input.isEmpty()) {
-                        println("Input is not a number. Please try again.")
+                        println("Invalid input. Please try again.")
                         continue
                     }
 
-                    val selectedCategory = categories.find { it.name.equals(input, true) }
+                    val selectedCategory = categories.find { it.getName().equals(input, true) }
                     if (selectedCategory == null) {
                         println("Invalid category. Please try again.")
                         continue
@@ -199,36 +201,42 @@ class CourseService (val courseRepo: AbstractCourseRepo) {
         )
     }
 
-    fun createLesson(moduleId: Int, sequenceNumber: Int): Lesson {
+    fun createLesson(courseId: Int, moduleId: Int, sequenceNumber: Int): Lesson {
         val newLessonData =  getNewLessonDataFromUser(sequenceNumber)
         newLessonData.sequenceNumber = sequenceNumber
         val lesson = courseRepo.createLesson(newLessonData, moduleId)
+        println("$CURRENT_FILE_NAME: New Lesson(${lesson.getId()}) created successfully")
+        // Increase duration in Module
+        val updatedModuleDuration: Float = courseRepo.updateModuleDuration(moduleId, lesson.getDuration())
+        println("$CURRENT_FILE_NAME: Module($moduleId) duration updated")
+        // Increase duration in Course
+        courseRepo.updateCourseDuration(courseId, updatedModuleDuration)
+        println("$CURRENT_FILE_NAME: Course($courseId) duration updated")
         return lesson
     }
 
     fun createCourse(currentUserId: UUID): Course {
+        // Create course with basic details
         val courseData = getBasicCourseDataFromUser()
         val course = courseRepo.createCourse(courseData, currentUserId)
 
-        // Attach PriceDetails To Course
+        // Attach PriceDetails to Course
+        val courseId = course.getId()
         if (courseData.priceData != null)
-            courseRepo.createPriceDetails(course.id, courseData.priceData)
-        println("${courseData.title}(id-${course.id}) created successfully with basic details")
+            courseRepo.createPriceDetails(courseId, courseData.priceData)
+        println("${courseData.title}(id-${courseId}) created successfully with basic details")
 
-        // Module Creation
-        var wantsAnotherModule = true
-        while (wantsAnotherModule) {
-            val module = createModule(course.id, course.moduleIds.size + 1)
-            var wantsAnotherLesson = true
-            while (wantsAnotherLesson) {
-                createLesson(module.id, module.lessonIds.size)
+        // Module & Lesson Creation
+        do {
+            val module = createModule(courseId, course.getModuleIds().size + 1)
+            do {
+                createLesson(courseId, module.getId(), module.getLessonIds().size)
                 println("Do you want to create another lesson(y/n) ?")
-                wantsAnotherLesson = readln().lowercase() == "y"
-            }
+                val addAnotherLesson = readln().lowercase() == "y"
+            } while (addAnotherLesson)
             println("Do you want to create another module(y/n) ?")
-            wantsAnotherModule = readln().lowercase() == "y"
-        }
-        val moduleId = createModule(course.id, 0)
+            val addAnotherModule = readln().lowercase() == "y"
+        } while (addAnotherModule)
 
         return course
     }

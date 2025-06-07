@@ -14,8 +14,8 @@ class Trainer (
     hashPassword: String,
     status: UserStatus,
     lastLoginAt: LocalDateTime,
-    educationIds: List<Int> = mutableListOf<Int>(),
-    workExperienceIds: List<Int> = mutableListOf<Int>()
+    private val educationIds: List<Int> = mutableListOf(),
+    private val workExperienceIds: List<Int> = mutableListOf()
 ) : User(
     id,
     firstName,
@@ -26,7 +26,13 @@ class Trainer (
     status,
     lastLoginAt,
 ) {
+
+    fun getEducationIds() = educationIds.toList() // returns a copy (immutable view)
+
+    fun getWorkExperienceIds() = workExperienceIds.toList()
+
     companion object {
+        private var serialId = 1
         private val records = mutableMapOf<UUID, Student>()
     }
 }

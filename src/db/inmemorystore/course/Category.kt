@@ -3,9 +3,13 @@ package db.inmemorystore.course
 import db.Timeline
 
 class Category (
-    val id: Int,
-    val name: String
+    private val id: Int,
+    private val name: String
 ) : Timeline() {
+    fun getId() = id
+
+    fun getName() = name
+
     companion object {
         private var serial = 1
         private val records = mutableMapOf<Int, Category>()

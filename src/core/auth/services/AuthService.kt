@@ -77,16 +77,16 @@ class AuthService (val userRepo: AbstractUserRepo) {
         }
 
         // Validate Password
-        if (!PasswordHasher.checkPasswordMatch(signInData.password,user.hashPassword)) {
+        if (!PasswordHasher.checkPasswordMatch(signInData.password,user.getUserHashedPassword())) {
             println("User with email(${signInData.email}) password is not matched!!!")
             return null // TODO: Throw appropriate exception
         }
 
-        if (user.status == UserStatus.SUSPENDED) {
-            println("User(${user.id}) account is suspended!!!")
+        if (user.getUserStatus() == UserStatus.SUSPENDED) {
+            println("User(${user.getUserId()}) account is suspended!!!")
             return null // TODO: Throw appropriate exception
         }
-        userRepo.updateUser(user.id, UserUpdateData(lastLoginAt = LocalDateTime.now()))
+        userRepo.updateUser(user.getUserId(), UserUpdateData(lastLoginAt = LocalDateTime.now()))
 
         return user
     }

@@ -1,18 +1,11 @@
 import core.auth.services.AuthService
 import core.course.repositories.CourseRepo
-import core.course.schemas.NewCourseBasicData
-import core.course.schemas.NewPriceData
 import core.course.services.CourseService
 import core.user.repositories.UserRepo
-import db.CourseLevel
-import db.CourseType
 import db.UserRole
 import db.UserStatus
-import db.inmemorystore.course.Category
 import db.inmemorystore.user.User
-import utils.getListInput
 import java.time.LocalDateTime
-import java.util.Currency
 import java.util.UUID
 
 fun authFlow(authService: AuthService): User? {
@@ -62,7 +55,7 @@ fun courseFlow(courseService: CourseService, currentUserId: UUID) {
         // When - Course Flow
         when (userInput) {
             0 -> break // It will break the outer loop
-            1 -> courseService.getCourse()
+            1 -> courseService.getCourses()
             2 -> {
                 val course = courseService.createCourse(currentUserId)
             }
@@ -96,8 +89,7 @@ fun main() {
     val courseRepo = CourseRepo()
     val courseService = CourseService(courseRepo)
 
-//    courseFlow(courseService, user.id)
-      println(courseService.getSelectedCategoryIdFromUser())
+    courseFlow(courseService, user.getUserId())
 
     println("Welcome..visit again 😊")
 }
