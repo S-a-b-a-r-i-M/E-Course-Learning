@@ -3,12 +3,9 @@ package db.inmemorystore.course
 import db.Timeline
 
 class Category (
-    private val id: Int,
-    private val name: String
+    val id: Int,
+    val name: String
 ) : Timeline() {
-    fun getId() = id
-
-    fun getName() = name
 
     companion object {
         private var serial = 1

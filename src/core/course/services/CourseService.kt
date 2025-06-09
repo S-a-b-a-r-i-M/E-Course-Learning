@@ -201,7 +201,7 @@ class CourseService (val courseRepo: AbstractCourseRepo) {
         }
 
         // Get Category ID
-        val categoryId = getSelectedCategoryIdFromUser().getId()
+        val categoryId = getSelectedCategoryIdFromUser().id
 
         return NewCourseBasicData(
             title=title,
@@ -256,7 +256,7 @@ class CourseService (val courseRepo: AbstractCourseRepo) {
                         continue
                     }
 
-                    val selectedCategory = categories.find { it.getName().equals(input, true) }
+                    val selectedCategory = categories.find { it.name.equals(input, true) }
                     if (selectedCategory == null) {
                         println("Invalid category. Please try again.")
                         continue
@@ -328,7 +328,7 @@ class CourseService (val courseRepo: AbstractCourseRepo) {
         val newLessonData =  getNewLessonDataFromUser(sequenceNumber)
         newLessonData.sequenceNumber = sequenceNumber
         val lesson = courseRepo.createLesson(newLessonData, moduleId)
-        println("$CURRENT_FILE_NAME: New Lesson(${lesson.getId()}) created successfully")
+        println("$CURRENT_FILE_NAME: New Lesson(${lesson.id}) created successfully")
         // Increase duration in Module
         val updatedModuleDuration: Float = courseRepo.updateModuleDuration(moduleId, lesson.getDuration())
         println("$CURRENT_FILE_NAME: Module($moduleId) duration updated")
@@ -350,10 +350,10 @@ class CourseService (val courseRepo: AbstractCourseRepo) {
 
         // Create course with basic details
         val courseData = getBasicCourseDataFromUser()
-        val course = courseRepo.createCourse(courseData, currentUser.getUserId())
+        val course = courseRepo.createCourse(courseData, currentUser.id)
 
         // Attach PriceDetails to Course
-        val courseId = course.getId()
+        val courseId = course.id
         if (courseData.priceData != null)
             courseRepo.createPriceDetails(courseId, courseData.priceData)
         println("${courseData.title}(id-${courseId}) created successfully with basic details")
@@ -362,7 +362,7 @@ class CourseService (val courseRepo: AbstractCourseRepo) {
         do {
             val module = createModule(courseId, course.getModuleIds().size + 1)
             do {
-                createLesson(courseId, module.getId(), module.getLessonIds().size)
+                createLesson(courseId, module.id, module.getLessonIds().size)
                 print("Do you want to create another lesson(y/n) ?")
                 val addAnotherLesson = readln().lowercase() == "y"
             } while (addAnotherLesson)

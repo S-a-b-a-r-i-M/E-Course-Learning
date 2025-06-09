@@ -4,13 +4,11 @@ import core.course.schemas.NewPriceData
 import db.Timeline
 
 class PriceDetails (
-    private val id: Int,
-    private val currencyCode: String,
-    private val currencySymbol: String,
+    val id: Int,
+    private var currencyCode: String,
+    private var currencySymbol: String,
     private var amount: Double,
 ) : Timeline() {
-    fun getId() = id
-
     fun getCurrencyCode() = currencyCode
 
     fun getCurrencySymbol() = currencySymbol

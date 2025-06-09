@@ -9,27 +9,19 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 open class User (
-    protected val id : UUID, // PK
+    val id : UUID, // PK
+    val email: String,
+    val role: UserRole,
+    val hashPassword: String,
     protected var firstName: String,
     protected var lastName: String,
-    protected val email: String,
-    protected var role: UserRole,
-    protected var hashPassword: String,
     protected var status: UserStatus,
     protected var lastLoginAt: LocalDateTime,
 ): Timeline() {
     // Custom getters to avoid naming conflicts
-    fun getUserId() = id
-
     fun getUserFirstName() = firstName
 
     fun getUserLastName() = lastName
-
-    fun getUserEmail() = email
-
-    fun getUserRole() = role
-
-    fun getUserHashedPassword() = hashPassword
 
     fun getUserStatus() = status
 

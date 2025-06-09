@@ -4,8 +4,8 @@ import db.Timeline
 import java.util.UUID
 
 data class WorkExperience (
-    private val id: Int, // PK
-    private val trainerId: UUID, // Foreign Key from User Table
+    val id: Int, // PK
+    val trainerId: UUID, // Foreign Key from User Table
     private var company: String,
     private var designation: String,
     private var startMonth: Int,
@@ -14,10 +14,6 @@ data class WorkExperience (
     private var endYear: Int?,
     private var isCurrent: Boolean = false, // "by default false. If this is true, end dates will be null"
 ) : Timeline() {
-
-    fun getId() = id
-
-    fun getTrainerId() = trainerId
 
     fun getCompany() = company
 

@@ -26,7 +26,7 @@ class ConsoleDisplayService {
         println(String.format("%-5s | %-20s", "ID", "Category"))
         println("-".repeat(35))
         categories.forEach {
-            println(String.format("%-5d | %-20s", it.getId(), it.getName()))
+            println(String.format("%-5d | %-20s", it.id, it.name))
         }
         println("\nTotal ${categories.size} categories" +
                 if (searchQuery.isNotEmpty()) " for '$searchQuery'" else "")
@@ -84,7 +84,7 @@ class ConsoleDisplayService {
         println("╔$border╗")
         println(centerText(course.getTitle()))
         println("╠${titleLine}╣")
-        println(" ID: ${course.getId()}")
+        println(" ID: ${course.id}")
         println(" Description: ${course.getDescription()}")
         println(" Level: ${course.getCourseLevel().toString().capitalize()}")
         println(" Type: ${course.getCourseType().toString().capitalize()}")
@@ -142,7 +142,7 @@ class ConsoleDisplayService {
 
         println("=== LESSON DETAILS ===")
         println("Title: ${lesson.getTittle()}")
-        println("ID: ${lesson.getId()}")
+        println("ID: ${lesson.id}")
         println("Duration: ${formatDurationMinutes(lesson.getDuration())}")
         println("Sequence: ${lesson.getSequenceNumber()}")
         println("Status: $statusText")

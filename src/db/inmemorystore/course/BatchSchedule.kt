@@ -7,32 +7,21 @@ import java.util.Date
 import java.util.UUID
 
 class BatchSchedule (
-    private val id: Int,
-    private val moduleId: Int,
-    private val lessonId: Int,
+    val id: Int,
+    val moduleId: Int,
+    val lessonId: Int,
+    val scheduledDate: Date,
+    val startTime: Time,
+    val endTime: Time,
     private var tutorId: UUID,
-    private val scheduledDate: Date,
-    private val startTime: Time,
-    private val endTime: Time,
-    private val staus: CompletionStatus,
+    private var staus: CompletionStatus,
 ) : Timeline() {
-    fun getId() = id
-
-    fun getModuleId() = moduleId
-
-    fun getLessonId() = lessonId
-
     fun getTutorId() = tutorId
-
-    fun getScheduledDate() = scheduledDate
-
-    fun getStartTime() = startTime
-
-    fun getEndTime() = endTime
 
     fun getStatus() = staus
 
     companion object {
+        private var serialId = 1
         private val records = mutableMapOf<Int, Category>()
     }
 }

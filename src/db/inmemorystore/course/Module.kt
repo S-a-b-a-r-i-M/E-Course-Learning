@@ -6,7 +6,7 @@ import db.ResourceStatus
 import db.Timeline
 
 class Module (
-    private val id : Int,
+    val id : Int,
     private var title: String,
     private var description: String?,
     private var sequenceNumber: Int,
@@ -14,8 +14,6 @@ class Module (
     private var status: ResourceStatus,
     private val lessonIds: MutableList<Int> = mutableListOf(),
 ) : Timeline() {
-    fun getId(): Int = id
-
     fun getTitle(): String = title
 
     fun getDescription(): String? = description

@@ -11,30 +11,26 @@ import kotlin.collections.mutableMapOf
 val CURRENT_FILE_NAME: String? = Throwable().stackTrace[0].fileName
 
 open class Course (
-    private val id : Int,
+    val id : Int,
+    val createdBy: UUID, // By which admin
+    val categoryId: Int,
     private var title: String,
     private var description: String,
     private var duration : Float, //note: "duration in minutes"
-    private val createdBy: UUID, // By which admin
     private var skills: List<String>,
     private var courseLevel: CourseLevel,
     private var courseType: CourseType,
     private var isFreeCourse: Boolean,
     private var status: ResourceStatus,
-    private val categoryId: Int,
     private var prerequisites: List<String>? = null,
     private var priceDetailsId: Int? = null, // null - means no price details
     private val moduleIds: MutableList<Int> = mutableListOf(),
 ) : Timeline() {
-    fun getId() = id
-
     fun getTitle() = title
 
     fun getDescription() = description
 
     fun getDuration() = duration
-
-    fun getCreatedBy() = createdBy
 
     fun getSkills() = skills
 
@@ -45,8 +41,6 @@ open class Course (
     fun isFreeCourse() = isFreeCourse
 
     fun getStatus() = status
-
-    fun getCategoryId() = categoryId
 
     fun getPrerequisites() = prerequisites?.toList() // returns a copy (immutable view)
 

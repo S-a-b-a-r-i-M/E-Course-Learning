@@ -19,7 +19,7 @@ class CourseRepo : AbstractCourseRepo {
         val categories = Category.getRecords().values.toList()
 
         // Apply Search
-        var result = categories.filter { it.getName().contains(searchQuery, true) }
+        var result = categories.filter { it.name.contains(searchQuery, true) }
         // Apply Pagination
         return result.subList(offset, endIndex.coerceAtMost(result.size))
     }
@@ -44,12 +44,12 @@ class CourseRepo : AbstractCourseRepo {
 
     override fun getModules(moduleIds: List<Int>): List<Module> {
         val moduleIdsSet = moduleIds.toSet() // For fast look up
-        return Module.getRecords().values.filter { moduleIdsSet.contains(it.getId()) }
+        return Module.getRecords().values.filter { moduleIdsSet.contains(it.id) }
     }
 
     override fun getLessons(lessonIds: List<Int>): List<Lesson> {
         val lessonIdsSet = lessonIds.toSet()
-        return Lesson.getRecords().values.filter { lessonIdsSet.contains(it.getId()) }
+        return Lesson.getRecords().values.filter { lessonIdsSet.contains(it.id) }
     }
 
     // ******************* CREATE *******************
@@ -64,21 +64,21 @@ class CourseRepo : AbstractCourseRepo {
     override fun createPriceDetails(courseId: Int, newPriceData: NewPriceData): Boolean {
         val priceDetails = PriceDetails.createPriceDetails(newPriceData)
         // Add price-details id into course
-        Course.updatePriceDetailsId(courseId, priceDetails.getId())
+        Course.updatePriceDetailsId(courseId, priceDetails.id)
         return true
     }
 
     override fun createModule(newModuleData: NewModuleData, courseId: Int): Module {
         val module = Module.createModule(newModuleData)
         // Add module id into course
-        Course.addModuleId(courseId, module.getId())
+        Course.addModuleId(courseId, module.id)
         return module
     }
 
     override fun createLesson(newLessonData: NewLessonData, moduleId: Int): Lesson {
         val lesson = Lesson.createLesson(newLessonData)
         // Add lesson id into module
-        Module.addLessonId(moduleId, lesson.getId())
+        Module.addLessonId(moduleId, lesson.id)
         return lesson
     }
 
@@ -93,7 +93,7 @@ class CourseRepo : AbstractCourseRepo {
 
     // ******************* EXISTS *******************
     override fun isCategoryExists(name: String): Boolean {
-        return Category.getRecords().values.any { it -> it.getName() == name }
+        return Category.getRecords().values.any { it -> it.name == name }
     }
 
     // ******************* DELETE *******************

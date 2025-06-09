@@ -6,30 +6,16 @@ import db.Timeline
 import java.util.Date
 
 class BatchCourse(
-    private val id: Int,
-    private val parentCourseId: Int, // Foreign Key
-    private val totalDays: Int,
-    private val startDate: Date,
-    private val endDate: Date,
-    private val scheduleType: ScheduleType,
-    private val status: BatchStatus,
-    private val batchScheduleIds: List<Int>,
+    val id: Int,
+    val parentCourseId: Int, // Foreign Key
+    val totalDays: Int,
+    val startDate: Date,
+    val endDate: Date,
+    val scheduleType: ScheduleType,
+    private var status: BatchStatus,
+    val batchScheduleIds: List<Int>,
 ) : Timeline() {
-    fun getId() = id
-
-    fun getParentCourseId() = parentCourseId
-
-    fun getTotalDays() = totalDays
-
-    fun getStartDate() = startDate
-
-    fun getEndDate() = endDate
-
-    fun getScheduleType() = scheduleType
-
     fun getStatus() = status
-
-    fun getBatchScheduleIds() = batchScheduleIds
 
     companion object {
         private val records = mutableMapOf<Int, BatchCourse>()
