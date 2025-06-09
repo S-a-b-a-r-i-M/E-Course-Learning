@@ -33,4 +33,6 @@ interface AbstractCourseRepo {
 
     // ******************* EXISTS *******************
     fun isCategoryExists(name: String): Boolean
+    fun getCategory(id: Int): Category?
+    fun getPriceDetails(priceDetailsId: Int): PriceDetailsData
 }

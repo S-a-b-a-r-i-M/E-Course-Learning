@@ -18,11 +18,11 @@ class Trainer (
     private val workExperienceIds: List<Int> = mutableListOf()
 ) : User(
     id,
-    firstName,
-    lastName,
     email,
     role,
     hashPassword,
+    firstName,
+    lastName,
     status,
     lastLoginAt,
 ) {

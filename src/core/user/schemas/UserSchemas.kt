@@ -11,7 +11,8 @@ abstract class BaseUserData {
     abstract var lastName: String
     abstract var email: String
     abstract var role: UserRole
-    abstract var status: UserStatus
+    abstract val status: UserStatus
+    abstract var hashedPassword: String
 }
 
 data class UserData (
@@ -20,28 +21,30 @@ data class UserData (
     override var lastName: String,
     override var email: String,
     override var role: UserRole,
-    override var status: UserStatus,
-    var hashedPassword: String,
+    override val status: UserStatus,
+    override var hashedPassword: String,
 ) : BaseUserData()
 
-data class StudentUserData (
+data class StudentData (
     override val userId: UUID,
     override var firstName: String,
     override var lastName: String,
     override var email: String,
     override var role: UserRole,
-    override var status: UserStatus,
+    override val status: UserStatus,
+    override var hashedPassword: String,
     var gitHubUrl: String?,
     var linkedInUrl: String?,
 ) : BaseUserData()
 
-data class TrainerUserData (
+data class TrainerData (
     override val userId: UUID,
     override var firstName: String,
     override var lastName: String,
     override var email: String,
     override var role: UserRole,
-    override var status: UserStatus,
+    override val status: UserStatus,
+    override var hashedPassword: String,
     val educations: List<EducationData> = mutableListOf<EducationData>(),
     val workExperiences: List<WorkExperienceData> = mutableListOf<WorkExperienceData>(),
     var technicalSkills: List<String>,

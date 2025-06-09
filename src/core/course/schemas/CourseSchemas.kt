@@ -3,10 +3,7 @@ package core.course.schemas
 import db.CourseLevel
 import db.CourseType
 import db.ResourceStatus
-import db.inmemorystore.course.Course
-import db.inmemorystore.course.Lesson
-import db.inmemorystore.course.Module
-import db.inmemorystore.course.PriceDetails
+import java.util.UUID
 
 data class NewCourseBasicData (
     var title: String,
@@ -19,6 +16,40 @@ data class NewCourseBasicData (
     var prerequisites: List<String>? = null,
     val priceData: NewPriceData? = null,
     var status: ResourceStatus = ResourceStatus.DRAFT,
+)
+
+data class CourseBasicData(
+    val id : Int,
+    val createdBy: UUID, // By which admin
+    val category: String,
+    var title: String,
+    var description: String,
+    var duration : Float, //note: "duration in minutes"
+    var skills: List<String>,
+    var courseLevel: CourseLevel,
+    var courseType: CourseType,
+    var isFreeCourse: Boolean,
+    var status: ResourceStatus,
+    var prerequisites: List<String>? = null,
+    var priceDetails: PriceDetailsData? = null,
+    val moduleIds: List<Int>? = null,
+)
+
+data class DetailedCourseData (
+    val id : Int,
+    val createdBy: UUID, // By which admin
+    val category: String?,
+    var title: String,
+    var description: String,
+    var duration : Float, //note: "duration in minutes"
+    var skills: List<String>,
+    var courseLevel: CourseLevel,
+    var courseType: CourseType,
+    var isFreeCourse: Boolean,
+    var status: ResourceStatus,
+    var prerequisites: List<String>? = null,
+    var priceDetails: PriceDetailsData? = null,
+    var modules: List<ModuleData>? = null,
 )
 
 // TODO: Needs to improve this to handle other field values
@@ -34,20 +65,16 @@ data class UpdateCourseBasicData (
     // TODO: Needs to add price details
 )
 
-data class DetailedCourseData (
-    val course: Course,
-    var priceDetails: PriceDetails? = null,
-    var modules: List<ModuleData>? = null
-)
-
-data class ModuleData (
-    val module: Module,
-    val lessons: List<Lesson>? = null,
-)
-
 data class NewPriceData (
     val currencyCode: String,
     val currencySymbol: String,
+    var amount: Double,
+)
+
+data class PriceDetailsData (
+    val id: Int,
+    var currencyCode: String,
+    var currencySymbol: String,
     var amount: Double,
 )
 
@@ -58,6 +85,15 @@ data class NewModuleData (
     var status: ResourceStatus = ResourceStatus.PUBLISHED,
 )
 
+data class ModuleData (
+    val id: Int,
+    val title: String,
+    val description: String?,
+    var sequenceNumber: Int = 0,
+    var status: ResourceStatus = ResourceStatus.PUBLISHED,
+    val lessons: List<LessonData>? = null,
+)
+
 data class UpdateModuleData (
     val title: String? = null,
     val description: String? = null,
@@ -66,6 +102,15 @@ data class UpdateModuleData (
 )
 
 data class NewLessonData (
+    val title: String,
+    val resource: String,
+    var duration: Float, // note: "duration in minutes"
+    var sequenceNumber: Int = 0,
+    var status: ResourceStatus = ResourceStatus.PUBLISHED,
+)
+
+data class LessonData (
+    val id: Int,
     val title: String,
     val resource: String,
     var duration: Float, // note: "duration in minutes"

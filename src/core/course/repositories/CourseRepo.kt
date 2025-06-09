@@ -1,9 +1,12 @@
 package core.course.repositories
 
+import core.course.schemas.DetailedCourseData
+import core.course.schemas.ModuleData
 import core.course.schemas.NewCourseBasicData
 import core.course.schemas.NewLessonData
 import core.course.schemas.NewModuleData
 import core.course.schemas.NewPriceData
+import core.course.schemas.PriceDetailsData
 import db.inmemorystore.course.Category
 import db.inmemorystore.course.Course
 import db.inmemorystore.course.Lesson
@@ -14,6 +17,10 @@ import java.util.UUID
 
 class CourseRepo : AbstractCourseRepo {
     // ******************* READ *********************
+    override fun getCategory(id: Int): Category {
+        return Category.getRecords().getValue(id)
+    }
+
     override fun getCategories(searchQuery: String, offset: Int, limit: Int): List<Category> {
         val endIndex = (offset + 1) * limit
         val categories = Category.getRecords().values.toList()
@@ -24,8 +31,15 @@ class CourseRepo : AbstractCourseRepo {
         return result.subList(offset, endIndex.coerceAtMost(result.size))
     }
 
-    override fun getPriceDetails(priceDetailsId: Int?): PriceDetails? {
-        return PriceDetails.getRecords()[priceDetailsId]
+    override fun getPriceDetails(priceDetailsId: Int): PriceDetailsData {
+        return PriceDetails.getRecords().getValue(priceDetailsId).let {
+            PriceDetailsData(
+                id = it.id,
+                currencyCode = it.getCurrencyCode(),
+                currencySymbol = it.getCurrencySymbol(),
+                amount = it.getAmount()
+            )
+        }
     }
 
     override fun getCourses(searchQuery: String, offset: Int, limit: Int): List<Course> {
@@ -38,8 +52,43 @@ class CourseRepo : AbstractCourseRepo {
         return result.subList(offset, endIndex.coerceAtMost(result.size))
     }
 
-    override fun getCourse(courseId: Int): Course? {
-        return Course.getRecords()[courseId]
+    override fun getCourse(courseId: Int): DetailedCourseData? {
+        val course = Course.getRecords()[courseId] ?: return null
+        val detailedCourseData = DetailedCourseData(
+            id = course.id,
+            createdBy = course.createdBy,
+            category = getCategory(course.categoryId).name,
+            title = course.getTitle(),
+            description = course.getDescription(),
+            duration = course.getDuration(),
+            skills = course.getSkills(),
+            courseLevel = course.courseLevel,
+            courseType = course.courseType,
+            isFreeCourse = course.isFreeCourse(),
+            status = course.getStatus(),
+            prerequisites = course.getPrerequisites(),
+        )
+
+        // Get Price Details
+        val priceDetailsId = course.getPriceDetailsId()
+        if (priceDetailsId != null) {
+            detailedCourseData.priceDetails = getPriceDetails(priceDetailsId)
+
+        // Get Modules
+        val moduleIds = course.getModuleIds()
+        if (moduleIds.isEmpty()) return detailedCourseData
+        val modules: List<Module> = getModules(moduleIds)
+
+        // Get Lessons
+        detailedCourseData.modules = modules.filter {
+            it.getLessonIds().isNotEmpty()
+        }.map {
+            val lessonIds = it.getLessonIds()
+            val lessons: List<Lesson> = courseRepo.getLessons(lessonIds)
+            ModuleData (it, lessons)
+        }
+
+        return detailedCourseData
     }
 
     override fun getModules(moduleIds: List<Int>): List<Module> {
@@ -97,4 +146,9 @@ class CourseRepo : AbstractCourseRepo {
     }
 
     // ******************* DELETE *******************
+
+    // ******************* HELPER *******************
+//    private fun convertCourseToDetailedCourseData(course: Course) = DetailedCourseData(
+//
+//    )
 }

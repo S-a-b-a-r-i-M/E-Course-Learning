@@ -1,11 +1,8 @@
 package db.inmemorystore.course
 
 import core.course.schemas.NewLessonData
-import core.course.schemas.NewModuleData
 import db.ResourceStatus
 import db.Timeline
-import db.inmemorystore.user.Student
-import java.util.UUID
 
 class Lesson (
     val id: Int,

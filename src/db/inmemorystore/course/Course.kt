@@ -14,12 +14,12 @@ open class Course (
     val id : Int,
     val createdBy: UUID, // By which admin
     val categoryId: Int,
+    val courseLevel: CourseLevel,
+    val courseType: CourseType,
     private var title: String,
     private var description: String,
     private var duration : Float, //note: "duration in minutes"
     private var skills: List<String>,
-    private var courseLevel: CourseLevel,
-    private var courseType: CourseType,
     private var isFreeCourse: Boolean,
     private var status: ResourceStatus,
     private var prerequisites: List<String>? = null,
@@ -33,10 +33,6 @@ open class Course (
     fun getDuration() = duration
 
     fun getSkills() = skills
-
-    fun getCourseLevel() = courseLevel
-
-    fun getCourseType() = courseType
 
     fun isFreeCourse() = isFreeCourse
 

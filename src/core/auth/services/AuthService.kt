@@ -4,9 +4,9 @@ import core.auth.schemas.SignInData
 import core.auth.schemas.SignUpData
 import core.user.schemas.NewUserData
 import core.user.repositories.AbstractUserRepo
+import core.user.schemas.UserData
 import db.UserRole
 import db.UserStatus
-import db.inmemorystore.user.User
 import utils.PasswordHasher
 import java.time.LocalDateTime
 import java.util.UUID
@@ -37,7 +37,7 @@ class AuthService (val userRepo: AbstractUserRepo) {
         )
     }
 
-    fun signUp(): User? {
+    fun signUp(): UserData? {
         val signUpData = getSignUpDataFromUser()
         // Check email uniqueness
         if (userRepo.isEmailExists(signUpData.email)){
@@ -54,9 +54,9 @@ class AuthService (val userRepo: AbstractUserRepo) {
             hashedPassword = hashedPassword,
             role = UserRole.STUDENT // Student only can sign up directly
         )
-        val user: User? = userRepo.createUser(newUserData)
-        println("New User(${newUserData.firstName} ${newUserData.lastName}) creation result is ${user != null}")
-        return user
+        val userData: UserData = userRepo.createUser(newUserData)
+        println("New User(${newUserData.firstName} ${newUserData.lastName}) creation result is ${userData != null}")
+        return userData
     }
 
     private fun getSignInDataFromUser(): SignInData {
@@ -67,28 +67,28 @@ class AuthService (val userRepo: AbstractUserRepo) {
         return SignInData(email, password)
     }
 
-    fun signIn(): User? {
+    fun signIn(): UserData? {
         val signInData = getSignInDataFromUser()
         // Get User
-        val user: User? = userRepo.getUserByEmail(signInData.email)
-        if(user == null){
+        val userData: UserData? = userRepo.getUserByEmail(signInData.email)
+        if(userData == null){
             println("User with email(${signInData.email}) is not found!!!")
             return null // TODO: Throw appropriate exception
         }
 
         // Validate Password
-        if (!PasswordHasher.checkPasswordMatch(signInData.password,user.hashPassword)) {
+        if (!PasswordHasher.checkPasswordMatch(signInData.password,userData.hashedPassword)) {
             println("User with email(${signInData.email}) password is not matched!!!")
             return null // TODO: Throw appropriate exception
         }
 
-        if (user.getUserStatus() == UserStatus.SUSPENDED) {
-            println("User(${user.id}) account is suspended!!!")
+        if (userData.status == UserStatus.SUSPENDED) {
+            println("User(${userData.userId}) account is suspended!!!")
             return null // TODO: Throw appropriate exception
         }
-        userRepo.updateLastLogin(user.id, LocalDateTime.now())
+        userRepo.updateLastLogin(userData.userId, LocalDateTime.now())
 
-        return user
+        return userData
     }
 
     fun logOut(userId: UUID): Boolean {

@@ -2,13 +2,14 @@ import core.auth.services.AuthService
 import core.course.repositories.CourseRepo
 import core.course.services.CourseService
 import core.user.repositories.UserRepo
+import core.user.schemas.UserData
 import db.UserRole
 import db.UserStatus
 import db.inmemorystore.user.User
 import java.time.LocalDateTime
 import java.util.UUID
 
-fun authFlow(authService: AuthService): User? {
+fun authFlow(authService: AuthService): UserData? {
     while (true) {
         println("\nOption to choose ⬇️")
         println("1 -> Sign In")
@@ -20,21 +21,21 @@ fun authFlow(authService: AuthService): User? {
         when (userInput) {
             0 -> break // It will break the outer loop
             1 -> {
-                val user: User? = authService.signIn()
-                if (user == null)
+                val userData: UserData? = authService.signIn()
+                if (userData == null)
                     println("login failed. Try again...")
                 else {
                     println("login success")
-                    return user
+                    return userData
                 }
             }
             2 -> {
-                val user = authService.signUp()
-                if (user == null)
+                val userData: UserData? = authService.signUp()
+                if (userData == null)
                     println("sign up failed. Try again...")
                 else {
                     println("sign up success")
-                    return user
+                    return userData
                 }
             }
             else -> println("Invalid input. Try again")
