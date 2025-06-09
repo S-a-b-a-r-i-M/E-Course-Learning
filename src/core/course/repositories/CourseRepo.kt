@@ -38,8 +38,8 @@ class CourseRepo : AbstractCourseRepo {
         return result.subList(offset, endIndex.coerceAtMost(result.size))
     }
 
-    override fun getCourse(courseId: Int): Course {
-        return Course.getRecords().getValue(courseId)
+    override fun getCourse(courseId: Int): Course? {
+        return Course.getRecords()[courseId]
     }
 
     override fun getModules(moduleIds: List<Int>): List<Module> {

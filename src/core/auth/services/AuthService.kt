@@ -1,16 +1,15 @@
 package core.auth.services
 
-import core.auth.schemas.LogOutModel
 import core.auth.schemas.SignInData
 import core.auth.schemas.SignUpData
 import core.user.schemas.NewUserData
-import core.user.schemas.UserUpdateData
 import core.user.repositories.AbstractUserRepo
 import db.UserRole
 import db.UserStatus
 import db.inmemorystore.user.User
 import utils.PasswordHasher
 import java.time.LocalDateTime
+import java.util.UUID
 
 class AuthService (val userRepo: AbstractUserRepo) {
     private fun getSignUpDataFromUser(): SignUpData {
@@ -40,7 +39,7 @@ class AuthService (val userRepo: AbstractUserRepo) {
 
     fun signUp(): User? {
         val signUpData = getSignUpDataFromUser()
-        // Check email is already exists
+        // Check email uniqueness
         if (userRepo.isEmailExists(signUpData.email)){
             println("AuthService(signUp): Email Already exists!!!")
             return null // TODO: Throw appropriate exception
@@ -70,6 +69,7 @@ class AuthService (val userRepo: AbstractUserRepo) {
 
     fun signIn(): User? {
         val signInData = getSignInDataFromUser()
+        // Get User
         val user: User? = userRepo.getUserByEmail(signInData.email)
         if(user == null){
             println("User with email(${signInData.email}) is not found!!!")
@@ -86,12 +86,12 @@ class AuthService (val userRepo: AbstractUserRepo) {
             println("User(${user.getUserId()}) account is suspended!!!")
             return null // TODO: Throw appropriate exception
         }
-        userRepo.updateUser(user.getUserId(), UserUpdateData(lastLoginAt = LocalDateTime.now()))
+        userRepo.updateLastLogin(user.getUserId(), LocalDateTime.now())
 
         return user
     }
 
-    fun logOut(logOutData: LogOutModel): Boolean {
+    fun logOut(userId: UUID): Boolean {
         return true
     }
 }

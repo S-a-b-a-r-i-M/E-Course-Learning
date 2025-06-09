@@ -55,7 +55,7 @@ fun courseFlow(courseService: CourseService, currentUser: User) {
         // When - Course Flow
         when (userInput) {
             0 -> return // It will break the outer loop
-            1 -> courseService.showCourses(currentUser)
+            1 -> courseService.listCourses(currentUser)
             2 -> courseService.createCourse(currentUser)
         }
     }

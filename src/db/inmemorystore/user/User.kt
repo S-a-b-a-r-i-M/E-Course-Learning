@@ -19,7 +19,6 @@ open class User (
     protected var lastLoginAt: LocalDateTime,
 ): Timeline() {
     // Custom getters to avoid naming conflicts
-
     fun getUserId() = id
 
     fun getUserFirstName() = firstName
@@ -63,7 +62,11 @@ open class User (
             updateData.firstName?.let { user.firstName = it }
             updateData.lastName?.let { user.lastName = it }
             updateData.status?.let { user.status = it }
-            updateData.lastLoginAt?.let { user.lastLoginAt = it }
+            return true
+        }
+
+        fun updateLastLogin(userId: UUID, lastLoginAt: LocalDateTime): Boolean {
+            records.getValue(userId).lastLoginAt = lastLoginAt
             return true
         }
 

@@ -2,7 +2,6 @@ package core.user.schemas
 
 import db.UserRole
 import db.UserStatus
-import java.time.LocalDateTime
 
 data class NewUserData (
     val firstName: String,
@@ -13,8 +12,7 @@ data class NewUserData (
 )
 
 data class UserUpdateData (
-    var firstName: String? = null,
-    var lastName: String? = null,
-    var status: UserStatus? = null,
-    var lastLoginAt: LocalDateTime? = null,
+    val firstName: String? = null,
+    val lastName: String? = null,
+    val status: UserStatus? = null,
 )

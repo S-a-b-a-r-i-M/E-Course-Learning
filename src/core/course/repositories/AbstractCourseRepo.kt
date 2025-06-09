@@ -18,7 +18,7 @@ interface AbstractCourseRepo {
     fun createPriceDetails(courseId: Int, newPriceData: NewPriceData): Boolean
 
     // ******************* READ *********************
-    fun getCourse(courseId: Int): Course
+    fun getCourse(courseId: Int): Course?
     fun getModules(moduleIds: List<Int>): List<Module>
     fun getLessons(lessonIds: List<Int>): List<Lesson>
     fun getPriceDetails(priceDetailsId: Int?): PriceDetails?

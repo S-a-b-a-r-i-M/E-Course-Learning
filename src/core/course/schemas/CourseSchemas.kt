@@ -3,6 +3,10 @@ package core.course.schemas
 import db.CourseLevel
 import db.CourseType
 import db.ResourceStatus
+import db.inmemorystore.course.Course
+import db.inmemorystore.course.Lesson
+import db.inmemorystore.course.Module
+import db.inmemorystore.course.PriceDetails
 
 data class NewCourseBasicData (
     var title: String,
@@ -28,6 +32,17 @@ data class UpdateCourseBasicData (
     var prerequisites: List<String>? = null,
     var isFreeCourse: Boolean? = null,
     // TODO: Needs to add price details
+)
+
+data class DetailedCourseData (
+    val course: Course,
+    var priceDetails: PriceDetails? = null,
+    var modules: List<ModuleData>? = null
+)
+
+data class ModuleData (
+    val module: Module,
+    val lessons: List<Lesson>? = null,
 )
 
 data class NewPriceData (
