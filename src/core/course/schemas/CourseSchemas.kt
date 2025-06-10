@@ -1,8 +1,5 @@
 package core.course.schemas
 
-import core.course.schemas.CourseLevel
-import core.course.schemas.CourseType
-import core.course.schemas.ResourceStatus
 import java.util.UUID
 
 val CURRENT_FILE_NAME: String? = Throwable().stackTrace[0].fileName
@@ -46,12 +43,12 @@ data class DetailedCourseData (
     var duration : Int, //note: "duration in minutes"
     var skills: List<String>,
     var courseLevel: CourseLevel,
-    var courseType: CourseType,
+    val courseType: CourseType,
     var isFreeCourse: Boolean,
     var status: ResourceStatus,
     var prerequisites: List<String>? = null,
     var priceDetails: PriceDetailsData? = null,
-    var modules: MutableList<ModuleData> = mutableListOf(),
+    val modules: MutableList<ModuleData> = mutableListOf(),
 )
 
 // TODO: Needs to improve this to handle other field values
@@ -89,8 +86,8 @@ data class NewModuleData (
 
 data class ModuleData (
     val id: Int,
-    val title: String,
-    val description: String?,
+    var title: String,
+    var description: String?,
     var duration: Int = 0,
     var sequenceNumber: Int = 0,
     var status: ResourceStatus = ResourceStatus.PUBLISHED,
@@ -114,8 +111,8 @@ data class NewLessonData (
 
 data class LessonData (
     val id: Int,
-    val title: String,
-    val resource: String,
+    var title: String,
+    var resource: String,
     var duration: Int, // note: "duration in minutes"
     var sequenceNumber: Int = 0,
     var status: ResourceStatus = ResourceStatus.PUBLISHED,

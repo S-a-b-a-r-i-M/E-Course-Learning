@@ -1,8 +1,5 @@
 package core.user.schemas
 
-import core.user.schemas.UserRole
-import core.user.schemas.UserStatus
-
 data class NewUserData (
     val firstName: String,
     val lastName: String,
