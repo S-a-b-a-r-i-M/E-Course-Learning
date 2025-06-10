@@ -16,8 +16,8 @@ class UserRepo : AbstractUserRepo {
 
     // ******************* READ *********************
     override fun getUserByEmail(email: String): UserData? {
-        val id = emailToIdMap[email] ?: return null
-        return userRecords[id] as UserData
+        val userId = emailToIdMap[email] ?: return null
+        return (userRecords.getValue(userId) as UserData).copy()
     }
 
     // ******************* CREATE *******************
@@ -34,7 +34,7 @@ class UserRepo : AbstractUserRepo {
         )
         userRecords[user.id] = user
         emailToIdMap[user.email] = user.id
-        return user
+        return user.copy()
     }
 
     // ******************* UPDATE *******************

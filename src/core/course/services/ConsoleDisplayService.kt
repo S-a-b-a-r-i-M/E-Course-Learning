@@ -93,7 +93,7 @@ class ConsoleDisplayService {
         if (skillsText.isNotEmpty()) println(" Skills: $skillsText")
         if (prereqText != null && prereqText.isNotEmpty()) println(" Prerequisites: ${course.prerequisites}")
         if (isDetailedView && course.modules.isNotEmpty())
-            displayModules(course.modules, true)
+            displayModules(course.modules, true, 2)
         if (!isDetailedView) println("╚$border╝")
     }
 
@@ -103,26 +103,27 @@ class ConsoleDisplayService {
      * @param modulesData List of ModuleData to display
      * @param withLessons Whether to include lessons under each module
      */
-    fun displayModules(modulesData: List<ModuleData>, withLessons: Boolean = true) {
+    fun displayModules(modulesData: List<ModuleData>, withLessons: Boolean = true, prefixSpace: Int = 0) {
         if (modulesData.isEmpty()) {
             println(" No modules available.")
             return
         }
 
-        println("=== MODULES ===\n")
+        println(" === MODULES ===\n")
+        val space = " ".repeat(prefixSpace)
         for((index, moduleData) in modulesData.withIndex()) {
             // Display module header
-            println("${index + 1}. ${moduleData.title}")
+            println("$space${index + 1}. ${moduleData.title}")
 
             if (withLessons && moduleData.lessons.isNotEmpty()) {
                 // By default, lessons are sorted by sequence number
                 moduleData.lessons.forEachIndexed { lessonIndex, lesson ->
                     val isLastLesson = lessonIndex == moduleData.lessons.size - 1
-                    val prefix = if (isLastLesson) "   └── " else "   ├── "
+                    val prefix = space + if (isLastLesson) "   └── " else "   ├── "
                     println("$prefix ${lessonIndex + 1}. ${lesson.title} (${formatDurationMinutes(lesson.duration)})")
                 }
             } else if (withLessons)
-                println("   └── No lessons available")
+                println("$space   └── No lessons available")
 
             // Add spacing between modules
             if (index < modulesData.size - 1) println()

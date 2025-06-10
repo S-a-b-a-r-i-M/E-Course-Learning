@@ -3,7 +3,6 @@ package core.course.repositories
 import core.course.schemas.*
 import java.util.UUID
 
-
 interface AbstractCourseRepo {
     // ******************* CREATE *******************
     fun createCategory(name: String): CategoryData
@@ -13,6 +12,7 @@ interface AbstractCourseRepo {
     fun createPriceDetails(newPriceData: NewPriceData, courseId: Int): PriceDetailsData?
 
     // ******************* READ *********************
+    fun getCategory(id: Int): CategoryData
     fun getCourse(courseId: Int): DetailedCourseData?
     fun getCategories(searchQuery: String, offset: Int, limit: Int): List<CategoryData>
     fun getCourses(searchQuery: String, offset: Int, limit: Int): List<DetailedCourseData>
@@ -21,9 +21,6 @@ interface AbstractCourseRepo {
     fun updateModuleDuration(moduleId: Int, duration: Int): Boolean
     fun updateCourseDuration(courseId: Int, duration: Int): Boolean
 
-    // ******************* DELETE *******************
-
     // ******************* EXISTS *******************
     fun isCategoryExists(name: String): Boolean
-    fun getCategory(id: Int): CategoryData
 }

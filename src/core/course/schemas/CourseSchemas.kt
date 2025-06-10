@@ -52,13 +52,7 @@ data class DetailedCourseData (
     var prerequisites: List<String>? = null,
     var priceDetails: PriceDetailsData? = null,
     var modules: MutableList<ModuleData> = mutableListOf(),
-) {
-    init {
-        require(isFreeCourse || priceDetails != null) {
-            "Price details are required for paid courses"
-        }
-    }
-}
+)
 
 // TODO: Needs to improve this to handle other field values
 data class UpdateCourseBasicData (

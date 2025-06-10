@@ -12,7 +12,6 @@ import core.course.schemas.NewPriceData
 import core.user.schemas.UserData
 import db.CourseLevel
 import db.CourseType
-import db.UserRole
 import utils.getListInput
 
 val CURRENT_FILE_NAME: String? = Throwable().stackTrace[0].fileName
@@ -151,9 +150,9 @@ class CourseService (val courseRepo: AbstractCourseRepo) {
         )
 
         // Course Level & Type
-        println("Enter Course Level(${CourseLevel.entries.joinToString(", ")}):")
+        println("Enter Course Level(${CourseLevel.entries.joinToString(", ") { it.name.capitalize() }}):")
         val courseLevel = readln().trim().let { CourseLevel.getFromStrValue(it) } // Reason for using let: Better readability and clarity
-        println("Enter Course Type(${CourseType.entries.joinToString(", ")}):")
+        println("Enter Course Type(${CourseType.entries.joinToString(", ") { it.name.capitalize().replace("_", "-") }}):")
         val courseType = readln().trim().let { CourseType.getFromStrValue(it) }
 
         // Free course check with Price details
@@ -324,11 +323,15 @@ class CourseService (val courseRepo: AbstractCourseRepo) {
      * @param sequenceNumber The sequential order of this lesson within the module.
      * @return A [LessonData] object representing the newly created lesson.
      */
-    fun createLesson(courseId: Int, moduleId: Int, sequenceNumber: Int):  LessonData {
+    fun createLesson(courseId: Int, moduleId: Int, sequenceNumber: Int):  LessonData? {
         val newLessonData =  getNewLessonDataFromUser(sequenceNumber)
         newLessonData.sequenceNumber = sequenceNumber
         val lesson = courseRepo.createLesson(newLessonData, moduleId)
-        println("$CURRENT_FILE_NAME: New Lesson(${lesson.id}) created successfully")
+        if (lesson == null) {
+            println("$CURRENT_FILE_NAME: Lesson creation failed")
+            return null
+        }
+
         // Increase duration in Module
         var isUpdated = courseRepo.updateModuleDuration(moduleId, lesson.duration)
         println("$CURRENT_FILE_NAME: Module($moduleId) duration updated($isUpdated)")
@@ -365,20 +368,20 @@ class CourseService (val courseRepo: AbstractCourseRepo) {
      *         and lessons, or `null` if the user does not have the required permissions.
      */
      fun createCourse(currentUser: UserData): DetailedCourseData? {
-        if (currentUser.role != UserRole.ADMIN) {
-            println("$CURRENT_FILE_NAME: User don't have the permission to create course")
-            return null
-        }
+//        if (currentUser.role != UserRole.ADMIN) {
+//            println("$CURRENT_FILE_NAME: User don't have the permission to create course")
+//            return null
+//        }
 
         // Create course with basic details
-        val courseInputData = getBasicCourseDataFromUser()
-        val course = courseRepo.createCourse(courseInputData, currentUser.id)
+        val newCourse = getBasicCourseDataFromUser()
+        val course = courseRepo.createCourse(newCourse, currentUser.id)
 
         // Attach PriceDetails to Course
         val courseId = course.id
-        if (courseInputData.priceData != null)
-            courseRepo.createPriceDetails(courseInputData.priceData, courseId)
-        println("${courseInputData.title}(id-${courseId}) created successfully with basic details")
+        if (newCourse.priceData != null)
+            courseRepo.createPriceDetails(newCourse.priceData, courseId)
+        println("$CURRENT_FILE_NAME: ${newCourse.title}(id-${courseId}) created successfully with basic details")
 
         // Module & Lesson Creation
         do {
@@ -392,6 +395,7 @@ class CourseService (val courseRepo: AbstractCourseRepo) {
             val addAnotherModule = readln().lowercase() == "y"
         } while (addAnotherModule)
 
+        println("Course successfully created!!!")
         return course
     }
 }

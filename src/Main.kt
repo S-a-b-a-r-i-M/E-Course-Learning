@@ -1,5 +1,6 @@
 import core.auth.services.AuthService
 import core.course.repositories.CourseRepo
+import core.course.services.ConsoleDisplayService
 import core.course.services.CourseService
 import core.user.repositories.UserRepo
 import core.user.schemas.UserData
@@ -11,9 +12,9 @@ import java.util.UUID
 fun authFlow(authService: AuthService): UserData? {
     while (true) {
         println("\nOption to choose ⬇️")
+        println("0 -> Exit")
         println("1 -> Sign In")
         println("2 -> Sign Up")
-        println("0 -> Exit")
         val userInput = readln().toInt()
 
         // When - Auth Flow
@@ -56,7 +57,15 @@ fun courseFlow(courseService: CourseService, currentUser: UserData) {
         when (userInput) {
             0 -> return // It will break the outer loop
             1 -> courseService.listCourses(currentUser)
-            2 -> courseService.createCourse(currentUser)
+            2 -> {
+                val course = courseService.createCourse(currentUser)
+                if (course != null) {
+                    println("Do you wanna open the course(y/n) ?")
+                    val openCourse = readln().trim().lowercase() == "y"
+                    if (openCourse)
+                        ConsoleDisplayService().displayCourse(course, true)
+                }
+            }
         }
     }
 }
@@ -68,7 +77,7 @@ fun main() {
     val authService = AuthService(userRepo)
 
     // App Flow
-//    val user: User? = authFlow(authService)
+//    val user: UserData? = authFlow(authService)
 //    if (user == null) return
     /**/
     val user = UserData(
