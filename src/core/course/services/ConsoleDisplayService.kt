@@ -1,11 +1,10 @@
 package core.course.services
 
+import core.course.schemas.CategoryData
+import core.course.schemas.DetailedCourseData
+import core.course.schemas.LessonData
 import core.course.schemas.ModuleData
 import db.ResourceStatus
-import db.inmemorystore.course.Category
-import db.inmemorystore.course.Course
-import db.inmemorystore.course.Lesson
-import db.inmemorystore.course.PriceDetails
 import utils.formatDurationMinutes
 import kotlin.collections.forEach
 import kotlin.collections.joinToString
@@ -19,9 +18,9 @@ class ConsoleDisplayService {
      * The table includes the ID and name of each category.
      * If a search query was used, it also displays that information at the end.
      *
-     * @param categories A list of [Category] objects to display.
+     * @param categories A list of [CategoryData] objects to display.
      */
-    fun displayCategories(categories: List<Category>, searchQuery: String) {
+    fun displayCategories(categories: List<CategoryData>, searchQuery: String) {
         // handle empty
         println(String.format("%-5s | %-20s", "ID", "Category"))
         println("-".repeat(35))
@@ -35,15 +34,11 @@ class ConsoleDisplayService {
     /**
      * Displays a Course with basic details optionally with price details and modules
      *
-     * @param course course basic details to display
-     * @param priceDetails price details os the course to display
-     * @param moduleDataList List of ModuleData to display
+     * @param course course details to display
      * @param isDetailedView Whether to include wrapping with counts or showing only partial content.
      */
     fun displayCourse(
-        course: Course,
-        priceDetails: PriceDetails? = null,
-        moduleDataList: List<ModuleData>? = null,
+        course: DetailedCourseData,
         isDetailedView: Boolean = false,
     ) {
         // TODO: Based on user role show different data in the card
@@ -53,17 +48,22 @@ class ConsoleDisplayService {
 
         // Format duration
         val durationText = when {
-            course.getDuration() > 60 -> formatDurationMinutes(course.getDuration())
-            else -> "${course.getDuration()}m"
+            course.duration > 60 -> formatDurationMinutes(course.duration)
+            else -> "${course.duration}m"
         }
 
         // Format price
-        val priceText = if (course.isFreeCourse()) "Free" else {
-            priceDetails?.let { "${it.getCurrencySymbol()}${it.getAmount()}" } ?: "Price not set"
+        val priceText = if (course.isFreeCourse) {
+            "Free"
+        } else {
+            course.priceDetails?.let { "${it.currencySymbol}${it.amount}" }
+                ?: throw IllegalStateException(
+                    "Price details missing in a non-free course(${course.id})"
+                )
         }
 
         // Format skills (limit to avoid overflow)
-        val skills = course.getSkills()
+        val skills = course.skills
         val skillsText = if (!isDetailedView && skills.size > 3) {
             skills.take(3).joinToString(", ") + " +${skills.size - 3} more"
         } else {
@@ -71,29 +71,29 @@ class ConsoleDisplayService {
         }
 
         // Format Prerequisites (limit to avoid overflow)
-        val prerequisites = course.getPrerequisites()
-        val prereqText = prerequisites?.let {
-            if (!isDetailedView && prerequisites.size > 2) {
-                prerequisites.take(2).joinToString(", ") + " +${prerequisites.size - 2} more"
+        val prereqText = course.prerequisites?.let {
+            if (!isDetailedView && it.size > 2) {
+                it.take(2).joinToString(", ") + " +${it.size - 2} more"
             } else {
-                prerequisites.joinToString(", ")
+                it.joinToString(", ")
             }
         }
 
         fun centerText(text: String) = "${" ".repeat((cardWidth - text.length) / 2)}$text"
         println("╔$border╗")
-        println(centerText(course.getTitle()))
+        println(centerText(course.title))
         println("╠${titleLine}╣")
         println(" ID: ${course.id}")
-        println(" Description: ${course.getDescription()}")
+        println(" Description: ${course.description}")
         println(" Level: ${course.courseLevel.toString().capitalize()}")
         println(" Type: ${course.courseType.toString().capitalize()}")
         println(" Duration: $durationText")
         println(" Price: $priceText")
-        println(" Status: ${course.getStatus().toString().capitalize()}")
+        println(" Status: ${course.status.toString().capitalize()}")
         if (skillsText.isNotEmpty()) println(" Skills: $skillsText")
-        if (prereqText != null && prereqText.isNotEmpty()) println(" Prerequisites: $prerequisites")
-        if (moduleDataList != null) displayModules(moduleDataList, true)
+        if (prereqText != null && prereqText.isNotEmpty()) println(" Prerequisites: ${course.prerequisites}")
+        if (isDetailedView && course.modules.isNotEmpty())
+            displayModules(course.modules, true)
         if (!isDetailedView) println("╚$border╝")
     }
 
@@ -112,14 +112,14 @@ class ConsoleDisplayService {
         println("=== MODULES ===\n")
         for((index, moduleData) in modulesData.withIndex()) {
             // Display module header
-            println("${index + 1}. ${moduleData.module.getTitle()}")
+            println("${index + 1}. ${moduleData.title}")
 
-            if (withLessons && !moduleData.lessons.isNullOrEmpty()) {
+            if (withLessons && moduleData.lessons.isNotEmpty()) {
                 // By default, lessons are sorted by sequence number
                 moduleData.lessons.forEachIndexed { lessonIndex, lesson ->
                     val isLastLesson = lessonIndex == moduleData.lessons.size - 1
                     val prefix = if (isLastLesson) "   └── " else "   ├── "
-                    println("$prefix ${lessonIndex + 1}. ${lesson.getTittle()} (${formatDurationMinutes(lesson.getDuration())})")
+                    println("$prefix ${lessonIndex + 1}. ${lesson.title} (${formatDurationMinutes(lesson.duration)})")
                 }
             } else if (withLessons)
                 println("   └── No lessons available")
@@ -137,17 +137,17 @@ class ConsoleDisplayService {
      * @param lesson The lesson to display
      * @param withResource Whether to include resource information
      */
-    fun displayDetailedLesson(lesson: Lesson, withResource: Boolean = true) {
-        val statusText = getStatusText(lesson.getStatus())
+    fun displayDetailedLesson(lesson: LessonData, withResource: Boolean = true) {
+        val statusText = getStatusText(lesson.status)
 
         println("=== LESSON DETAILS ===")
-        println("Title: ${lesson.getTittle()}")
+        println("Title: ${lesson.title}")
         println("ID: ${lesson.id}")
-        println("Duration: ${formatDurationMinutes(lesson.getDuration())}")
-        println("Sequence: ${lesson.getSequenceNumber()}")
+        println("Duration: ${formatDurationMinutes(lesson.duration)}")
+        println("Sequence: ${lesson.sequenceNumber}")
         println("Status: $statusText")
 
-        if (withResource) println("Resource: ${lesson.getResource()}")
+        if (withResource) println("Resource: ${lesson.resource}")
 
         println("=====================")
     }

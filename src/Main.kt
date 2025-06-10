@@ -5,7 +5,6 @@ import core.user.repositories.UserRepo
 import core.user.schemas.UserData
 import db.UserRole
 import db.UserStatus
-import db.inmemorystore.user.User
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -45,7 +44,7 @@ fun authFlow(authService: AuthService): UserData? {
     return null
 }
 
-fun courseFlow(courseService: CourseService, currentUser: User) {
+fun courseFlow(courseService: CourseService, currentUser: UserData) {
     while (true) {
         println("\nOption to choose ⬇️")
         println("0 -> Back")
@@ -72,7 +71,7 @@ fun main() {
 //    val user: User? = authFlow(authService)
 //    if (user == null) return
     /**/
-    val user = User(
+    val user = UserData(
         id = UUID.randomUUID(),
         firstName = "firstName",
         lastName = "lastName",

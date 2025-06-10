@@ -5,6 +5,8 @@ import db.CourseType
 import db.ResourceStatus
 import java.util.UUID
 
+val CURRENT_FILE_NAME: String? = Throwable().stackTrace[0].fileName
+
 data class NewCourseBasicData (
     var title: String,
     var description: String,
@@ -12,7 +14,7 @@ data class NewCourseBasicData (
     var courseLevel: CourseLevel,
     var courseType: CourseType,
     var isFreeCourse: Boolean,
-    var categoryId: Int,
+    var category: String,
     var prerequisites: List<String>? = null,
     val priceData: NewPriceData? = null,
     var status: ResourceStatus = ResourceStatus.DRAFT,
@@ -24,7 +26,7 @@ data class CourseBasicData(
     val category: String,
     var title: String,
     var description: String,
-    var duration : Float, //note: "duration in minutes"
+    var duration : Int, //note: "duration in minutes"
     var skills: List<String>,
     var courseLevel: CourseLevel,
     var courseType: CourseType,
@@ -41,7 +43,7 @@ data class DetailedCourseData (
     val category: String?,
     var title: String,
     var description: String,
-    var duration : Float, //note: "duration in minutes"
+    var duration : Int, //note: "duration in minutes"
     var skills: List<String>,
     var courseLevel: CourseLevel,
     var courseType: CourseType,
@@ -49,8 +51,14 @@ data class DetailedCourseData (
     var status: ResourceStatus,
     var prerequisites: List<String>? = null,
     var priceDetails: PriceDetailsData? = null,
-    var modules: List<ModuleData>? = null,
-)
+    var modules: MutableList<ModuleData> = mutableListOf(),
+) {
+    init {
+        require(isFreeCourse || priceDetails != null) {
+            "Price details are required for paid courses"
+        }
+    }
+}
 
 // TODO: Needs to improve this to handle other field values
 data class UpdateCourseBasicData (
@@ -89,9 +97,10 @@ data class ModuleData (
     val id: Int,
     val title: String,
     val description: String?,
+    var duration: Int = 0,
     var sequenceNumber: Int = 0,
     var status: ResourceStatus = ResourceStatus.PUBLISHED,
-    val lessons: List<LessonData>? = null,
+    val lessons: MutableList<LessonData> = mutableListOf(),
 )
 
 data class UpdateModuleData (
@@ -104,7 +113,7 @@ data class UpdateModuleData (
 data class NewLessonData (
     val title: String,
     val resource: String,
-    var duration: Float, // note: "duration in minutes"
+    var duration: Int, // note: "duration in minutes"
     var sequenceNumber: Int = 0,
     var status: ResourceStatus = ResourceStatus.PUBLISHED,
 )
@@ -113,7 +122,12 @@ data class LessonData (
     val id: Int,
     val title: String,
     val resource: String,
-    var duration: Float, // note: "duration in minutes"
+    var duration: Int, // note: "duration in minutes"
     var sequenceNumber: Int = 0,
     var status: ResourceStatus = ResourceStatus.PUBLISHED,
+)
+
+data class CategoryData (
+    val id: Int,
+    val name: String
 )

@@ -1,154 +1,193 @@
 package core.course.repositories
 
+import core.course.schemas.CategoryData
 import core.course.schemas.DetailedCourseData
+import core.course.schemas.LessonData
 import core.course.schemas.ModuleData
 import core.course.schemas.NewCourseBasicData
 import core.course.schemas.NewLessonData
 import core.course.schemas.NewModuleData
 import core.course.schemas.NewPriceData
 import core.course.schemas.PriceDetailsData
-import db.inmemorystore.course.Category
-import db.inmemorystore.course.Course
-import db.inmemorystore.course.Lesson
-import db.inmemorystore.course.Module
-import db.inmemorystore.course.PriceDetails
+import db.ResourceStatus
 import java.util.UUID
 
+val CURRENT_FILE_NAME: String? = Throwable().stackTrace[0].fileName
 
 class CourseRepo : AbstractCourseRepo {
-    // ******************* READ *********************
-    override fun getCategory(id: Int): Category {
-        return Category.getRecords().getValue(id)
+    companion object {
+        // Serial Ids
+        private var categorySerialId = 1
+        private var priceDetailsSerialId = 1
+        private var courseSerialId = 1
+        private var moduleSerialId = 1
+        private var lessonSerialId = 1
+
+        private fun getNextCategoryId() = categorySerialId++
+        private fun getNextPriceDetailsId() = priceDetailsSerialId++
+        private fun getNextCourseId() = courseSerialId++
+        private fun getNextModuleId() = moduleSerialId++
+        private fun getNextLessonId() = lessonSerialId++
+
+        // Map Storage
+        private val categoryRecords = mutableMapOf<Int, CategoryData>()
+        private val courseRecords = mutableMapOf<Int, DetailedCourseData>()
+        private val priceDetailsIdToCourseId = mutableMapOf<Int, Int>()
+        private val moduleIdToCourseId = mutableMapOf<Int, Int>()
+        private val lessonIdToModuleId = mutableMapOf<Int, Int>()
     }
 
-    override fun getCategories(searchQuery: String, offset: Int, limit: Int): List<Category> {
+    // ******************* READ *********************
+    override fun getCategory(id: Int): CategoryData = categoryRecords.getValue(id)
+
+    override fun getCategories(searchQuery: String, offset: Int, limit: Int): List<CategoryData> {
         val endIndex = (offset + 1) * limit
-        val categories = Category.getRecords().values.toList()
+        val categories = categoryRecords.values.toList()
 
         // Apply Search
-        var result = categories.filter { it.name.contains(searchQuery, true) }
+        val result = categories.filter { it.name.contains(searchQuery, true) }
         // Apply Pagination
         return result.subList(offset, endIndex.coerceAtMost(result.size))
     }
 
-    override fun getPriceDetails(priceDetailsId: Int): PriceDetailsData {
-        return PriceDetails.getRecords().getValue(priceDetailsId).let {
-            PriceDetailsData(
-                id = it.id,
-                currencyCode = it.getCurrencyCode(),
-                currencySymbol = it.getCurrencySymbol(),
-                amount = it.getAmount()
-            )
-        }
-    }
-
-    override fun getCourses(searchQuery: String, offset: Int, limit: Int): List<Course> {
+    override fun getCourses(searchQuery: String, offset: Int, limit: Int): List<DetailedCourseData> {
         val endIndex = (offset + 1) * limit
-        val courses = Course.getRecords().values.toList()
+        val courses = courseRecords.values.toList()
 
         // Apply Search
-        var result  = courses.filter { it.getTitle().contains(searchQuery, true) }
+        val result = courses.filter { it.title.contains(searchQuery, true) }
         // Apply Pagination
         return result.subList(offset, endIndex.coerceAtMost(result.size))
     }
 
     override fun getCourse(courseId: Int): DetailedCourseData? {
-        val course = Course.getRecords()[courseId] ?: return null
-        val detailedCourseData = DetailedCourseData(
-            id = course.id,
-            createdBy = course.createdBy,
-            category = getCategory(course.categoryId).name,
-            title = course.getTitle(),
-            description = course.getDescription(),
-            duration = course.getDuration(),
-            skills = course.getSkills(),
-            courseLevel = course.courseLevel,
-            courseType = course.courseType,
-            isFreeCourse = course.isFreeCourse(),
-            status = course.getStatus(),
-            prerequisites = course.getPrerequisites(),
-        )
+        val course = courseRecords[courseId]
+        if (course == null)
+            println("$CURRENT_FILE_NAME: Course not found: courseId=$courseId")
+        return course
+    }
 
-        // Get Price Details
-        val priceDetailsId = course.getPriceDetailsId()
-        if (priceDetailsId != null) {
-            detailedCourseData.priceDetails = getPriceDetails(priceDetailsId)
-
-        // Get Modules
-        val moduleIds = course.getModuleIds()
-        if (moduleIds.isEmpty()) return detailedCourseData
-        val modules: List<Module> = getModules(moduleIds)
-
-        // Get Lessons
-        detailedCourseData.modules = modules.filter {
-            it.getLessonIds().isNotEmpty()
-        }.map {
-            val lessonIds = it.getLessonIds()
-            val lessons: List<Lesson> = courseRepo.getLessons(lessonIds)
-            ModuleData (it, lessons)
+    fun getModule(moduleId: Int): ModuleData? {
+        val courseId = moduleIdToCourseId[moduleId]
+        if (courseId == null) {
+            println("$CURRENT_FILE_NAME[getModule]: No course found for module id($moduleId)")
+            return null
         }
-
-        return detailedCourseData
-    }
-
-    override fun getModules(moduleIds: List<Int>): List<Module> {
-        val moduleIdsSet = moduleIds.toSet() // For fast look up
-        return Module.getRecords().values.filter { moduleIdsSet.contains(it.id) }
-    }
-
-    override fun getLessons(lessonIds: List<Int>): List<Lesson> {
-        val lessonIdsSet = lessonIds.toSet()
-        return Lesson.getRecords().values.filter { lessonIdsSet.contains(it.id) }
+        return courseRecords.getValue(courseId).modules.find { it.id == moduleId }
     }
 
     // ******************* CREATE *******************
-    override fun createCourse(newCourseData: NewCourseBasicData, currentUserId: UUID): Course {
-        return Course.createCourse(newCourseData, currentUserId)
+    override fun createCourse(newCourseData: NewCourseBasicData, currentUserId: UUID): DetailedCourseData {
+        val course = DetailedCourseData(
+            id = getNextCourseId(),
+            title = newCourseData.title,
+            description = newCourseData.description,
+            duration = 0,// Duration will be calculated based on module duration
+            createdBy = currentUserId,
+            skills = newCourseData.skills,
+            courseLevel = newCourseData.courseLevel,
+            courseType = newCourseData.courseType,
+            isFreeCourse = newCourseData.isFreeCourse,
+            status = ResourceStatus.DRAFT,
+            prerequisites = newCourseData.prerequisites,
+            category = newCourseData.category
+        )
+
+        courseRecords[course.id] = course
+        println("$CURRENT_FILE_NAME: New course created")
+        return course
     }
 
-    override fun createCategory(name: String): Category {
-        return Category.createCategory(name)
+    override fun createCategory(name: String): CategoryData {
+        val category = CategoryData(getNextCategoryId(), name)
+        categoryRecords[category.id] = category
+        return category
     }
 
-    override fun createPriceDetails(courseId: Int, newPriceData: NewPriceData): Boolean {
-        val priceDetails = PriceDetails.createPriceDetails(newPriceData)
+    override fun createPriceDetails(newPriceData: NewPriceData, courseId: Int): PriceDetailsData? {
+        val course = getCourse(courseId)
+        if (course == null) return null
         // Add price-details id into course
-        Course.updatePriceDetailsId(courseId, priceDetails.id)
-        return true
+        course.priceDetails = PriceDetailsData(
+            id = getNextPriceDetailsId(),
+            currencyCode = newPriceData.currencyCode,
+            currencySymbol = newPriceData.currencySymbol,
+            amount = newPriceData.amount
+        )
+        return course.priceDetails
     }
 
-    override fun createModule(newModuleData: NewModuleData, courseId: Int): Module {
-        val module = Module.createModule(newModuleData)
+    override fun createModule(newModuleData: NewModuleData, courseId: Int): ModuleData {
+        val course = courseRecords.getValue(courseId)
+
+        val module = ModuleData(
+            id = getNextModuleId(),
+            title = newModuleData.title,
+            description = newModuleData.description,
+            sequenceNumber = newModuleData.sequenceNumber,
+            status = newModuleData.status,
+        )
+        println("$CURRENT_FILE_NAME: New module created(id-${module.id})")
         // Add module id into course
-        Course.addModuleId(courseId, module.id)
+        course.modules.add(module)
+        println("$CURRENT_FILE_NAME: New module attached to course(${courseId})")
         return module
     }
 
-    override fun createLesson(newLessonData: NewLessonData, moduleId: Int): Lesson {
-        val lesson = Lesson.createLesson(newLessonData)
+    override fun createLesson(newLessonData: NewLessonData, moduleId: Int): LessonData? {
+        val module = getModule(moduleId)
+        if (module == null) {
+            println("$CURRENT_FILE_NAME: Lesson creation failed")
+            return null
+        }
+        val lesson = LessonData (
+            id = getNextLessonId(),
+            title = newLessonData.title,
+            resource = newLessonData.resource,
+            duration = newLessonData.duration,
+            sequenceNumber = newLessonData.sequenceNumber,
+            status = newLessonData.status,
+        )
+        println("$CURRENT_FILE_NAME: New lesson created(id-${lesson.id})")
         // Add lesson id into module
-        Module.addLessonId(moduleId, lesson.id)
+        module.lessons.add(lesson)
+        println("$CURRENT_FILE_NAME: New lesson attached to module(${moduleId})")
         return lesson
     }
 
     // ******************* UPDATE *******************
-    override fun updateModuleDuration(moduleId: Int, duration: Float): Float {
-        return Module.updateDuration(moduleId, duration)
+    override fun updateModuleDuration(moduleId: Int, duration: Int): Boolean {
+        // Get Module
+        val module = getModule(moduleId)
+        if (module == null) {
+            println("$CURRENT_FILE_NAME: Updating module duration failed")
+            return false
+        }
+        // Update Duration
+        module.duration += duration
+        return true
     }
 
-    override fun updateCourseDuration(courseId: Int, duration: Float): Float {
-        return Course.updateDuration(courseId, duration)
+    override fun updateCourseDuration(courseId: Int, duration: Int): Boolean {
+        // Get Course
+        val course = getCourse(courseId)
+        if (course == null) {
+            println("$CURRENT_FILE_NAME: Updating course duration failed")
+            return false
+        }
+        // Update Duration
+        course.duration += duration
+        return true
     }
 
     // ******************* EXISTS *******************
     override fun isCategoryExists(name: String): Boolean {
-        return Category.getRecords().values.any { it -> it.name == name }
+        return categoryRecords.values.any { it -> it.name == name }
     }
+
+    fun isCourseIdExists(courseId: Int): Boolean = courseId in courseRecords.keys
 
     // ******************* DELETE *******************
 
     // ******************* HELPER *******************
-//    private fun convertCourseToDetailedCourseData(course: Course) = DetailedCourseData(
-//
-//    )
 }

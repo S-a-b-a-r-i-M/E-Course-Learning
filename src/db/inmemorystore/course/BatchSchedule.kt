@@ -22,6 +22,6 @@ class BatchSchedule (
 
     companion object {
         private var serialId = 1
-        private val records = mutableMapOf<Int, Category>()
+        private val records = mutableMapOf<Int, BatchSchedule>()
     }
 }

@@ -2,54 +2,59 @@ package core.user.schemas
 
 import db.UserRole
 import db.UserStatus
+import java.time.LocalDateTime
 
 import java.util.UUID
 
-abstract class BaseUserData {
-    abstract val userId: UUID
+abstract class BaseUser {
+    abstract val id: UUID
     abstract var firstName: String
     abstract var lastName: String
     abstract var email: String
-    abstract var role: UserRole
-    abstract val status: UserStatus
-    abstract var hashedPassword: String
+    abstract val role: UserRole
+    abstract var status: UserStatus
+    abstract val hashPassword: String
+    abstract var lastLoginAt: LocalDateTime
 }
 
 data class UserData (
-    override val userId: UUID,
+    override val id: UUID,
     override var firstName: String,
     override var lastName: String,
     override var email: String,
-    override var role: UserRole,
-    override val status: UserStatus,
-    override var hashedPassword: String,
-) : BaseUserData()
+    override val role: UserRole,
+    override var status: UserStatus,
+    override val hashPassword: String,
+    override var lastLoginAt: LocalDateTime,
+) : BaseUser()
 
 data class StudentData (
-    override val userId: UUID,
+    override val id: UUID,
     override var firstName: String,
     override var lastName: String,
     override var email: String,
     override var role: UserRole,
-    override val status: UserStatus,
-    override var hashedPassword: String,
+    override var status: UserStatus,
+    override var hashPassword: String,
+    override var lastLoginAt: LocalDateTime,
     var gitHubUrl: String?,
     var linkedInUrl: String?,
-) : BaseUserData()
+) : BaseUser()
 
 data class TrainerData (
-    override val userId: UUID,
+    override val id: UUID,
     override var firstName: String,
     override var lastName: String,
     override var email: String,
     override var role: UserRole,
-    override val status: UserStatus,
-    override var hashedPassword: String,
-    val educations: List<EducationData> = mutableListOf<EducationData>(),
-    val workExperiences: List<WorkExperienceData> = mutableListOf<WorkExperienceData>(),
+    override var status: UserStatus,
+    override var hashPassword: String,
+    override var lastLoginAt: LocalDateTime,
+    val educations: List<EducationData> = mutableListOf(),
+    val workExperiences: List<WorkExperienceData> = mutableListOf(),
     var technicalSkills: List<String>,
-    var softSkills: List<String> = mutableListOf<String>(),
-) : BaseUserData()
+    var softSkills: List<String> = mutableListOf(),
+) : BaseUser()
 
 data class EducationData (
     val id: Int, // PK

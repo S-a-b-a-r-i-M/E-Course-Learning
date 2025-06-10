@@ -1,19 +1,18 @@
 package core.course.services
 
 import core.course.repositories.AbstractCourseRepo
+import core.course.schemas.CategoryData
 import core.course.schemas.DetailedCourseData
+import core.course.schemas.LessonData
 import core.course.schemas.ModuleData
 import core.course.schemas.NewCourseBasicData
 import core.course.schemas.NewLessonData
 import core.course.schemas.NewModuleData
 import core.course.schemas.NewPriceData
+import core.user.schemas.UserData
 import db.CourseLevel
 import db.CourseType
-import db.inmemorystore.course.Category
-import db.inmemorystore.course.Course
-import db.inmemorystore.course.Lesson
-import db.inmemorystore.course.Module
-import db.inmemorystore.user.User
+import db.UserRole
 import utils.getListInput
 
 val CURRENT_FILE_NAME: String? = Throwable().stackTrace[0].fileName
@@ -29,35 +28,7 @@ class CourseService (val courseRepo: AbstractCourseRepo) {
      * @param courseId The unique identifier of the course.
      * @return A [DetailedCourseData] object containing full course information includes pricing, modules, etc.
      */
-    fun getCourse(courseId: Int): DetailedCourseData? {
-        // Get Course Basic Details
-        val course: Course? = courseRepo.getCourse(courseId)
-        if (course == null) {
-            println("No course found at the for course id($courseId)")
-            return null
-        }
-        val detailedCourseData = DetailedCourseData(course)
-
-        // Get Price Details
-        if (course.getPriceDetailsId() != null)
-            detailedCourseData.priceDetails = courseRepo.getPriceDetails(course.getPriceDetailsId())
-
-        // Get Modules
-        val moduleIds = course.getModuleIds()
-        if (moduleIds.isEmpty()) return detailedCourseData
-        val modules: List<Module> = courseRepo.getModules(moduleIds)
-
-        // Get Lessons
-        detailedCourseData.modules = modules.filter {
-            it.getLessonIds().isNotEmpty()
-        }.map {
-            val lessonIds = it.getLessonIds()
-            val lessons: List<Lesson> = courseRepo.getLessons(lessonIds)
-            ModuleData (it, lessons)
-        }
-
-        return detailedCourseData
-    }
+    fun getCourse(courseId: Int): DetailedCourseData? = courseRepo.getCourse(courseId)
 
     /**
      * Retrieves a paginated list of courses that match the given search query.
@@ -65,24 +36,23 @@ class CourseService (val courseRepo: AbstractCourseRepo) {
      * @param searchQuery to search courses by title.
      * @param offset The starting index for pagination.
      * @param limit The maximum number of courses to return.
-     * @return A list of [Course] objects that match the search criteria.
+     * @return A list of [DetailedCourseData] objects that match the search criteria.
      */
-    fun getCoursesWithPriceDetails(searchQuery: String, offset: Int, limit: Int): List<DetailedCourseData> {
-        val courses = courseRepo.getCourses(searchQuery, offset, limit)
-        return courses.map {
-            val priceDetails = if(it.getPriceDetailsId() != null) {
-                courseRepo.getPriceDetails(it.getPriceDetailsId())
-            } else {
-                null
-            }
-            DetailedCourseData(it, priceDetails)
-        }
-    }
+    fun getCoursesWithPriceDetails(searchQuery: String, offset: Int, limit: Int) =
+        courseRepo.getCourses(searchQuery, offset, limit)
 
     /**
-     * Shows list of courses. Each courses with its minimal details.
+     * Displays a paginated list of courses with interactive menu options.
+     *
+     * Allows users to:
+     * - Browse courses with pagination (10 courses per page)
+     * - Search courses by name
+     * - View detailed course information
+     * - Load more courses when available
+     *
+     * @param currentUser The current user's data context
      */
-    fun listCourses(currentUser: User) {
+    fun listCourses(currentUser: UserData) {
         var searchQuery = ""
         var offset = 0
         val limit = 10
@@ -95,9 +65,7 @@ class CourseService (val courseRepo: AbstractCourseRepo) {
                 hasMore = false
                 return
             }
-             courses.forEach {
-                 displayService.displayCourse(it.course, it.priceDetails)
-             }
+            courses.forEach { displayService.displayCourse(it) }
             hasMore = courses.size == limit
         }
         fetchCourses()
@@ -121,11 +89,7 @@ class CourseService (val courseRepo: AbstractCourseRepo) {
                     val detailedCourseData = getCourse(courseId)
                     if (detailedCourseData == null)
                         continue
-                    displayService.displayCourse(
-                        detailedCourseData.course,
-                        detailedCourseData.priceDetails,
-                        detailedCourseData.modules
-                    )
+                    displayService.displayCourse(detailedCourseData, true)
                 }
                 // Search
                 2 -> {
@@ -156,6 +120,22 @@ class CourseService (val courseRepo: AbstractCourseRepo) {
         }
     }
 
+    /**
+     * Fetches a paginated list of course categories, with an optional search filter.
+     *
+     * @param searchQuery The text to filter categories by name.
+     * @param offset The starting index for pagination (e.g., 0 for the first page).
+     * @param limit The maximum number of categories in one call.
+     * @return A list of [CategoryData] matching the criteria.
+     */
+    fun getCategories(searchQuery: String, offset: Int, limit: Int) =
+        courseRepo.getCategories(searchQuery, offset, limit)
+
+    /**
+     * Interactively prompts the user to enter all the basic details for creating a new course.
+     *
+     * @return A [NewCourseBasicData] object populated with the user's input.
+     */
     private fun getBasicCourseDataFromUser(): NewCourseBasicData {
         println("---------- Course Creation Section ----------")
         print("Enter course title: ")
@@ -200,8 +180,8 @@ class CourseService (val courseRepo: AbstractCourseRepo) {
             priceData = NewPriceData(currencyCode, currencySymbol, amount)
         }
 
-        // Get Category ID
-        val categoryId = getSelectedCategoryIdFromUser().id
+        // Get Category
+        val category = getSelectedCategoryFromUser()
 
         return NewCourseBasicData(
             title=title,
@@ -210,17 +190,18 @@ class CourseService (val courseRepo: AbstractCourseRepo) {
             courseLevel=courseLevel,
             courseType=courseType,
             isFreeCourse=isFree,
-            categoryId=categoryId,
+            category=category.name,
             prerequisites=prerequisites,
             priceData = priceData,
         )
     }
 
-    fun getCategories(searchQuery: String, offset: Int, limit: Int): List<Category> {
-        return courseRepo.getCategories(searchQuery, offset, limit)
-    }
-
-    private fun getSelectedCategoryIdFromUser(): Category {
+    /**
+     * Provides an interactive command-line interface for the user to select a course category.
+     *
+     * @return The final [CategoryData] object selected by the user.
+     */
+    private fun getSelectedCategoryFromUser(): CategoryData {
         /* Steps:
           1. Show First 10.
               1.1. Select Categories
@@ -233,7 +214,7 @@ class CourseService (val courseRepo: AbstractCourseRepo) {
         var searchQuery = ""
         var offset = 0
         val limit = 10
-        var categories: List<Category> = getCategories(searchQuery, offset, limit)
+        var categories: List<CategoryData> = getCategories(searchQuery, offset, limit)
 
         // Show 10 default categories
         displayService.displayCategories(categories, searchQuery)
@@ -296,6 +277,11 @@ class CourseService (val courseRepo: AbstractCourseRepo) {
         }
     }
 
+    /**
+     * Prompts the user to enter the module details.
+     *
+     * @return A [NewModuleData] object containing the entered details.
+     */
     private fun getNewModuleDataFromUser(): NewModuleData {
         println("----- Module Creation ------")
         print("Enter module title: ")
@@ -307,6 +293,12 @@ class CourseService (val courseRepo: AbstractCourseRepo) {
         return NewModuleData(title = title, description = description)
     }
 
+    /**
+     * Prompts the user to enter the details for a new lesson.
+     *
+     * @param sequenceNumber The sequential order of this lesson within its parent module.
+     * @return A [NewLessonData] object populated with the user's input and sequence number.
+     */
     private fun getNewLessonDataFromUser(sequenceNumber: Int): NewLessonData {
         println("----- Lesson Creation ------")
         print("Enter Lesson title: ")
@@ -314,7 +306,7 @@ class CourseService (val courseRepo: AbstractCourseRepo) {
         print("Enter content: ")
         val resource = readln().trim()
         print("Enter duration(in minutes): ")
-        val duration = readln().toFloat()
+        val duration = readln().toInt()
 
         return NewLessonData(
             title = title,
@@ -324,45 +316,75 @@ class CourseService (val courseRepo: AbstractCourseRepo) {
         )
     }
 
-    fun createLesson(courseId: Int, moduleId: Int, sequenceNumber: Int): Lesson {
+    /**
+     * Creates a new lesson within a specific module and updates the duration of the parent module and course.
+     *
+     * @param courseId The ID of the parent course, used to update its total duration.
+     * @param moduleId The ID of the module to which this lesson will be added.
+     * @param sequenceNumber The sequential order of this lesson within the module.
+     * @return A [LessonData] object representing the newly created lesson.
+     */
+    fun createLesson(courseId: Int, moduleId: Int, sequenceNumber: Int):  LessonData {
         val newLessonData =  getNewLessonDataFromUser(sequenceNumber)
         newLessonData.sequenceNumber = sequenceNumber
         val lesson = courseRepo.createLesson(newLessonData, moduleId)
         println("$CURRENT_FILE_NAME: New Lesson(${lesson.id}) created successfully")
         // Increase duration in Module
-        val updatedModuleDuration: Float = courseRepo.updateModuleDuration(moduleId, lesson.getDuration())
-        println("$CURRENT_FILE_NAME: Module($moduleId) duration updated")
+        var isUpdated = courseRepo.updateModuleDuration(moduleId, lesson.duration)
+        println("$CURRENT_FILE_NAME: Module($moduleId) duration updated($isUpdated)")
         // Increase duration in Course
-        courseRepo.updateCourseDuration(courseId, updatedModuleDuration)
-        println("$CURRENT_FILE_NAME: Course($courseId) duration updated")
+        isUpdated = courseRepo.updateCourseDuration(courseId, lesson.duration)
+        println("$CURRENT_FILE_NAME: Course($courseId) duration updated($isUpdated)")
         return lesson
     }
 
-    fun createModule(courseId: Int, sequenceNumber: Int): Module {
+    /**
+     * Creates a new module for a given course.
+     *
+     * @param courseId The ID of the course to which this module belongs.
+     * @param sequenceNumber The sequential order of this module within the course.
+     * @return A [ModuleData] object for the newly created module.
+     */
+    fun createModule(courseId: Int, sequenceNumber: Int): ModuleData {
         val newModule =  getNewModuleDataFromUser()
         newModule.sequenceNumber = sequenceNumber
         val module = courseRepo.createModule(newModule, courseId)
         return module
     }
 
-    fun createCourse(currentUser: User): Course {
-        // TODO: Role Check
+    /**
+     * Orchestrates the end-to-end process of creating a new course.
+     *
+     * This function handles the entire course creation workflow:
+     * 1. Checks if the `currentUser` has ADMIN permissions.
+     * 2. Gathers basic course details from the user.
+     * 3. Interactively prompts the user to create one or more modules with one or more lessons.
+     *
+     * @param currentUser The user attempting to create the course.
+     * @return A [DetailedCourseData] the complete course object with all its modules
+     *         and lessons, or `null` if the user does not have the required permissions.
+     */
+     fun createCourse(currentUser: UserData): DetailedCourseData? {
+        if (currentUser.role != UserRole.ADMIN) {
+            println("$CURRENT_FILE_NAME: User don't have the permission to create course")
+            return null
+        }
 
         // Create course with basic details
-        val courseData = getBasicCourseDataFromUser()
-        val course = courseRepo.createCourse(courseData, currentUser.id)
+        val courseInputData = getBasicCourseDataFromUser()
+        val course = courseRepo.createCourse(courseInputData, currentUser.id)
 
         // Attach PriceDetails to Course
         val courseId = course.id
-        if (courseData.priceData != null)
-            courseRepo.createPriceDetails(courseId, courseData.priceData)
-        println("${courseData.title}(id-${courseId}) created successfully with basic details")
+        if (courseInputData.priceData != null)
+            courseRepo.createPriceDetails(courseInputData.priceData, courseId)
+        println("${courseInputData.title}(id-${courseId}) created successfully with basic details")
 
         // Module & Lesson Creation
         do {
-            val module = createModule(courseId, course.getModuleIds().size + 1)
+            val module = createModule(courseId, course.modules.size + 1)
             do {
-                createLesson(courseId, module.id, module.getLessonIds().size)
+                createLesson(courseId, module.id, module.lessons.size + 1)
                 print("Do you want to create another lesson(y/n) ?")
                 val addAnotherLesson = readln().lowercase() == "y"
             } while (addAnotherLesson)
