@@ -11,7 +11,7 @@ import kotlin.collections.joinToString
 import kotlin.collections.take
 import kotlin.text.isNotEmpty
 
-class ConsoleDisplayService {
+object CourseDisplayService {
     /**
      * Displays a list of categories in a formatted table on the console.
      *

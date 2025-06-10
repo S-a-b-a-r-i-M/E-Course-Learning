@@ -19,9 +19,13 @@ val CURRENT_FILE_NAME: String? = Throwable().stackTrace[0].fileName
 
 fun String.capitalize(): String = this[0].uppercase() + this.substring(1).lowercase()
 
-class CourseService (val courseRepo: AbstractCourseRepo) {
-    private val displayService = ConsoleDisplayService()
+val currencyMap = mapOf<String, String>(
+    "INR" to "₹",
+    "USD" to "$",
+    // Add other entries
+)
 
+class CourseService (val courseRepo: AbstractCourseRepo) {
     /**
      * Retrieves detailed information for a specific course by its ID.
      *
@@ -65,7 +69,7 @@ class CourseService (val courseRepo: AbstractCourseRepo) {
                 hasMore = false
                 return
             }
-            courses.forEach { displayService.displayCourse(it) }
+            courses.forEach { CourseDisplayService.displayCourse(it) }
             hasMore = courses.size == limit
         }
         fetchCourses()
@@ -89,7 +93,7 @@ class CourseService (val courseRepo: AbstractCourseRepo) {
                     val detailedCourseData = getCourse(courseId)
                     if (detailedCourseData == null)
                         continue
-                    displayService.displayCourse(detailedCourseData, true)
+                    CourseDisplayService.displayCourse(detailedCourseData, true)
                 }
                 // Search
                 2 -> {
@@ -163,11 +167,6 @@ class CourseService (val courseRepo: AbstractCourseRepo) {
         var priceData: NewPriceData? = null
         if (!isFree) {
             println("\n----- Enter Price Details -----")
-            val currencyMap = mapOf<String, String>(
-                "INR" to "₹",
-                "USD" to "$",
-                // Add other entries
-            )
             print("Enter currency code (${currencyMap.keys.joinToString(", ")}): ")
             val currencyCode = readln().trim().uppercase()
             val currencySymbol = currencyMap.getOrDefault(currencyCode, "₹")
@@ -217,7 +216,7 @@ class CourseService (val courseRepo: AbstractCourseRepo) {
         var categories: List<CategoryData> = getCategories(searchQuery, offset, limit)
 
         // Show 10 default categories
-        displayService.displayCategories(categories, searchQuery)
+        CourseDisplayService.displayCategories(categories, searchQuery)
 
         while (true) {
             println("\nOption to choose ⬇️")
@@ -256,7 +255,7 @@ class CourseService (val courseRepo: AbstractCourseRepo) {
                     searchQuery = newSearchQuery
                     offset = 0 // Reset offset when searching
                     categories = getCategories(searchQuery, offset, limit)
-                    displayService.displayCategories(categories, searchQuery)
+                    CourseDisplayService.displayCategories(categories, searchQuery)
                 }
                 // Load More
                 /*

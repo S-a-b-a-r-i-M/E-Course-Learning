@@ -42,7 +42,7 @@ data class DetailedCourseData (
     var description: String,
     var duration : Int, //note: "duration in minutes"
     var skills: List<String>,
-    var courseLevel: CourseLevel,
+    val courseLevel: CourseLevel,
     val courseType: CourseType,
     var isFreeCourse: Boolean,
     var status: ResourceStatus,
@@ -89,7 +89,7 @@ data class ModuleData (
     var title: String,
     var description: String?,
     var duration: Int = 0,
-    var sequenceNumber: Int = 0,
+    val sequenceNumber: Int = 0,
     var status: ResourceStatus = ResourceStatus.PUBLISHED,
     val lessons: MutableList<LessonData> = mutableListOf(),
 )
@@ -105,7 +105,7 @@ data class NewLessonData (
     val title: String,
     val resource: String,
     var duration: Int, // note: "duration in minutes"
-    var sequenceNumber: Int = 0,
+    val sequenceNumber: Int = 0,
     var status: ResourceStatus = ResourceStatus.PUBLISHED,
 )
 

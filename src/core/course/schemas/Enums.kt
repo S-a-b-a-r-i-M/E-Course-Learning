@@ -1,9 +1,25 @@
 package core.course.schemas
 
+import core.course.schemas.CourseLevel.ADVANCED
+import core.course.schemas.CourseLevel.BEGINNER
+import core.course.schemas.CourseLevel.INTERMEDIATE
+
 enum class ResourceStatus {
     DRAFT,
     PUBLISHED,
-    ARCHIVE,
+    ARCHIVE;
+
+    companion object {
+        fun getFromStrValue(value: String): ResourceStatus = when {
+            value.equals("DRAFT", true) -> DRAFT
+            value.equals("PUBLISHED", true) -> PUBLISHED
+            value.equals("ARCHIVE", true) -> ARCHIVE
+            else -> {
+                println("Invalid level, defaulting to PUBLISHED")
+                PUBLISHED
+            }
+        }
+    }
 }
 
 enum class CourseLevel {
