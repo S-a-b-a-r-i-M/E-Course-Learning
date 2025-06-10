@@ -1,7 +1,7 @@
 package core.user.schemas
 
-import db.UserRole
-import db.UserStatus
+import core.user.schemas.UserRole
+import core.user.schemas.UserStatus
 
 data class NewUserData (
     val firstName: String,

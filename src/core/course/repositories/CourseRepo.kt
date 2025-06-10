@@ -9,9 +9,9 @@ import core.course.schemas.NewLessonData
 import core.course.schemas.NewModuleData
 import core.course.schemas.NewPriceData
 import core.course.schemas.PriceDetailsData
-import db.CourseLevel
-import db.CourseType
-import db.ResourceStatus
+import core.course.schemas.CourseLevel
+import core.course.schemas.CourseType
+import core.course.schemas.ResourceStatus
 import java.util.UUID
 
 val CURRENT_FILE_NAME: String? = Throwable().stackTrace[0].fileName

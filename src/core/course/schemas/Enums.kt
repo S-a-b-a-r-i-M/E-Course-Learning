@@ -1,0 +1,42 @@
+package core.course.schemas
+
+enum class ResourceStatus {
+    DRAFT,
+    PUBLISHED,
+    ARCHIVE,
+}
+
+enum class CourseLevel {
+    BEGINNER,
+    INTERMEDIATE,
+    ADVANCED;
+
+    companion object {
+        fun getFromStrValue(value: String): CourseLevel = when {
+            value.equals("BEGINNER", true) -> INTERMEDIATE
+            value.equals("INTERMEDIATE", true) -> INTERMEDIATE
+            value.equals("ADVANCED", true) -> ADVANCED
+            else -> {
+                println("Invalid level, defaulting to BEGINNER")
+                BEGINNER
+            }
+        }
+    }
+}
+
+enum class CourseType {
+    LIVE,
+    SELF_PACED;
+
+    companion object {
+        fun getFromStrValue(value: String): CourseType = when {
+            value.equals("LIVE", true) -> LIVE
+            value.equals("SELF_PACED", true) -> SELF_PACED
+            value.equals("SELF-PACED", true) -> SELF_PACED
+            else -> {
+                println("Invalid level, defaulting to SELF_PACED")
+                SELF_PACED
+            }
+        }
+    }
+}

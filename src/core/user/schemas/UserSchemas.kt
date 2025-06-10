@@ -1,7 +1,7 @@
 package core.user.schemas
 
-import db.UserRole
-import db.UserStatus
+import core.user.schemas.UserRole
+import core.user.schemas.UserStatus
 import java.time.LocalDateTime
 
 import java.util.UUID

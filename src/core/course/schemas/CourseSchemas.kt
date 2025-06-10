@@ -1,8 +1,8 @@
 package core.course.schemas
 
-import db.CourseLevel
-import db.CourseType
-import db.ResourceStatus
+import core.course.schemas.CourseLevel
+import core.course.schemas.CourseType
+import core.course.schemas.ResourceStatus
 import java.util.UUID
 
 val CURRENT_FILE_NAME: String? = Throwable().stackTrace[0].fileName

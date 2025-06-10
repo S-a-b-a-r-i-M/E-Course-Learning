@@ -5,8 +5,8 @@ import core.auth.schemas.SignUpData
 import core.user.schemas.NewUserData
 import core.user.repositories.AbstractUserRepo
 import core.user.schemas.UserData
-import db.UserRole
-import db.UserStatus
+import core.user.schemas.UserRole
+import core.user.schemas.UserStatus
 import utils.PasswordHasher
 import java.time.LocalDateTime
 import java.util.UUID
@@ -55,7 +55,7 @@ class AuthService (val userRepo: AbstractUserRepo) {
             role = UserRole.STUDENT // Student only can sign up directly
         )
         val userData: UserData = userRepo.createUser(newUserData)
-        println("New User(${newUserData.firstName} ${newUserData.lastName}) creation result is ${userData != null}")
+        println("New User(${newUserData.firstName} ${newUserData.lastName}) created.")
         return userData
     }
 

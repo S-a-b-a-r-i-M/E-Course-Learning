@@ -4,7 +4,7 @@ import core.course.schemas.CategoryData
 import core.course.schemas.DetailedCourseData
 import core.course.schemas.LessonData
 import core.course.schemas.ModuleData
-import db.ResourceStatus
+import core.course.schemas.ResourceStatus
 import utils.formatDurationMinutes
 import kotlin.collections.forEach
 import kotlin.collections.joinToString

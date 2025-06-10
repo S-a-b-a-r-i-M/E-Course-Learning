@@ -4,7 +4,7 @@ import core.user.schemas.BaseUser
 import core.user.schemas.NewUserData
 import core.user.schemas.UserData
 import core.user.schemas.UserUpdateData
-import db.UserStatus
+import core.user.schemas.UserStatus
 import java.time.LocalDateTime
 import java.util.UUID
 

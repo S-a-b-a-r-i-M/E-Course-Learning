@@ -4,8 +4,8 @@ import core.course.services.ConsoleDisplayService
 import core.course.services.CourseService
 import core.user.repositories.UserRepo
 import core.user.schemas.UserData
-import db.UserRole
-import db.UserStatus
+import core.user.schemas.UserRole
+import core.user.schemas.UserStatus
 import java.time.LocalDateTime
 import java.util.UUID
 

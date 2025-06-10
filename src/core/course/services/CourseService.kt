@@ -9,9 +9,10 @@ import core.course.schemas.NewCourseBasicData
 import core.course.schemas.NewLessonData
 import core.course.schemas.NewModuleData
 import core.course.schemas.NewPriceData
+import core.course.schemas.CourseLevel
+import core.course.schemas.CourseType
+import core.user.schemas.UserRole
 import core.user.schemas.UserData
-import db.CourseLevel
-import db.CourseType
 import utils.getListInput
 
 val CURRENT_FILE_NAME: String? = Throwable().stackTrace[0].fileName
@@ -35,9 +36,9 @@ class CourseService (val courseRepo: AbstractCourseRepo) {
      * @param searchQuery to search courses by title.
      * @param offset The starting index for pagination.
      * @param limit The maximum number of courses to return.
-     * @return A list of [DetailedCourseData] objects that match the search criteria.
+     * @return A list of [DetailedCourseData] objects.
      */
-    fun getCoursesWithPriceDetails(searchQuery: String, offset: Int, limit: Int) =
+    fun getCourses(searchQuery: String, offset: Int, limit: Int) =
         courseRepo.getCourses(searchQuery, offset, limit)
 
     /**
@@ -58,7 +59,7 @@ class CourseService (val courseRepo: AbstractCourseRepo) {
         var hasMore = false
 
         fun fetchCourses() {
-            val courses = getCoursesWithPriceDetails(searchQuery, offset, limit)
+            val courses = getCourses(searchQuery, offset, limit)
             if (courses.isEmpty()) {
                 println("-------------- No Course to display -------------")
                 hasMore = false
@@ -368,10 +369,10 @@ class CourseService (val courseRepo: AbstractCourseRepo) {
      *         and lessons, or `null` if the user does not have the required permissions.
      */
      fun createCourse(currentUser: UserData): DetailedCourseData? {
-//        if (currentUser.role != UserRole.ADMIN) {
-//            println("$CURRENT_FILE_NAME: User don't have the permission to create course")
-//            return null
-//        }
+        if (currentUser.role != UserRole.ADMIN) {
+            println("$CURRENT_FILE_NAME: User don't have the permission to create course")
+            return null
+        }
 
         // Create course with basic details
         val newCourse = getBasicCourseDataFromUser()
