@@ -284,7 +284,7 @@ fun manageLessons(courseId: Int, moduleId: Int) {
                     continue
                 }
 
-                println("Enter lesson id to edit:")
+                print("Enter lesson id to edit:")
                 val inputId = readln().toIntOrNull()
                 if (inputId == null) {
                     println("Invalid input, try again.")
@@ -534,9 +534,7 @@ fun listCourses(courseService: CourseService, currentUser: UserData) {
                                     courseId, courseData.modules.size + 1
                                 )
                                 println("New Module 👇")
-                                CourseDisplayService.displayModule(
-                                    module, indexNumber = courseData.modules.size + 1
-                                )
+                                CourseDisplayService.displayModule(module)
                                 // Add Lessons to New Module
                                 println("Let's add lessons to your module...")
                                 var lessonSeqNum = 1
@@ -552,7 +550,7 @@ fun listCourses(courseService: CourseService, currentUser: UserData) {
                                     println("Invalid option selected. Please try again.")
                                     continue
                                 }
-                                print("Select module to edit (serial number): ") // TODO: Change this to module id
+                                print("Enter module id to edit: ") // TODO: Change this to module id
                                 val inputModuleId = readln().toInt()
                                 val module = courseData.modules.find { it.id == inputModuleId }
                                 if (module == null)

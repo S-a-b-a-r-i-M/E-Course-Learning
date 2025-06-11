@@ -120,7 +120,7 @@ object CourseDisplayService {
         if (indexNumber != null)
             index = "$indexNumber."
         println("$space${index}ID: ${moduleData.id}")
-        println("$space${index}Title: ${moduleData.title}")
+        println("${space}Title: ${moduleData.title}")
         if (moduleData.description != null) {
             println("${space}Description: ${moduleData.description}")
         }
