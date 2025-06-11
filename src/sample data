@@ -15,6 +15,5 @@ createdBy: 550e8400-e29b-41d4-a716-446655440000, // UUID of the admin
 skills: [React, JSX, Hooks],
 courseLevel: BEGINNER, // or use an enum equivalent
 courseType: SELF_PACED,     // e.g., VIDEO, ARTICLE, etc.
-isFreeCourse: true,
 status: ACTIVE,        // or DRAFT, INACTIVE, etc.
 prerequisites: [Basic HTML, JavaScript fundamentals]

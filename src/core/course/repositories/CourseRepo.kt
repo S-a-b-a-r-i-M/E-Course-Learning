@@ -12,6 +12,9 @@ import core.course.schemas.PriceDetailsData
 import core.course.schemas.CourseLevel
 import core.course.schemas.CourseType
 import core.course.schemas.ResourceStatus
+import core.course.schemas.UpdateCourseBasicData
+import core.course.schemas.UpdateLessonData
+import core.course.schemas.UpdateModuleData
 import java.util.UUID
 
 val CURRENT_FILE_NAME: String? = Throwable().stackTrace[0].fileName
@@ -32,15 +35,57 @@ class CourseRepo : AbstractCourseRepo {
         private fun getNextLessonId() = lessonSerialId++
 
         // Map Storage
-        private val categoryRecords = mutableMapOf<Int, CategoryData>()
         private val courseRecords = mutableMapOf<Int, DetailedCourseData>()
-        private val priceDetailsIdToCourseId = mutableMapOf<Int, Int>()
+        private val moduleRecords = mutableMapOf<Int, ModuleData>()
+        private val lessonRecords = mutableMapOf<Int, LessonData>()
+        private val priceRecords = mutableMapOf<Int, PriceDetailsData>()
+        private val categoryRecords = mutableMapOf<Int, CategoryData>()
+
+        private val priceDetailsToCourseId = mutableMapOf<Int, Int>()
         private val moduleIdToCourseId = mutableMapOf<Int, Int>()
         private val lessonIdToModuleId = mutableMapOf<Int, Int>()
     }
 
     // ******************* READ *********************
-    override fun getCategory(id: Int): CategoryData = categoryRecords.getValue(id).copy()
+    override fun getCategory(categoryId: Int): CategoryData? {
+        val category = categoryRecords[categoryId]
+        if (category == null)
+            println("$CURRENT_FILE_NAME: Course not available fo courseId($categoryId)")
+
+        return category?.copy()
+    }
+
+    override fun getCourse(courseId: Int): DetailedCourseData? {
+        val course = courseRecords[courseId]
+        if (course == null)
+            println("$CURRENT_FILE_NAME: Course not available fo courseId($courseId)")
+
+        return course?.copy()
+    }
+
+    override fun getPriceDetails(courseId: Int): PriceDetailsData? {
+        val course = courseRecords[courseId]
+        if (course == null)
+            println("$CURRENT_FILE_NAME: Course not available fo courseId($courseId)")
+
+        return courseRecords.getValue(courseId).priceDetails?.copy()
+    }
+
+    override fun getModule(moduleId: Int): ModuleData? {
+        val module = moduleRecords[moduleId]
+        if (module == null)
+            println("$CURRENT_FILE_NAME: Module not available fo moduleId($moduleId)")
+
+        return module?.copy()
+    }
+
+    override fun getLesson(lessonId: Int): LessonData? {
+        val lesson = lessonRecords[lessonId]
+        if (lesson == null)
+            println("$CURRENT_FILE_NAME: Lesson not available fo lessonId($lessonId)")
+
+        return lesson?.copy()
+    }
 
     override fun getCategories(searchQuery: String, offset: Int, limit: Int): List<CategoryData> {
         val endIndex = (offset + 1) * limit
@@ -59,23 +104,7 @@ class CourseRepo : AbstractCourseRepo {
         // Apply Search
         val result = courses.filter { it.title.contains(searchQuery, true) }
         // Apply Pagination
-        return result.subList(offset, endIndex.coerceAtMost(result.size))
-    }
-
-    override fun getCourse(courseId: Int): DetailedCourseData? {
-        val course = courseRecords[courseId]
-        if (course == null)
-            println("$CURRENT_FILE_NAME: Course not found: courseId=$courseId")
-        return course?.copy()
-    }
-
-    fun getModule(moduleId: Int): ModuleData? {
-        val courseId = moduleIdToCourseId[moduleId]
-        if (courseId == null) {
-            println("$CURRENT_FILE_NAME: No course found for module id($moduleId)")
-            return null
-        }
-        return courseRecords.getValue(courseId).modules.find { it.id == moduleId }
+        return result.subList(offset, endIndex.coerceAtMost(result.size)).map { it.copy() }
     }
 
     // ******************* CREATE *******************
@@ -89,7 +118,6 @@ class CourseRepo : AbstractCourseRepo {
             skills = newCourseData.skills,
             courseLevel = newCourseData.courseLevel,
             courseType = newCourseData.courseType,
-            isFreeCourse = newCourseData.isFreeCourse,
             status = ResourceStatus.DRAFT,
             prerequisites = newCourseData.prerequisites,
             category = newCourseData.category
@@ -106,17 +134,18 @@ class CourseRepo : AbstractCourseRepo {
         return category.copy()
     }
 
-    override fun createPriceDetails(newPriceData: NewPriceData, courseId: Int): PriceDetailsData? {
-        val course = getCourse(courseId)
-        if (course == null) return null
+    override fun createPricing(newPriceData: NewPriceData, courseId: Int): PriceDetailsData {
+        val course = courseRecords.getValue(courseId)
         // Add price-details id into course
-        course.priceDetails = PriceDetailsData(
+        val priceDetails = PriceDetailsData(
             id = getNextPriceDetailsId(),
             currencyCode = newPriceData.currencyCode,
             currencySymbol = newPriceData.currencySymbol,
             amount = newPriceData.amount
         )
-        return course.priceDetails?.copy()
+        course.priceDetails = priceDetails
+        priceDetailsToCourseId[priceDetails.id] = course.id
+        return priceDetails.copy()
     }
 
     override fun createModule(newModuleData: NewModuleData, courseId: Int): ModuleData {
@@ -130,19 +159,17 @@ class CourseRepo : AbstractCourseRepo {
             status = newModuleData.status,
         )
         println("$CURRENT_FILE_NAME: New module created(id-${module.id})")
-        // Add module id into course
+
+        // Add module into maps
         course.modules.add(module)
+        moduleRecords[module.id] = module
         moduleIdToCourseId[module.id] = courseId
-        println("$CURRENT_FILE_NAME: New module attached to course(${courseId})")
+
         return module.copy()
     }
 
-    override fun createLesson(newLessonData: NewLessonData, moduleId: Int): LessonData? {
-        val module = getModule(moduleId)
-        if (module == null) {
-            println("$CURRENT_FILE_NAME: Lesson creation failed")
-            return null
-        }
+    override fun createLesson(newLessonData: NewLessonData, moduleId: Int): LessonData {
+        val module = moduleRecords.getValue(moduleId)
         val lesson = LessonData (
             id = getNextLessonId(),
             title = newLessonData.title,
@@ -152,21 +179,19 @@ class CourseRepo : AbstractCourseRepo {
             status = newLessonData.status,
         )
         println("$CURRENT_FILE_NAME: New lesson created(id-${lesson.id})")
-        // Add lesson id into module
+
+        // Add lesson into maps
         module.lessons.add(lesson)
+        lessonRecords[lesson.id] = lesson
         lessonIdToModuleId[lesson.id] = moduleId
-        println("$CURRENT_FILE_NAME: New lesson attached to module(${moduleId})")
+
         return lesson.copy()
     }
 
     // ******************* UPDATE *******************
     override fun updateModuleDuration(moduleId: Int, duration: Int): Boolean {
         // Get Module
-        val module = getModule(moduleId)
-        if (module == null) {
-            println("$CURRENT_FILE_NAME: Updating module duration failed")
-            return false
-        }
+        val module = moduleRecords.getValue(moduleId)
         // Update Duration
         module.duration += duration
         return true
@@ -174,24 +199,69 @@ class CourseRepo : AbstractCourseRepo {
 
     override fun updateCourseDuration(courseId: Int, duration: Int): Boolean {
         // Get Course
-        val course = getCourse(courseId)
-        if (course == null) {
-            println("$CURRENT_FILE_NAME: Updating course duration failed")
-            return false
-        }
+        val course = courseRecords.getValue(courseId)
         // Update Duration
         course.duration += duration
         return true
     }
 
-    // ******************* EXISTS *******************
-    override fun isCategoryExists(name: String): Boolean {
-        return categoryRecords.values.any { it -> it.name == name }
+    override fun updateOrCreatePricing(priceDetails: PriceDetailsData?, courseId: Int): Boolean {
+        val course = courseRecords.getValue(courseId)
+        if (priceDetails == null)
+            course.priceDetails = null
+        else if (priceDetails.id == 0) {
+            // Create
+            course.priceDetails = priceDetails.copy(id = getNextPriceDetailsId())
+        } else {
+            // Update
+            course.priceDetails = priceDetails
+        }
+        return true
     }
 
-    fun isCourseIdExists(courseId: Int): Boolean = courseId in courseRecords.keys
+    override fun updateCourseBasicDetails(courseId: Int, updateData: UpdateCourseBasicData): Boolean {
+        val course = courseRecords.getValue(courseId)
+
+        updateData.title?.let { course.title = it }
+        updateData.description?.let { course.description = it }
+        updateData.skills?.let { course.skills = it }
+        updateData.prerequisites?.let { course.prerequisites = it }
+        updateData.status?.let { course.status = it }
+        return true
+    }
+
+    override fun updateModuleDetails(moduleId: Int, updateData: UpdateModuleData): Boolean {
+        val module = moduleRecords.getValue(moduleId)
+
+        updateData.title?.let { module.title = it }
+        updateData.description?.let { module.description = it }
+        updateData.status?.let { module.status = it }
+        return true
+    }
+
+    override fun updateLessonDetails(lessonId: Int, updateData: UpdateLessonData): Boolean {
+        val lesson = lessonRecords.getValue(lessonId)
+        updateData.title?.let { lesson.title = it }
+        updateData.resource?.let { lesson.resource = it }
+        updateData.duration?.let { lesson.duration = it }
+        updateData.status?.let { lesson.status = it }
+        return true
+    }
 
     // ******************* DELETE *******************
+    override fun deleteLesson(lessonId: Int): Boolean {
+        val moduleId = lessonIdToModuleId.getValue(lessonId)
+        val module = moduleRecords.getValue(moduleId)
+
+        lessonIdToModuleId.remove(lessonId)
+        lessonRecords.remove(lessonId)
+        return module.lessons.removeIf { it.id == lessonId }
+    }
+
+    // ******************* EXISTS *******************
+    override fun isCategoryExists(name: String) = categoryRecords.values.any { it -> it.name == name }
+
+    fun isCourseIdExists(courseId: Int): Boolean = courseId in courseRecords.keys
 
     // ******************* HELPER *******************
 
@@ -308,22 +378,6 @@ class CourseRepo : AbstractCourseRepo {
                     duration = 50,
                     sequenceNumber = 4,
                     status = ResourceStatus.PUBLISHED
-                ),
-                LessonData(
-                    id = getNextLessonId(),
-                    title = "Strings in C++",
-                    resource = "strings_tutorial.mp4",
-                    duration = 45,
-                    sequenceNumber = 5,
-                    status = ResourceStatus.PUBLISHED
-                ),
-                LessonData(
-                    id = getNextLessonId(),
-                    title = "Practice Project - Calculator",
-                    resource = "calculator_project.zip",
-                    duration = 70,
-                    sequenceNumber = 6,
-                    status = ResourceStatus.PUBLISHED
                 )
             )
         )
@@ -346,7 +400,6 @@ class CourseRepo : AbstractCourseRepo {
             ),
             courseLevel = CourseLevel.INTERMEDIATE,
             courseType = CourseType.SELF_PACED,
-            isFreeCourse = false,
             status = ResourceStatus.PUBLISHED,
             prerequisites = listOf(
                 "Basic computer knowledge",
@@ -431,7 +484,6 @@ class CourseRepo : AbstractCourseRepo {
             ),
             courseLevel = CourseLevel.BEGINNER,
             courseType = CourseType.SELF_PACED,
-            isFreeCourse = false,
             status = ResourceStatus.PUBLISHED,
             prerequisites = listOf(
                 "Access to a basic kitchen",
@@ -446,8 +498,12 @@ class CourseRepo : AbstractCourseRepo {
         courseRecords[course2.id] = course2
         listOf(course1, course2).forEach { course ->
             course.modules.forEach { module ->
+                moduleRecords[module.id] = module
                 moduleIdToCourseId[module.id] = course1.id
-                module.lessons.forEach { lesson -> lessonIdToModuleId[lesson.id] = module.id }
+                module.lessons.forEach { lesson ->
+                    lessonRecords[lesson.id] = lesson
+                    lessonIdToModuleId[lesson.id] = module.id
+                }
             }
         }
     }

@@ -1,9 +1,5 @@
 package core.course.schemas
 
-import core.course.schemas.CourseLevel.ADVANCED
-import core.course.schemas.CourseLevel.BEGINNER
-import core.course.schemas.CourseLevel.INTERMEDIATE
-
 enum class ResourceStatus {
     DRAFT,
     PUBLISHED,
@@ -15,7 +11,7 @@ enum class ResourceStatus {
             value.equals("PUBLISHED", true) -> PUBLISHED
             value.equals("ARCHIVE", true) -> ARCHIVE
             else -> {
-                println("Invalid level, defaulting to PUBLISHED")
+                println("Invalid level, defaulting to Published")
                 PUBLISHED
             }
         }

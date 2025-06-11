@@ -10,7 +10,6 @@ data class NewCourseBasicData (
     var skills: List<String>,
     var courseLevel: CourseLevel,
     var courseType: CourseType,
-    var isFreeCourse: Boolean,
     var category: String,
     var prerequisites: List<String>? = null,
     val priceData: NewPriceData? = null,
@@ -27,7 +26,6 @@ data class CourseBasicData(
     var skills: List<String>,
     var courseLevel: CourseLevel,
     var courseType: CourseType,
-    var isFreeCourse: Boolean,
     var status: ResourceStatus,
     var prerequisites: List<String>? = null,
     var priceDetails: PriceDetailsData? = null,
@@ -44,7 +42,6 @@ data class DetailedCourseData (
     var skills: List<String>,
     val courseLevel: CourseLevel,
     val courseType: CourseType,
-    var isFreeCourse: Boolean,
     var status: ResourceStatus,
     var prerequisites: List<String>? = null,
     var priceDetails: PriceDetailsData? = null,
@@ -56,12 +53,8 @@ data class UpdateCourseBasicData (
     var title: String? = null,
     var description: String? = null,
     var skills: List<String>? = null,
-    var courseLevel: CourseLevel? = null,
-    var courseType: CourseType? = null,
     var status: ResourceStatus? = null,
     var prerequisites: List<String>? = null,
-    var isFreeCourse: Boolean? = null,
-    // TODO: Needs to add price details
 )
 
 data class NewPriceData (
@@ -95,17 +88,17 @@ data class ModuleData (
 )
 
 data class UpdateModuleData (
-    val title: String? = null,
-    val description: String? = null,
-    val sequenceNumber: Int? = null,
-    val status: ResourceStatus? = null,
+    var title: String? = null,
+    var description: String? = null,
+//    var sequenceNumber: Int? = null,
+    var status: ResourceStatus? = null,
 )
 
 data class NewLessonData (
     val title: String,
     val resource: String,
     var duration: Int, // note: "duration in minutes"
-    val sequenceNumber: Int = 0,
+    var sequenceNumber: Int = 0,
     var status: ResourceStatus = ResourceStatus.PUBLISHED,
 )
 
@@ -116,6 +109,14 @@ data class LessonData (
     var duration: Int, // note: "duration in minutes"
     var sequenceNumber: Int = 0,
     var status: ResourceStatus = ResourceStatus.PUBLISHED,
+)
+
+data class UpdateLessonData (
+    var title: String? = null,
+    var resource: String? = null,
+    var duration: Int? = null, // note: "duration in minutes"
+//    var sequenceNumber: Int = 0,
+    var status: ResourceStatus? = null,
 )
 
 data class CategoryData (

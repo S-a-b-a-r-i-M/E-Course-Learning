@@ -53,14 +53,7 @@ object CourseDisplayService {
         }
 
         // Format price
-        val priceText = if (course.isFreeCourse) {
-            "Free"
-        } else {
-            course.priceDetails?.let { "${it.currencySymbol}${it.amount}" }
-                ?: throw IllegalStateException(
-                    "Price details missing in a non-free course(${course.id})"
-                )
-        }
+        val priceText = course.priceDetails?.let { "${it.currencySymbol}${it.amount}" } ?: "Free"
 
         // Format skills (limit to avoid overflow)
         val skills = course.skills
@@ -91,7 +84,7 @@ object CourseDisplayService {
         println(" Price: $priceText")
         println(" Status: ${course.status.toString().capitalize()}")
         if (skillsText.isNotEmpty()) println(" Skills: $skillsText")
-        if (prereqText != null && prereqText.isNotEmpty()) println(" Prerequisites: ${course.prerequisites}")
+        if (prereqText != null && prereqText.isNotEmpty()) println(" Prerequisites: $prereqText")
         if (isDetailedView && course.modules.isNotEmpty())
             displayModules(course.modules, true, 2)
         if (!isDetailedView) println("╚$border╝")
@@ -109,27 +102,41 @@ object CourseDisplayService {
             return
         }
 
-        println(" === MODULES ===\n")
-        val space = " ".repeat(prefixSpace)
+        println(" === MODULES ===")
         for((index, moduleData) in modulesData.withIndex()) {
-            // Display module header
-            println("$space${index + 1}. ${moduleData.title}")
-
-            if (withLessons && moduleData.lessons.isNotEmpty()) {
-                // By default, lessons are sorted by sequence number
-                moduleData.lessons.forEachIndexed { lessonIndex, lesson ->
-                    val isLastLesson = lessonIndex == moduleData.lessons.size - 1
-                    val prefix = space + if (isLastLesson) "   └── " else "   ├── "
-                    println("$prefix ${lessonIndex + 1}. ${lesson.title} (${formatDurationMinutes(lesson.duration)})")
-                }
-            } else if (withLessons)
-                println("$space   └── No lessons available")
-
+            displayModule(moduleData, withLessons, prefixSpace, index + 1)
             // Add spacing between modules
             if (index < modulesData.size - 1) println()
         }
 
-        println("\n===============")
+        println(" ===============")
+    }
+
+    fun displayModule(moduleData: ModuleData, withLessons: Boolean = true, prefixSpace: Int = 0, indexNumber: Int? = null) {
+        val space = " ".repeat(prefixSpace)
+
+        // Display module header
+        var index = ""
+        if (indexNumber != null)
+            index = "$indexNumber."
+        println("$space${index}ID: ${moduleData.id}")
+        println("$space${index}Title: ${moduleData.title}")
+        if (moduleData.description != null) {
+            println("${space}Description: ${moduleData.description}")
+        }
+        println("${space}Status: ${moduleData.status.name.capitalize()}")
+        println("${space}Duration: ${formatDurationMinutes(moduleData.duration)}")
+        println("${space}Lessons: ${moduleData.lessons.size}")
+
+        if (withLessons && moduleData.lessons.isNotEmpty()) {
+            // By default, lessons are sorted by sequence number
+            moduleData.lessons.forEachIndexed { lessonIndex, lesson ->
+                val isLastLesson = lessonIndex == moduleData.lessons.size - 1
+                val prefix = space + if (isLastLesson) "   └── " else "   ├── "
+                println("$prefix ${lessonIndex + 1}. ${lesson.title} (${formatDurationMinutes(lesson.duration)})")
+            }
+        } else if (withLessons)
+            println("$space   └── No lessons available")
     }
 
     /**

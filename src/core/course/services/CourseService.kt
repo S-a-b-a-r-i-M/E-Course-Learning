@@ -11,6 +11,10 @@ import core.course.schemas.NewModuleData
 import core.course.schemas.NewPriceData
 import core.course.schemas.CourseLevel
 import core.course.schemas.CourseType
+import core.course.schemas.PriceDetailsData
+import core.course.schemas.UpdateCourseBasicData
+import core.course.schemas.UpdateLessonData
+import core.course.schemas.UpdateModuleData
 import core.user.schemas.UserRole
 import core.user.schemas.UserData
 import utils.getListInput
@@ -45,84 +49,11 @@ class CourseService (val courseRepo: AbstractCourseRepo) {
     fun getCourses(searchQuery: String, offset: Int, limit: Int) =
         courseRepo.getCourses(searchQuery, offset, limit)
 
-    /**
-     * Displays a paginated list of courses with interactive menu options.
-     *
-     * Allows users to:
-     * - Browse courses with pagination (10 courses per page)
-     * - Search courses by name
-     * - View detailed course information
-     * - Load more courses when available
-     *
-     * @param currentUser The current user's data context
-     */
-    fun listCourses(currentUser: UserData) {
-        var searchQuery = ""
-        var offset = 0
-        val limit = 10
-        var hasMore = false
+    fun getLesson(lessonId: Int) = courseRepo.getLesson(lessonId)
 
-        fun fetchCourses() {
-            val courses = getCourses(searchQuery, offset, limit)
-            if (courses.isEmpty()) {
-                println("-------------- No Course to display -------------")
-                hasMore = false
-                return
-            }
-            courses.forEach { CourseDisplayService.displayCourse(it) }
-            hasMore = courses.size == limit
-        }
-        fetchCourses()
+    fun getModule(moduleId: Int) = courseRepo.getModule(moduleId)
 
-        while (true) {
-            println("\nOption to choose ⬇️")
-            println("0 -> Go Back")
-            println("1 -> Open a course")
-            println("2 -> Search by Course name 🔍")
-            if (hasMore) println("3 -> Load More ↻")
-            print("Enter your option: ")
-            val userInput = readln().toInt()
-
-            when (userInput) {
-                // Go Back
-                0 -> return
-                // Open a Course
-                1 -> {
-                    print("Enter course id: ")
-                    val courseId = readln().toInt()
-                    val detailedCourseData = getCourse(courseId)
-                    if (detailedCourseData == null)
-                        continue
-                    CourseDisplayService.displayCourse(detailedCourseData, true)
-                }
-                // Search
-                2 -> {
-                    print("Enter Search Query: ")
-                    val newSearchQuery = readln().trim()
-                    if (newSearchQuery == searchQuery) { // If there is no change no need to refetch
-                        println("Same search query - no changes made")
-                        continue
-                    }
-
-                    searchQuery = newSearchQuery
-                    offset = 0 // Reset offset when searching
-                    fetchCourses()
-                }
-                // Load More
-                3 -> {
-                    if (!hasMore) {
-                        println("No more courses to load")
-                        continue
-                    }
-                    offset += limit
-                    fetchCourses()
-                }
-                else -> {
-                    println("invalid option selected. Please try again.")
-                }
-            }
-        }
-    }
+    fun getCoursePriceDetails(courseId: Int) = courseRepo.getPriceDetails(courseId)
 
     /**
      * Fetches a paginated list of course categories, with an optional search filter.
@@ -188,7 +119,6 @@ class CourseService (val courseRepo: AbstractCourseRepo) {
             skills=skills,
             courseLevel=courseLevel,
             courseType=courseType,
-            isFreeCourse=isFree,
             category=category.name,
             prerequisites=prerequisites,
             priceData = priceData,
@@ -323,14 +253,10 @@ class CourseService (val courseRepo: AbstractCourseRepo) {
      * @param sequenceNumber The sequential order of this lesson within the module.
      * @return A [LessonData] object representing the newly created lesson.
      */
-    fun createLesson(courseId: Int, moduleId: Int, sequenceNumber: Int):  LessonData? {
+    fun createLesson(courseId: Int, moduleId: Int, sequenceNumber: Int):  LessonData {
         val newLessonData =  getNewLessonDataFromUser(sequenceNumber)
         newLessonData.sequenceNumber = sequenceNumber
         val lesson = courseRepo.createLesson(newLessonData, moduleId)
-        if (lesson == null) {
-            println("$CURRENT_FILE_NAME: Lesson creation failed")
-            return null
-        }
 
         // Increase duration in Module
         var isUpdated = courseRepo.updateModuleDuration(moduleId, lesson.duration)
@@ -380,7 +306,7 @@ class CourseService (val courseRepo: AbstractCourseRepo) {
         // Attach PriceDetails to Course
         val courseId = course.id
         if (newCourse.priceData != null)
-            courseRepo.createPriceDetails(newCourse.priceData, courseId)
+            courseRepo.createPricing(newCourse.priceData, courseId)
         println("$CURRENT_FILE_NAME: ${newCourse.title}(id-${courseId}) created successfully with basic details")
 
         // Module & Lesson Creation
@@ -397,5 +323,29 @@ class CourseService (val courseRepo: AbstractCourseRepo) {
 
         println("Course successfully created!!!")
         return course
+    }
+
+    fun updateCourseBasicDetails(courseId: Int, updateData: UpdateCourseBasicData) {
+        courseRepo.updateCourseBasicDetails(courseId, updateData)
+        println("$CURRENT_FILE_NAME: Course($courseId) basic details updated.")
+    }
+
+    fun updateCoursePricing(courseId: Int, priceDetails: PriceDetailsData?) {
+        courseRepo.updateOrCreatePricing(priceDetails, courseId)
+        println("$CURRENT_FILE_NAME: Price Details Updated.")
+    }
+
+    fun updateModuleDetails(moduleId: Int, updateData: UpdateModuleData) {
+        courseRepo.updateModuleDetails(moduleId, updateData)
+        println("$CURRENT_FILE_NAME: Module($moduleId) details updated.")
+    }
+
+    fun updateLessonDetails(lessonId: Int, updateData: UpdateLessonData) {
+        courseRepo.updateLessonDetails(lessonId, updateData)
+        println("$CURRENT_FILE_NAME: Lesson($lessonId) details updated.")
+    }
+
+    fun deleteLesson(lessonId: Int): Boolean {
+        return courseRepo.deleteLesson(lessonId)
     }
 }
