@@ -7,6 +7,7 @@ import core.course.schemas.ResourceStatus
 import core.course.schemas.UpdateCourseBasicData
 import core.course.schemas.UpdateLessonData
 import core.course.schemas.UpdateModuleData
+import core.course.schemas.UpdatePriceDetailsData
 import core.course.services.CourseDisplayService
 import core.course.services.CourseService
 import core.course.services.capitalize
@@ -62,9 +63,9 @@ fun authFlow(authService: AuthService): UserData? {
 
 fun editPriceDetails(courseId: Int): Boolean {
     val priceDetailsData = courseService.getCoursePriceDetails(courseId)
-    if (priceDetailsData == null)
-        return false
+    if (priceDetailsData == null) return false
 
+    val updatedPriceData = UpdatePriceDetailsData(id=priceDetailsData.id)
     while (true) {
         println("\n=== Edit Price Details ===")
         println("What would you like to edit?")
@@ -82,8 +83,8 @@ fun editPriceDetails(courseId: Int): Boolean {
                     println("Invalid currency code. Try again.")
                     continue
                 }
-                priceDetailsData.currencyCode = currencyCode
-                priceDetailsData.currencySymbol = currencyMap.getOrDefault(currencyCode, "₹")
+                updatedPriceData.currencyCode = currencyCode
+                updatedPriceData.currencySymbol = currencyMap.getOrDefault(currencyCode, "₹")
             }
             2 -> {
                 print("Enter new amount: ")
@@ -92,13 +93,13 @@ fun editPriceDetails(courseId: Int): Boolean {
                     println("Invalid amount entered. Try again")
                     continue
                 }
-                priceDetailsData.amount = amount
+                updatedPriceData.amount = amount
             }
             3 -> {
                 return false
             }
             4 -> {
-                courseService.updateCoursePricing(courseId, priceDetailsData)
+                courseService.updateCoursePricing(courseId, updatedPriceData)
                 return true
             }
             else -> println("Invalid input")
@@ -107,7 +108,7 @@ fun editPriceDetails(courseId: Int): Boolean {
 }
 
 fun editCoursePricing(courseId: Int) {
-    fun getPriceDetails(): PriceDetailsData {
+    fun getPriceDetails(): UpdatePriceDetailsData {
         print("Enter currency code (${currencyMap.keys.joinToString(", ")}): ")
         val currencyCode = readln().trim().uppercase()
         val currencySymbol = currencyMap.getOrDefault(currencyCode, "₹")
@@ -116,7 +117,7 @@ fun editCoursePricing(courseId: Int) {
             println("Invalid amount entered. Setting base price as 1")
             1.0
         }
-        return PriceDetailsData(0, currencyCode, currencySymbol, amount)
+        return UpdatePriceDetailsData(0, currencyCode, currencySymbol, amount)
     }
 
     var priceDetails: PriceDetailsData? = null
@@ -135,7 +136,6 @@ fun editCoursePricing(courseId: Int) {
             println("2 -> Price Details")
 
         print("Enter your choice: ")
-
         when (readln().toIntOrNull()) {
             0 -> break
             1 -> {
@@ -161,7 +161,6 @@ fun editCoursePricing(courseId: Int) {
                             println("Course set to Paid!")
                             fetchPriceDetails() // refetch
                         }
-
                         else -> println("Invalid choice.")
                     }
                 } else {
@@ -177,7 +176,6 @@ fun editCoursePricing(courseId: Int) {
                     println("Course is in Free status.Price details not set.")
                 }
             }
-
             else -> println("Invalid input")
         }
     }
@@ -204,7 +202,7 @@ fun editLesson(lessonId: Int): Boolean {
                 print("New title (or press Enter to keep current): ")
                 val newTitle = readln().trim()
                 if (newTitle.isNotEmpty()) {
-                    existingLessonData.title = newTitle
+                    updateLessonData.title = newTitle
                     println("New Title added")
                 } else
                     println("Title unchanged")
@@ -214,7 +212,7 @@ fun editLesson(lessonId: Int): Boolean {
                 print("New resource (or press Enter to keep current): ")
                 val newResource = readln().trim()
                 if (newResource.isNotEmpty()) {
-                    existingLessonData.resource = newResource
+                    updateLessonData.resource = newResource
                     println("New Resource added")
                 } else
                     println("Resource unchanged")
@@ -224,7 +222,7 @@ fun editLesson(lessonId: Int): Boolean {
                 print("New duration (or press Enter to keep current): ")
                 val newDuration = readln().toIntOrNull()
                 if (newDuration != null && newDuration > 0) {
-                    existingLessonData.duration = newDuration
+                    updateLessonData.duration = newDuration
                     println("Duration updated")
                 } else {
                     println("Invalid duration - $newDuration. Try again.")
@@ -232,7 +230,7 @@ fun editLesson(lessonId: Int): Boolean {
             }
             4 -> {
                 selectResourceStatus() {
-                    existingLessonData.status = it
+                    updateLessonData.status = it
                     println("Status updated")
                 }
             }
@@ -464,14 +462,14 @@ fun editCourseBasicDetails(courseData: DetailedCourseData): Boolean {
     }
 }
 
-fun listCourses(courseService: CourseService, currentUser: UserData) {
+fun listCourses(currentUser: UserData) {
     var searchQuery = ""
     var offset = 0
     val limit = 10
     var hasMore = false
 
     fun fetchCourses() {
-        val courses = courseService.getCourses(searchQuery, offset, limit)
+        val courses = courseService.getCourses(searchQuery, offset, limit, currentUser)
         if (courses.isEmpty()) {
             println("-------------- No Course to display -------------")
             hasMore = false
@@ -502,7 +500,7 @@ fun listCourses(courseService: CourseService, currentUser: UserData) {
                 if (courseData == null)
                     continue
                 CourseDisplayService.displayCourse(courseData, true)
-                // If Admin User Then Show Edit Option
+                // If Admin Then Show Edit Option
                 if (currentUser.role == UserRole.ADMIN) {
                     while (true) {
                         if (courseData == null)
@@ -569,6 +567,10 @@ fun listCourses(courseService: CourseService, currentUser: UserData) {
                         }
                     }
                 }
+                // If Student Then Show Enroll Option
+                else if (currentUser.role == UserRole.STUDENT) {
+
+                }
             }
             // Search
             2 -> {
@@ -600,18 +602,22 @@ fun listCourses(courseService: CourseService, currentUser: UserData) {
 }
 
 fun courseFlow(courseService: CourseService, currentUser: UserData) {
+    val isAdmin = currentUser.role == UserRole.ADMIN
+    val isStudent = currentUser.role == UserRole.STUDENT
     while (true) {
         println("\nOption to choose ⬇️")
         println("0 -> Back")
         println("1 -> List Of Courses")
-        println("2 -> Create Course")
+        println("2 -> ${if(isAdmin) "Create Course" else "My Courses"}")
+
         val userInput = readln().toInt()
 
         // When - Course Flow
         when (userInput) {
             0 -> return // It will break the outer loop
-            1 -> listCourses(courseService, currentUser)
-            2 -> {
+            1 -> listCourses(currentUser)
+            2 -> if(isAdmin) {
+                // Create Course
                 val course = courseService.createCourse(currentUser)
                 if (course != null) {
                     println("Do you wanna open the course(y/n) ?")
@@ -619,6 +625,9 @@ fun courseFlow(courseService: CourseService, currentUser: UserData) {
                     if (openCourse)
                         CourseDisplayService.displayCourse(course, true)
                 }
+            } else if (isStudent) {
+                // My Courses
+
             }
         }
     }
@@ -644,7 +653,6 @@ fun main() {
         status = UserStatus.ACTIVE,
         lastLoginAt = LocalDateTime.now()
     )
-
 
     // Object Creation
     courseFlow(courseService, user)

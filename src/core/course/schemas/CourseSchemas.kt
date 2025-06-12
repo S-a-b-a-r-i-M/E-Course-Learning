@@ -36,16 +36,16 @@ data class DetailedCourseData (
     val id : Int,
     val createdBy: UUID, // By which admin
     val category: String?,
-    var title: String,
-    var description: String,
-    var duration : Int, //note: "duration in minutes"
-    var skills: List<String>,
+    val title: String,
+    val description: String,
+    val skills: List<String>,
     val courseLevel: CourseLevel,
     val courseType: CourseType,
-    var status: ResourceStatus,
-    var prerequisites: List<String>? = null,
-    var priceDetails: PriceDetailsData? = null,
+    val status: ResourceStatus,
+    val prerequisites: List<String>? = null,
+    val priceDetails: PriceDetailsData? = null,
     val modules: MutableList<ModuleData> = mutableListOf(),
+    val parentCourseId: Int? = null // Used to connect this course with its parent course
 )
 
 // TODO: Needs to improve this to handle other field values
@@ -65,9 +65,16 @@ data class NewPriceData (
 
 data class PriceDetailsData (
     val id: Int,
-    var currencyCode: String,
-    var currencySymbol: String,
-    var amount: Double,
+    val currencyCode: String,
+    val currencySymbol: String,
+    val amount: Double,
+)
+
+data class UpdatePriceDetailsData (
+    var id: Int = 0,
+    var currencyCode: String? = null,
+    var currencySymbol: String? = null,
+    var amount: Double? = null,
 )
 
 data class NewModuleData (
@@ -79,11 +86,11 @@ data class NewModuleData (
 
 data class ModuleData (
     val id: Int,
-    var title: String,
-    var description: String?,
-    var duration: Int = 0,
+    val title: String,
+    val description: String?,
+    val duration: Int = 0,
     val sequenceNumber: Int = 0,
-    var status: ResourceStatus = ResourceStatus.PUBLISHED,
+    val status: ResourceStatus = ResourceStatus.PUBLISHED,
     val lessons: MutableList<LessonData> = mutableListOf(),
 )
 
@@ -104,11 +111,11 @@ data class NewLessonData (
 
 data class LessonData (
     val id: Int,
-    var title: String,
-    var resource: String,
-    var duration: Int, // note: "duration in minutes"
-    var sequenceNumber: Int = 0,
-    var status: ResourceStatus = ResourceStatus.PUBLISHED,
+    val title: String,
+    val resource: String,
+    val duration: Int, // note: "duration in minutes"
+    val sequenceNumber: Int = 0,
+    val status: ResourceStatus = ResourceStatus.PUBLISHED,
 )
 
 data class UpdateLessonData (

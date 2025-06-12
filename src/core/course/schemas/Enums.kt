@@ -52,3 +52,10 @@ enum class CourseType {
         }
     }
 }
+
+
+enum class EnrollmentStatus {
+    ASSIGNED,
+    NOT_ASSIGNED,
+    PAYMENT_FAILED
+}

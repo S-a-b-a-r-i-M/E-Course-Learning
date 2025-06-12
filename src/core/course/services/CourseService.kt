@@ -15,6 +15,7 @@ import core.course.schemas.PriceDetailsData
 import core.course.schemas.UpdateCourseBasicData
 import core.course.schemas.UpdateLessonData
 import core.course.schemas.UpdateModuleData
+import core.course.schemas.UpdatePriceDetailsData
 import core.user.schemas.UserRole
 import core.user.schemas.UserData
 import utils.getListInput
@@ -46,8 +47,28 @@ class CourseService (val courseRepo: AbstractCourseRepo) {
      * @param limit The maximum number of courses to return.
      * @return A list of [DetailedCourseData] objects.
      */
-    fun getCourses(searchQuery: String, offset: Int, limit: Int) =
-        courseRepo.getCourses(searchQuery, offset, limit)
+    fun getCourses(
+        searchQuery: String,
+        offset: Int,
+        limit: Int,
+        currentUser: UserData,
+        onlyAssociated: Boolean = false,
+    ): List<DetailedCourseData> {
+        // TODO: Get Courses based on roles
+
+        if (currentUser.role != UserRole.ADMIN && onlyAssociated) {
+            if (currentUser.role == UserRole.STUDENT) {
+                // Get Student's Enrolled Course Ids
+            } else {
+                // Get Trainer's Assigned Course Ids
+            }
+        }
+        return courseRepo.getCourses(searchQuery, offset, limit)
+    }
+
+    fun getCoursesByIds(courseIds: List<Int>): List<DetailedCourseData> {
+        return courseRepo.getCoursesByIds(courseIds)
+    }
 
     fun getLesson(lessonId: Int) = courseRepo.getLesson(lessonId)
 
@@ -257,13 +278,6 @@ class CourseService (val courseRepo: AbstractCourseRepo) {
         val newLessonData =  getNewLessonDataFromUser(sequenceNumber)
         newLessonData.sequenceNumber = sequenceNumber
         val lesson = courseRepo.createLesson(newLessonData, moduleId)
-
-        // Increase duration in Module
-        var isUpdated = courseRepo.updateModuleDuration(moduleId, lesson.duration)
-        println("$CURRENT_FILE_NAME: Module($moduleId) duration updated($isUpdated)")
-        // Increase duration in Course
-        isUpdated = courseRepo.updateCourseDuration(courseId, lesson.duration)
-        println("$CURRENT_FILE_NAME: Course($courseId) duration updated($isUpdated)")
         return lesson
     }
 
@@ -293,7 +307,7 @@ class CourseService (val courseRepo: AbstractCourseRepo) {
      * @return A [DetailedCourseData] the complete course object with all its modules
      *         and lessons, or `null` if the user does not have the required permissions.
      */
-     fun createCourse(currentUser: UserData): DetailedCourseData? {
+    fun createCourse(currentUser: UserData): DetailedCourseData? {
         if (currentUser.role != UserRole.ADMIN) {
             println("$CURRENT_FILE_NAME: User don't have the permission to create course")
             return null
@@ -330,7 +344,7 @@ class CourseService (val courseRepo: AbstractCourseRepo) {
         println("$CURRENT_FILE_NAME: Course($courseId) basic details updated.")
     }
 
-    fun updateCoursePricing(courseId: Int, priceDetails: PriceDetailsData?) {
+    fun updateCoursePricing(courseId: Int, priceDetails: UpdatePriceDetailsData?) {
         courseRepo.updateOrCreatePricing(priceDetails, courseId)
         println("$CURRENT_FILE_NAME: Price Details Updated.")
     }

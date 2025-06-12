@@ -19,11 +19,10 @@ interface AbstractCourseRepo {
     fun getPriceDetails(courseId: Int): PriceDetailsData?
     fun getCategories(searchQuery: String, offset: Int, limit: Int): List<CategoryData>
     fun getCourses(searchQuery: String, offset: Int, limit: Int): List<DetailedCourseData>
+    fun getCoursesByIds(courseIds: List<Int>): List<DetailedCourseData>
 
     // ******************* UPDATE *******************
-    fun updateModuleDuration(moduleId: Int, duration: Int): Boolean
-    fun updateCourseDuration(courseId: Int, duration: Int): Boolean
-    fun updateOrCreatePricing(priceDetails: PriceDetailsData?, courseId: Int): Boolean
+    fun updateOrCreatePricing(priceDetails: UpdatePriceDetailsData?, courseId: Int): Boolean
     fun updateCourseBasicDetails(courseId: Int, updateData: UpdateCourseBasicData): Boolean
     fun updateModuleDetails(moduleId: Int, updateData: UpdateModuleData): Boolean
     fun updateLessonDetails(lessonId: Int, updateData: UpdateLessonData) : Boolean
