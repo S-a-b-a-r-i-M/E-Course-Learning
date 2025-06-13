@@ -4,7 +4,8 @@ import core.auth.schemas.SignInData
 import core.auth.schemas.SignUpData
 import core.user.schemas.NewUserData
 import core.user.repositories.AbstractUserRepo
-import core.user.schemas.UserData
+import core.user.schemas.BaseUser
+import core.user.schemas.StudentData
 import core.user.schemas.UserRole
 import core.user.schemas.UserStatus
 import utils.PasswordHasher
@@ -37,7 +38,7 @@ class AuthService (val userRepo: AbstractUserRepo) {
         )
     }
 
-    fun signUp(): UserData? {
+    fun signUp(): StudentData? {
         val signUpData = getSignUpDataFromUser()
         // Check email uniqueness
         if (userRepo.isEmailExists(signUpData.email)){
@@ -54,9 +55,9 @@ class AuthService (val userRepo: AbstractUserRepo) {
             hashedPassword = hashedPassword,
             role = UserRole.STUDENT // Student only can sign up directly
         )
-        val userData: UserData = userRepo.createUser(newUserData)
+        val student: StudentData = userRepo.createStudentUser(newUserData)
         println("New User(${newUserData.firstName} ${newUserData.lastName}) created.")
-        return userData
+        return student
     }
 
     private fun getSignInDataFromUser(): SignInData {
@@ -67,10 +68,10 @@ class AuthService (val userRepo: AbstractUserRepo) {
         return SignInData(email, password)
     }
 
-    fun signIn(): UserData? {
+    fun signIn(): BaseUser? {
         val signInData = getSignInDataFromUser()
         // Get User
-        val userData: UserData? = userRepo.getUserByEmail(signInData.email)
+        val userData: BaseUser? = userRepo.getUserByEmail(signInData.email)
         if(userData == null){
             println("User with email(${signInData.email}) is not found!!!")
             return null // TODO: Throw appropriate exception

@@ -13,6 +13,7 @@ import core.course.services.CourseService
 import core.course.services.capitalize
 import core.course.services.currencyMap
 import core.user.repositories.UserRepo
+import core.user.schemas.BaseUser
 import core.user.schemas.UserData
 import core.user.schemas.UserRole
 import core.user.schemas.UserStatus
@@ -25,7 +26,7 @@ import kotlin.io.println
 val courseRepo = CourseRepo()
 val courseService = CourseService(courseRepo)
 
-fun authFlow(authService: AuthService): UserData? {
+fun authFlow(authService: AuthService): BaseUser? {
     while (true) {
         println("\nOption to choose ⬇️")
         println("0 -> Exit")
@@ -37,7 +38,7 @@ fun authFlow(authService: AuthService): UserData? {
         when (userInput) {
             0 -> break // It will break the outer loop
             1 -> {
-                val userData: UserData? = authService.signIn()
+                val userData: BaseUser? = authService.signIn()
                 if (userData == null)
                     println("login failed. Try again...")
                 else {
@@ -46,7 +47,7 @@ fun authFlow(authService: AuthService): UserData? {
                 }
             }
             2 -> {
-                val userData: UserData? = authService.signUp()
+                val userData: BaseUser? = authService.signUp() as BaseUser
                 if (userData == null)
                     println("sign up failed. Try again...")
                 else {

@@ -1,6 +1,8 @@
 package core.user.repositories
 
+import core.user.schemas.BaseUser
 import core.user.schemas.NewUserData
+import core.user.schemas.StudentData
 import core.user.schemas.UserData
 import core.user.schemas.UserUpdateData
 import java.time.LocalDateTime
@@ -8,10 +10,10 @@ import java.util.UUID
 
 interface AbstractUserRepo {
     // ******************* READ *******************
-    fun getUserByEmail(email: String): UserData?
+    fun getUserByEmail(email: String): BaseUser?
 
     // ******************* CREATE *******************
-    fun createUser(newUserData: NewUserData): UserData
+    fun createStudentUser(newUserData: NewUserData): StudentData
 
     // ******************* UPDATE *******************
     fun updateUser(userId: UUID, updateData: UserUpdateData): Boolean

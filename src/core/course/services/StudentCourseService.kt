@@ -11,19 +11,6 @@ import java.util.UUID
  * This service will handle student course enrollment, student lesson progress
  */
 class StudentCourseService (val repo: AbstractStudentCourseRepo) {
-//    fun getEnrolledCourses(studentId: UUID): List<EnrolledCourse> {
-//        // TODO: Implement search and pagination(filter is optional)
-//        // TODO: Implement for live-course
-//        val enrollments: List<CourseEnrollment> = repo.getCourseEnrollments(studentId)
-//        if (enrollments.isEmpty()) return emptyList()
-//
-//        val courseIds = enrollments.map { it.courseId }
-//        val courses = courseService.getCoursesByIds(courseIds)
-//        return courses.zip(enrollments) {course, enrollment ->
-//            EnrolledCourse(course, enrollment)
-//        }
-//    }
-
     fun getEnrolledCourseIds(studentId: UUID): List<Int> = repo.getEnrolledCourseIds(studentId)
 
     fun enrollCourse(newEnrollment: NewEnrollment): CourseEnrollment? {
