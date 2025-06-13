@@ -19,6 +19,7 @@ import core.course.schemas.UpdatePriceDetailsData
 import core.user.schemas.UserRole
 import core.user.schemas.UserData
 import utils.getListInput
+import kotlin.Int
 
 val CURRENT_FILE_NAME: String? = Throwable().stackTrace[0].fileName
 
@@ -30,7 +31,10 @@ val currencyMap = mapOf<String, String>(
     // Add other entries
 )
 
-class CourseService (val courseRepo: AbstractCourseRepo) {
+class CourseService (
+    private val courseRepo: AbstractCourseRepo,
+    private val studentCourseService: StudentCourseService
+) {
     /**
      * Retrieves detailed information for a specific course by its ID.
      *
@@ -56,14 +60,23 @@ class CourseService (val courseRepo: AbstractCourseRepo) {
     ): List<DetailedCourseData> {
         // TODO: Get Courses based on roles
 
+        var courseIds: List<Int>? = null
         if (currentUser.role != UserRole.ADMIN && onlyAssociated) {
-            if (currentUser.role == UserRole.STUDENT) {
+            if (currentUser.role == UserRole.STUDENT)
                 // Get Student's Enrolled Course Ids
-            } else {
-                // Get Trainer's Assigned Course Ids
+                courseIds = studentCourseService.getEnrolledCourseIds(currentUser.id)
+//          else {
+//                // Get Trainer's Assigned Course Ids
+//          }
+
+            // If no course found then return immediately
+            if (courseIds != null && courseIds.isEmpty()) {
+                println("No course found for user(${currentUser.fullName})")
+                return emptyList()
             }
         }
-        return courseRepo.getCourses(searchQuery, offset, limit)
+
+        return courseRepo.getCourses(searchQuery, offset, limit, courseIds)
     }
 
     fun getCoursesByIds(courseIds: List<Int>): List<DetailedCourseData> {
@@ -309,7 +322,7 @@ class CourseService (val courseRepo: AbstractCourseRepo) {
      */
     fun createCourse(currentUser: UserData): DetailedCourseData? {
         if (currentUser.role != UserRole.ADMIN) {
-            println("$CURRENT_FILE_NAME: User don't have the permission to create course")
+            println("User don't have the permission to create course")
             return null
         }
 
@@ -321,7 +334,7 @@ class CourseService (val courseRepo: AbstractCourseRepo) {
         val courseId = course.id
         if (newCourse.priceData != null)
             courseRepo.createPricing(newCourse.priceData, courseId)
-        println("$CURRENT_FILE_NAME: ${newCourse.title}(id-${courseId}) created successfully with basic details")
+        println("${newCourse.title}(id-${courseId}) created successfully with basic details")
 
         // Module & Lesson Creation
         do {
@@ -341,22 +354,22 @@ class CourseService (val courseRepo: AbstractCourseRepo) {
 
     fun updateCourseBasicDetails(courseId: Int, updateData: UpdateCourseBasicData) {
         courseRepo.updateCourseBasicDetails(courseId, updateData)
-        println("$CURRENT_FILE_NAME: Course($courseId) basic details updated.")
+        println("Course($courseId) basic details updated.")
     }
 
     fun updateCoursePricing(courseId: Int, priceDetails: UpdatePriceDetailsData?) {
         courseRepo.updateOrCreatePricing(priceDetails, courseId)
-        println("$CURRENT_FILE_NAME: Price Details Updated.")
+        println("Price Details Updated.")
     }
 
     fun updateModuleDetails(moduleId: Int, updateData: UpdateModuleData) {
         courseRepo.updateModuleDetails(moduleId, updateData)
-        println("$CURRENT_FILE_NAME: Module($moduleId) details updated.")
+        println("Module($moduleId) details updated.")
     }
 
     fun updateLessonDetails(lessonId: Int, updateData: UpdateLessonData) {
         courseRepo.updateLessonDetails(lessonId, updateData)
-        println("$CURRENT_FILE_NAME: Lesson($lessonId) details updated.")
+        println("Lesson($lessonId) details updated.")
     }
 
     fun deleteLesson(lessonId: Int): Boolean {

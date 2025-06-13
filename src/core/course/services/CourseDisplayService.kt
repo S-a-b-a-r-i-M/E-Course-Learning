@@ -5,6 +5,7 @@ import core.course.schemas.DetailedCourseData
 import core.course.schemas.LessonData
 import core.course.schemas.ModuleData
 import core.course.schemas.ResourceStatus
+import db.CompletionStatus
 import utils.formatDurationMinutes
 import kotlin.collections.forEach
 import kotlin.collections.joinToString
@@ -94,7 +95,11 @@ object CourseDisplayService {
      * @param modulesData List of ModuleData to display
      * @param withLessons Whether to include lessons under each module
      */
-    fun displayModules(modulesData: List<ModuleData>, withLessons: Boolean = true, prefixSpace: Int = 0) {
+    fun displayModules(
+        modulesData: List<ModuleData>,
+        withLessons: Boolean = true,
+        prefixSpace: Int = 0,
+    ) {
         if (modulesData.isEmpty()) {
             println(" No modules available.")
             return
@@ -106,32 +111,47 @@ object CourseDisplayService {
             // Add spacing between modules
             if (index < modulesData.size - 1) println()
         }
-
         println(" ===============")
     }
 
-    fun displayModule(moduleData: ModuleData, withLessons: Boolean = true, prefixSpace: Int = 0, indexNumber: Int? = null) {
+    fun displayModule(
+        moduleData: ModuleData,
+        withLessons: Boolean = true,
+        prefixSpace: Int = 0,
+        indexNumber: Int? = null,
+        isReadMode: Boolean = false,
+        recentLessonId: Int = -1,
+        recentLessonStatus: CompletionStatus = CompletionStatus.NOT_STARTED,
+    ) {
         val space = " ".repeat(prefixSpace)
 
         // Display module header
-        var index = ""
-        if (indexNumber != null)
-            index = "$indexNumber."
-        println("$space${index}ID: ${moduleData.id}")
+        println("$space${if (indexNumber != null) "$indexNumber." else ""}ID: ${moduleData.id}")
         println("${space}Title: ${moduleData.title}")
         if (moduleData.description != null) {
             println("${space}Description: ${moduleData.description}")
         }
-        println("${space}Status: ${moduleData.status.name.capitalize()}")
+        if (!isReadMode) println("${space}Status: ${moduleData.status.name.capitalize()}")
+//       else println("${space}Status: ${moduleData.status.name.capitalize()}") // Module Level Status and Completion percentage
         println("${space}Duration: ${formatDurationMinutes(moduleData.duration)}")
-        println("${space}Lessons: ${moduleData.lessons.size}")
+        println("${space}Lessons(${moduleData.lessons.size}): ")
 
         if (withLessons && moduleData.lessons.isNotEmpty()) {
             // By default, lessons are sorted by sequence number
             moduleData.lessons.forEachIndexed { lessonIndex, lesson ->
                 val isLastLesson = lessonIndex == moduleData.lessons.size - 1
                 val prefix = space + if (isLastLesson) "   └── " else "   ├── "
-                println("$prefix ${lessonIndex + 1}. ${lesson.title} (${formatDurationMinutes(lesson.duration)})")
+                print(
+                    "$prefix ${lessonIndex + 1}. ${lesson.title} (${formatDurationMinutes(lesson.duration)})"
+                )
+                if (isReadMode) {
+                    val status = if (recentLessonId < lesson.id) CompletionStatus.NOT_STARTED
+                    else if (lesson.id < recentLessonId) CompletionStatus.COMPLETED
+                    else recentLessonStatus
+                    println("  Status: ${getCompletionText(status)}")
+                } else {
+                    println()
+                }
             }
         } else if (withLessons)
             println("$space   └── No lessons available")
@@ -163,6 +183,14 @@ object CourseDisplayService {
             ResourceStatus.DRAFT -> "Draft"
             ResourceStatus.PUBLISHED -> "Published"
             ResourceStatus.ARCHIVE -> "Archive"
+        }
+    }
+
+    private fun getCompletionText(status: CompletionStatus): String {
+        return when (status) {
+            CompletionStatus.NOT_STARTED -> "Not Started ⛔️"
+            CompletionStatus.IN_PROGRESS -> "In Progress ⏳"
+            CompletionStatus.COMPLETED -> "Completed ✅"
         }
     }
 }

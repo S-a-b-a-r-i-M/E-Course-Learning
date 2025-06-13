@@ -1,7 +1,10 @@
 import core.auth.services.AuthService
 import core.course.repositories.CourseRepo
+import core.course.repositories.StudentCourseRepo
 import core.course.schemas.DetailedCourseData
 import core.course.schemas.ModuleData
+import core.course.schemas.NewEnrollment
+import core.course.schemas.NewPaymentDetails
 import core.course.schemas.PriceDetailsData
 import core.course.schemas.ResourceStatus
 import core.course.schemas.UpdateCourseBasicData
@@ -10,6 +13,7 @@ import core.course.schemas.UpdateModuleData
 import core.course.schemas.UpdatePriceDetailsData
 import core.course.services.CourseDisplayService
 import core.course.services.CourseService
+import core.course.services.StudentCourseService
 import core.course.services.capitalize
 import core.course.services.currencyMap
 import core.user.repositories.UserRepo
@@ -17,6 +21,7 @@ import core.user.schemas.BaseUser
 import core.user.schemas.UserData
 import core.user.schemas.UserRole
 import core.user.schemas.UserStatus
+import db.CompletionStatus
 import utils.getListInput
 import java.time.LocalDateTime
 import java.util.UUID
@@ -24,10 +29,13 @@ import kotlin.io.print
 import kotlin.io.println
 
 val courseRepo = CourseRepo()
-val courseService = CourseService(courseRepo)
+val studentCourseRepo = StudentCourseRepo()
+val studentCourseService = StudentCourseService(studentCourseRepo)
+val courseService = CourseService(courseRepo, studentCourseService)
 
 fun authFlow(authService: AuthService): BaseUser? {
     while (true) {
+        println("\n======== Auth Page =========")
         println("\nOption to choose ⬇️")
         println("0 -> Exit")
         println("1 -> Sign In")
@@ -463,25 +471,174 @@ fun editCourseBasicDetails(courseData: DetailedCourseData): Boolean {
     }
 }
 
-fun listCourses(currentUser: UserData) {
+fun enrollCourse(studentId: UUID, course: DetailedCourseData): Boolean {
+    var paymentDetails: NewPaymentDetails? = null
+    if (course.priceDetails != null)
+        paymentDetails = NewPaymentDetails(
+            currencyCode = course.priceDetails.currencyCode,
+            amount = course.priceDetails.amount,
+        )
+
+    val enrollment = studentCourseService.enrollCourse(
+        NewEnrollment(
+            courseId = course.id,
+            studentId = studentId,
+            courseType = course.courseType,
+            paymentDetails = paymentDetails
+        )
+    )
+
+    return enrollment != null
+}
+
+
+fun openCourseInLearningMode(course: DetailedCourseData, currentUser: UserData) {
+    if (currentUser.role != UserRole.STUDENT) {
+        println("Not a Student")
+        return
+    }
+    // Get Student Progress
+    val progress = studentCourseService.getStudentProgress(currentUser.id, course.id)
+
+    // Show Modules
+    println(" ====== MODULES ====== ")
+    if (course.modules.isEmpty()) {
+        println("No modules available.")
+        return
+    } else
+        for((index, module) in course.modules.withIndex()) {
+            CourseDisplayService.displayModule(
+                module,
+                true,
+                2,
+                index + 1,
+                true,
+                recentLessonId = progress?.recentLessonId ?: -1,
+                recentLessonStatus = progress?.status ?: CompletionStatus.NOT_STARTED
+            )
+            // Add spacing between modules
+            if (index < course.modules.size - 1) println()
+        }
+    println(" ==================== ")
+
+    // Ask for start
+    println("Are you ready to ${if (progress != null) "resume" else "start"} learning (y/n) ? ")
+    if (readln().trim().lowercase() == "y") {
+        var recentModuleIndex = 0
+        var recentLessonIndex = 0
+
+        // Find current progress position
+        if (progress != null) {
+            outer@ for (indexM in course.modules.indices) {
+                val module = course.modules[indexM]
+                for (indexL in module.lessons.indices) {
+                    if (module.lessons[indexL].id == progress.recentLessonId) {
+                        if (progress.status == CompletionStatus.COMPLETED) {
+                            if (indexL + 1 < module.lessons.size) {
+                                recentModuleIndex = indexM
+                                recentLessonIndex = indexL + 1
+                            } else if (indexM + 1 < course.modules.size) {
+                                recentModuleIndex = indexM + 1
+                                recentLessonIndex = 0
+                            } else { // Course Already Completed
+                                println("This Course already successfully completed ✅")
+                                return
+                            }
+                        } else {
+                            recentModuleIndex = indexM
+                            recentLessonIndex = indexL
+                        }
+                        break@outer
+                    }
+                }
+            }
+        }
+
+        // Main learning loop
+        for (i in recentModuleIndex until course.modules.size) {
+            val module = course.modules[i]
+            val startLessonIndex = if (i == recentModuleIndex) recentLessonIndex else 0
+
+            println("\nMODULE ${i + 1}: ${module.title}")
+            for (j in startLessonIndex until module.lessons.size) {
+                val lesson = module.lessons[j]
+
+                println("\nLESSON ${j + 1}: ${lesson.title}")
+                // Display lesson content
+                println(lesson.resource)
+
+                // User interaction
+                println("\n-".repeat(3))
+                print("\nDo you want to learn next lesson (y/n) ? ")
+
+                fun updateStudentProgress(isCompleted: Boolean) {
+                    studentCourseService.updateStudentProgress(
+                        course.id,
+                        lesson.id,
+                        currentUser.id,
+                        isCompleted
+                    )
+                }
+
+                // Update Student Progress
+                if (readln().trim().lowercase() == "y") {
+                        updateStudentProgress(true)
+                        println("Lesson completed ☑️!")
+                }
+                else {
+                    print("Have you completed the current lesson (y/n) ? ")
+                    updateStudentProgress(readln().trim().lowercase() == "y")
+                    return
+                }
+            }
+
+            // Module completion message
+            println("\n🎉 Congratulations! You've completed Module ${i + 1}: ${module.title}")
+            if (i < course.modules.size - 1)
+                println("🚀 Ready for the next module!")
+        }
+
+        // Course completion
+        println("\n" + "🎊".repeat(20))
+        println("🏆 CONGRATULATIONS! 🏆")
+        println("You have successfully completed the entire course:")
+        println("📚 ${course.title}")
+        println("🌟 Your learning journey for this course is now complete!")
+
+    } else {
+        println("📚 No problem! You can start learning anytime.")
+    }
+}
+
+fun listCourses(pageTitle: String, currentUser: UserData, onlyAssociated: Boolean = false) {
     var searchQuery = ""
     var offset = 0
     val limit = 10
     var hasMore = false
 
-    fun fetchCourses() {
-        val courses = courseService.getCourses(searchQuery, offset, limit, currentUser)
+    // Decide User Type
+    var isAdmin = false
+    var isStudent = false
+    if (currentUser.role == UserRole.ADMIN) isAdmin = true
+    else if (currentUser.role == UserRole.STUDENT) isStudent = true
+
+    fun fetchCourses(): List<DetailedCourseData> {
+        val courses = courseService.getCourses(searchQuery, offset, limit, currentUser, onlyAssociated)
         if (courses.isEmpty()) {
             println("-------------- No Course to display -------------")
             hasMore = false
-            return
+            return courses
         }
         courses.forEach { CourseDisplayService.displayCourse(it) }
         hasMore = courses.size == limit
+        return courses
     }
-    fetchCourses()
+    // If no course available in the initial fetch then return immediately
+    if (fetchCourses().isEmpty())
+        return
 
     while (true) {
+        println("\n======== $pageTitle =========")
         println("\nOption to choose ⬇️")
         println("0 -> Go Back")
         println("1 -> Open a course")
@@ -497,21 +654,29 @@ fun listCourses(currentUser: UserData) {
             1 -> {
                 print("Enter course id: ")
                 val courseId = readln().toInt()
-                var courseData = courseService.getCourse(courseId)
-                if (courseData == null)
+                if (isStudent && MY_COURSE_PAGE_TITLE == pageTitle) {
+                    // Check if the entered course id is enrolled or not
+                    if (!studentCourseService.getEnrolledCourseIds(currentUser.id).contains(courseId)) {
+                        println("The selected course id is not yet enrolled by you.")
+                        println("aborting to previous menu...")
+                        continue
+                    }
+                }
+                var course = courseService.getCourse(courseId)
+                if (course == null)
                     continue
-                CourseDisplayService.displayCourse(courseData, true)
+                CourseDisplayService.displayCourse(course, true)
                 // If Admin Then Show Edit Option
-                if (currentUser.role == UserRole.ADMIN) {
+                if (isAdmin) {
                     while (true) {
-                        if (courseData == null)
+                        if (course == null)
                             continue
                         println("\nOption to choose ⬇️")
                         println("0 -> Go Back")
                         println("1 -> Edit Basic Details")
                         println("2 -> Edit Course Pricing")
                         println("3 -> Add New Module")
-                        if (courseData.modules.isNotEmpty())
+                        if (course.modules.isNotEmpty())
                             println("4 -> Edit Module Details")
 
                         print("Enter your option: ")
@@ -519,7 +684,7 @@ fun listCourses(currentUser: UserData) {
                         when (readln().toInt()) {
                             0 -> break
                             1 -> {
-                                if (editCourseBasicDetails(courseData))
+                                if (editCourseBasicDetails(course))
                                     // Refetch course After edit
                                     isRefetch = true
                             }
@@ -530,7 +695,7 @@ fun listCourses(currentUser: UserData) {
                             }
                             3 -> {
                                 val module = courseService.createModule(
-                                    courseId, courseData.modules.size + 1
+                                    courseId, course.modules.size + 1
                                 )
                                 println("New Module 👇")
                                 CourseDisplayService.displayModule(module)
@@ -545,13 +710,13 @@ fun listCourses(currentUser: UserData) {
                                 isRefetch = true
                             }
                             4 -> {
-                                if (courseData.modules.isEmpty()) {
+                                if (course.modules.isEmpty()) {
                                     println("Invalid option selected. Please try again.")
                                     continue
                                 }
                                 print("Enter module id to edit: ") // TODO: Change this to module id
                                 val inputModuleId = readln().toInt()
-                                val module = courseData.modules.find { it.id == inputModuleId }
+                                val module = course.modules.find { it.id == inputModuleId }
                                 if (module == null)
                                     println("module not found")
                                 else {
@@ -563,14 +728,33 @@ fun listCourses(currentUser: UserData) {
                         }
 
                         if (isRefetch) {
-                            courseData = courseService.getCourse(courseId)
+                            course = courseService.getCourse(courseId)
                             println("Course refetched...")
                         }
                     }
                 }
                 // If Student Then Show Enroll Option
-                else if (currentUser.role == UserRole.STUDENT) {
+                else if (isStudent) {
+                    // Get already enrolled courses ids
+                    val enrolledCourseIds = studentCourseService.getEnrolledCourseIds(currentUser.id)
 
+                    if (enrolledCourseIds.contains(courseId))
+                        println("Already Enrolled ✅")
+                    else {
+                        print("Are you ready to learn new skills by enrolling this course (y/n) ? ")
+                        if (readln().trim().lowercase() != "y") {
+                            println("📚 No problem! You can start enroll anytime.")
+                            continue
+                        }
+
+                        val isEnrolled = enrollCourse(currentUser.id, course)
+                        println("Course enrollment is ${if (isEnrolled) "success ✅ " else "failed ❌"}")
+                        if (isEnrolled)
+                            println("Course will be available in your 'My Course' page.")
+                    }
+                    print("Do you want to start learning (y/n) ? ")
+                    if (readln().trim().lowercase() == "y")
+                        openCourseInLearningMode(course, currentUser)
                 }
             }
             // Search
@@ -601,22 +785,23 @@ fun listCourses(currentUser: UserData) {
         }
     }
 }
-
+const val MY_COURSE_PAGE_TITLE = "My Courses"
 fun courseFlow(courseService: CourseService, currentUser: UserData) {
     val isAdmin = currentUser.role == UserRole.ADMIN
     val isStudent = currentUser.role == UserRole.STUDENT
     while (true) {
+        println("\n======== Main Page =========")
         println("\nOption to choose ⬇️")
         println("0 -> Back")
         println("1 -> List Of Courses")
-        println("2 -> ${if(isAdmin) "Create Course" else "My Courses"}")
-
-        val userInput = readln().toInt()
+        val option2 = if(isAdmin) "Create Course" else MY_COURSE_PAGE_TITLE
+        println("2 -> $option2")
+        print("Enter your option: ")
 
         // When - Course Flow
-        when (userInput) {
+        when (readln().toIntOrNull()) {
             0 -> return // It will break the outer loop
-            1 -> listCourses(currentUser)
+            1 -> listCourses("List Of Courses", currentUser)
             2 -> if(isAdmin) {
                 // Create Course
                 val course = courseService.createCourse(currentUser)
@@ -628,7 +813,7 @@ fun courseFlow(courseService: CourseService, currentUser: UserData) {
                 }
             } else if (isStudent) {
                 // My Courses
-
+                listCourses(option2, currentUser, true)
             }
         }
     }
@@ -649,7 +834,7 @@ fun main() {
         firstName = "firstName",
         lastName = "lastName",
         email = "email",
-        role = UserRole.ADMIN,
+        role = UserRole.STUDENT,
         hashPassword = "newUserData.hashedPassword",
         status = UserStatus.ACTIVE,
         lastLoginAt = LocalDateTime.now()

@@ -13,6 +13,8 @@ abstract class BaseUser {
     abstract val status: UserStatus
     abstract val hashPassword: String
     abstract val lastLoginAt: LocalDateTime
+    val fullName: String
+        get() = "$firstName $lastName"
 }
 
 data class UserData (

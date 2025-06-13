@@ -176,12 +176,23 @@ class CourseRepo : AbstractCourseRepo {
         return result.subList(offset, endIndex.coerceAtMost(result.size))
     }
 
-    override fun getCourses(searchQuery: String, offset: Int, limit: Int): List<DetailedCourseData> {
+    override fun getCourses(
+        searchQuery: String,
+        offset: Int,
+        limit: Int,
+        courseIds: List<Int>?
+    ): List<DetailedCourseData> {
         val endIndex = (offset + 1) * limit
         val courses = courseRecords.values.toList()
+        var result: List<DetailedCourseData> = courses
 
+        // Apply Course ids
+        if (courseIds != null && courseIds.isNotEmpty()) {
+            val courseIdsSet = courseIds.toSet()
+            result = courses.filter { courseIdsSet.contains(it.id) }
+        }
         // Apply Search
-        val result = courses.filter { it.title.contains(searchQuery, true) }
+        result = result.filter { it.title.contains(searchQuery, true) }
         // Apply Pagination
         return result.subList(offset, endIndex.coerceAtMost(result.size))
     }

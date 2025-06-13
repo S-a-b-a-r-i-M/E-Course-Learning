@@ -33,7 +33,7 @@ data class NewEnrollment (
     val paymentDetails: NewPaymentDetails?
 )
 
-data class StudentLessonProgress (
+data class StudentProgress (
     val id: Int,
     val studentId: UUID,
     val recentLessonId: Int,

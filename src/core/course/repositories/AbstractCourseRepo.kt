@@ -18,7 +18,12 @@ interface AbstractCourseRepo {
     fun getCourse(courseId: Int): DetailedCourseData?
     fun getPriceDetails(courseId: Int): PriceDetailsData?
     fun getCategories(searchQuery: String, offset: Int, limit: Int): List<CategoryData>
-    fun getCourses(searchQuery: String, offset: Int, limit: Int): List<DetailedCourseData>
+    fun getCourses(
+        searchQuery: String,
+        offset: Int,
+        limit: Int,
+        courseIds: List<Int>? = null
+    ): List<DetailedCourseData>
     fun getCoursesByIds(courseIds: List<Int>): List<DetailedCourseData>
 
     // ******************* UPDATE *******************
