@@ -8,13 +8,13 @@ import core.user.schemas.UserData
 import core.user.schemas.UserRole
 import core.user.schemas.UserUpdateData
 import core.user.schemas.UserStatus
+import utils.PasswordHasher
 import java.time.LocalDateTime
 import java.util.UUID
 
 class UserRepo : AbstractUserRepo {
     companion object{
         // Main Store
-        private val userRecords = mutableMapOf<UUID, BaseUser>()
         private val adminRecords = mutableMapOf<UUID, UserData>()
         private val studentRecords = mutableMapOf<UUID, StudentData>()
         private val trainerRecords = mutableMapOf<UUID, TrainerData>()
@@ -61,7 +61,7 @@ class UserRepo : AbstractUserRepo {
 
     // ******************* UPDATE *******************
     override fun updateUser(userId: UUID, updateData: UserUpdateData): Boolean {
-        val user = userRecords.getValue(userId)
+        val user = getUser(userId)
         val firstName = updateData.firstName ?: user.firstName
         val lastName = updateData.lastName ?: user.lastName
         val status = updateData.status ?: user.status
@@ -94,12 +94,29 @@ class UserRepo : AbstractUserRepo {
         return true
     }
 
-    override fun updateLastLogin(userId: UUID, lastLoginAt: LocalDateTime): Boolean {
-        TODO("Not yet implemented")
-    }
-
     // ******************* EXISTS *******************
     override fun isEmailExists(email: String): Boolean {
         return emailToIdMap[email] != null
+    }
+
+    init {
+        // Add New Admin User
+        val password = "p@ssword998877"
+        val adminUser = UserData(
+            id = UUID.randomUUID(),
+            firstName = "Sathrabathi",
+            lastName = "Sivaji",
+            email = "sivaji@gmail.com",
+            role = UserRole.ADMIN,
+            hashPassword = PasswordHasher.getHashPassword(password),
+            status = UserStatus.ACTIVE,
+            lastLoginAt = LocalDateTime.now()
+        )
+
+        // Add into Records
+        adminRecords[adminUser.id] = adminUser
+        userIdToRole[adminUser.id] = adminUser.role
+        emailToIdMap[adminUser.email] = adminUser.id
+        println("Admin record added...${adminUser.fullName}")
     }
 }

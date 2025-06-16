@@ -166,7 +166,6 @@ object CourseDisplayService {
     fun displayDetailedLesson(lesson: LessonData, withResource: Boolean = true) {
         val statusText = getStatusText(lesson.status)
 
-        println("=== LESSON DETAILS ===")
         println("Title: ${lesson.title}")
         println("ID: ${lesson.id}")
         println("Duration: ${formatDurationMinutes(lesson.duration)}")
@@ -174,8 +173,6 @@ object CourseDisplayService {
         println("Status: $statusText")
 
         if (withResource) println("Resource: ${lesson.resource}")
-
-        println("=====================")
     }
 
     private fun getStatusText(status: ResourceStatus): String {

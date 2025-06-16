@@ -17,7 +17,7 @@ interface AbstractUserRepo {
 
     // ******************* UPDATE *******************
     fun updateUser(userId: UUID, updateData: UserUpdateData): Boolean
-    fun updateLastLogin(userId: UUID, lastLoginAt: LocalDateTime): Boolean
+//    fun updateLastLogin(userId: UUID, lastLoginAt: LocalDateTime): Boolean
 
     // ******************* EXISTS *******************
     fun isEmailExists(email: String): Boolean

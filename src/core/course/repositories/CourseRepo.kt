@@ -17,8 +17,7 @@ import core.course.schemas.UpdateLessonData
 import core.course.schemas.UpdateModuleData
 import core.course.schemas.UpdatePriceDetailsData
 import java.util.UUID
-
-val CURRENT_FILE_NAME: String? = Throwable().stackTrace[0].fileName
+import kotlin.math.abs
 
 class CourseRepo : AbstractCourseRepo {
     companion object {
@@ -61,7 +60,7 @@ class CourseRepo : AbstractCourseRepo {
         )
 
         courseRecords[course.id] = course
-        println("$CURRENT_FILE_NAME: New course created")
+        println("New course created")
         return course
     }
 
@@ -95,7 +94,7 @@ class CourseRepo : AbstractCourseRepo {
             sequenceNumber = newModuleData.sequenceNumber,
             status = newModuleData.status,
         )
-        println("$CURRENT_FILE_NAME: New module created(id-${module.id})")
+        println("New module created(id-${module.id})")
 
         // Add module into maps
         course.modules.add(module)
@@ -115,7 +114,7 @@ class CourseRepo : AbstractCourseRepo {
             sequenceNumber = newLessonData.sequenceNumber,
             status = newLessonData.status,
         )
-        println("$CURRENT_FILE_NAME: New lesson created(id-${lesson.id})")
+        println("New lesson created(id-${lesson.id})")
 
         // Add lesson into maps
         module.lessons.add(lesson)
@@ -129,7 +128,7 @@ class CourseRepo : AbstractCourseRepo {
     override fun getCategory(categoryId: Int): CategoryData? {
         val category = categoryRecords[categoryId]
         if (category == null)
-            println("$CURRENT_FILE_NAME: Course not available fo courseId($categoryId)")
+            println("Course not available fo courseId($categoryId)")
 
         return category
     }
@@ -137,7 +136,7 @@ class CourseRepo : AbstractCourseRepo {
     override fun getCourse(courseId: Int): DetailedCourseData? {
         val course = courseRecords[courseId]
         if (course == null)
-            println("$CURRENT_FILE_NAME: Course not available fo courseId($courseId)")
+            println("Course not available fo courseId($courseId)")
 
         return course
     }
@@ -145,7 +144,7 @@ class CourseRepo : AbstractCourseRepo {
     override fun getPriceDetails(courseId: Int): PriceDetailsData? {
         val course = courseRecords[courseId]
         if (course == null)
-            println("$CURRENT_FILE_NAME: Course not available fo courseId($courseId)")
+            println("Course not available fo courseId($courseId)")
 
         return courseRecords.getValue(courseId).priceDetails
     }
@@ -153,7 +152,7 @@ class CourseRepo : AbstractCourseRepo {
     override fun getModule(moduleId: Int): ModuleData? {
         val module = moduleRecords[moduleId]
         if (module == null)
-            println("$CURRENT_FILE_NAME: Module not available fo moduleId($moduleId)")
+            println("Module not available fo moduleId($moduleId)")
 
         return module
     }
@@ -161,7 +160,7 @@ class CourseRepo : AbstractCourseRepo {
     override fun getLesson(lessonId: Int): LessonData? {
         val lesson = lessonRecords[lessonId]
         if (lesson == null)
-            println("$CURRENT_FILE_NAME: Lesson not available fo lessonId($lessonId)")
+            println("Lesson not available fo lessonId($lessonId)")
 
         return lesson
     }
@@ -277,6 +276,18 @@ class CourseRepo : AbstractCourseRepo {
         }
 
         return false
+    }
+
+    override fun updateModuleDuration(moduleId: Int, duration: Int): Boolean {
+        val module = moduleRecords.getValue(moduleId)
+        moduleRecords[moduleId] = module.copy(duration = abs(module.duration + duration))
+        return true
+    }
+
+    override fun updateCourseDuration(courseId: Int, duration: Int): Boolean {
+        val course = courseRecords.getValue(courseId)
+        courseRecords[courseId] = course.copy(duration = abs(course.duration + duration))
+        return true
     }
 
     // ******************* DELETE *******************

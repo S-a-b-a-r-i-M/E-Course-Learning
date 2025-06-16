@@ -11,25 +11,21 @@ import core.course.schemas.NewModuleData
 import core.course.schemas.NewPriceData
 import core.course.schemas.CourseLevel
 import core.course.schemas.CourseType
-import core.course.schemas.PriceDetailsData
 import core.course.schemas.UpdateCourseBasicData
 import core.course.schemas.UpdateLessonData
 import core.course.schemas.UpdateModuleData
 import core.course.schemas.UpdatePriceDetailsData
 import core.user.schemas.UserRole
 import core.user.schemas.UserData
+import utils.InputValidator
+import utils.currencyMap
 import utils.getListInput
+import utils.hasPermission
 import kotlin.Int
 
-val CURRENT_FILE_NAME: String? = Throwable().stackTrace[0].fileName
+const val RETRY_COUNT = 2
 
 fun String.capitalize(): String = this[0].uppercase() + this.substring(1).lowercase()
-
-val currencyMap = mapOf<String, String>(
-    "INR" to "₹",
-    "USD" to "$",
-    // Add other entries
-)
 
 class CourseService (
     private val courseRepo: AbstractCourseRepo,
@@ -107,10 +103,10 @@ class CourseService (
      */
     private fun getBasicCourseDataFromUser(): NewCourseBasicData {
         println("---------- Course Creation Section ----------")
-        print("Enter course title: ")
-        val title = readln().trim()
-        print("Enter course description: ")
-        val description = readln().trim()
+        print("Enter course title (min 3 char, max 50 char): ")
+        val title = InputValidator.validateName(readln(), "Title", 3, 50)
+        print("Enter course description (min 10 char): ")
+        val description = InputValidator.validateName(readln(), "Description", 10, 50)
 
         // Skills & Prerequisites
         val skills = getListInput("Enter skills(separate by comma): ", ",")
@@ -138,7 +134,7 @@ class CourseService (
 
             print("Enter amount: ")
             val amount = readln().trim().toDoubleOrNull() ?: run {
-                println("Invalid amount entered. Setting base price as 0")
+                println("Invalid amount entered. Setting base price as 0(In edit mode you can change it)")
                 0.0
             }
             priceData = NewPriceData(currencyCode, currencySymbol, amount)
@@ -247,8 +243,8 @@ class CourseService (
      */
     private fun getNewModuleDataFromUser(): NewModuleData {
         println("----- Module Creation ------")
-        print("Enter module title: ")
-        val title = readln().trim()
+        print("Enter module title (min 3 char, max 50 char): ")
+        val title = InputValidator.validateName(readln(), "Title", 3, 50)
 
         print("Enter description (optional, press enter to skip): ")
         val description = readln().trim().ifBlank { null }
@@ -264,10 +260,10 @@ class CourseService (
      */
     private fun getNewLessonDataFromUser(sequenceNumber: Int): NewLessonData {
         println("----- Lesson Creation ------")
-        print("Enter Lesson title: ")
-        val title = readln().trim()
-        print("Enter content: ")
-        val resource = readln().trim()
+        print("Enter Lesson title (min 3 char, max 50 char): ")
+        val title = InputValidator.validateName(readln(), "Title", 3, 50)
+        print("Enter content (min 30 char): ")
+        val resource = InputValidator.validateName(readln(), "Content", 50)
         print("Enter duration(in minutes): ")
         val duration = readln().toInt()
 
@@ -287,11 +283,30 @@ class CourseService (
      * @param sequenceNumber The sequential order of this lesson within the module.
      * @return A [LessonData] object representing the newly created lesson.
      */
-    fun createLesson(courseId: Int, moduleId: Int, sequenceNumber: Int):  LessonData {
-        val newLessonData =  getNewLessonDataFromUser(sequenceNumber)
-        newLessonData.sequenceNumber = sequenceNumber
-        val lesson = courseRepo.createLesson(newLessonData, moduleId)
-        return lesson
+    fun createLesson(currentUser: UserData, courseId: Int, moduleId: Int, sequenceNumber: Int):  LessonData? {
+        if (!hasPermission(currentUser.role)) return null
+
+        return createLessonInternal(courseId, moduleId, sequenceNumber)
+    }
+
+    private fun createLessonInternal(courseId: Int, moduleId: Int, sequenceNumber: Int):  LessonData? {
+        repeat(RETRY_COUNT) { count ->
+            try {
+                val newLessonData = getNewLessonDataFromUser(sequenceNumber)
+                newLessonData.sequenceNumber = sequenceNumber
+                val lesson = courseRepo.createLesson(newLessonData, moduleId)
+                // Update Durations in Module and Course
+                courseRepo.updateModuleDuration(moduleId, lesson.duration)
+                courseRepo.updateCourseDuration(courseId, lesson.duration)
+                return lesson
+            } catch (exp: Exception) {
+                println("Err:{${exp.message}}")
+                if (count < RETRY_COUNT - 1) println("Try again....\n")
+            }
+        }
+
+        println("Too many attempts, aborting...\n")
+        return null
     }
 
     /**
@@ -301,11 +316,27 @@ class CourseService (
      * @param sequenceNumber The sequential order of this module within the course.
      * @return A [ModuleData] object for the newly created module.
      */
-    fun createModule(courseId: Int, sequenceNumber: Int): ModuleData {
-        val newModule =  getNewModuleDataFromUser()
-        newModule.sequenceNumber = sequenceNumber
-        val module = courseRepo.createModule(newModule, courseId)
-        return module
+    fun createModule(currentUser: UserData, courseId: Int, sequenceNumber: Int): ModuleData? {
+        if (!hasPermission(currentUser.role)) return null
+
+        return createModuleInternal(courseId, sequenceNumber)
+    }
+
+    private fun createModuleInternal(courseId: Int, sequenceNumber: Int): ModuleData? {
+        repeat(RETRY_COUNT) { count ->
+            try {
+                val newModule = getNewModuleDataFromUser()
+                newModule.sequenceNumber = sequenceNumber
+                val module = courseRepo.createModule(newModule, courseId)
+                return module
+            }  catch (exp: Exception) {
+                println("Err:{${exp.message}}")
+                if (count < RETRY_COUNT - 1) println("Try again....\n")
+            }
+        }
+
+        println("Too many attempts, aborting...\n")
+        return null
     }
 
     /**
@@ -321,58 +352,98 @@ class CourseService (
      *         and lessons, or `null` if the user does not have the required permissions.
      */
     fun createCourse(currentUser: UserData): DetailedCourseData? {
-        if (currentUser.role != UserRole.ADMIN) {
-            println("User don't have the permission to create course")
-            return null
+        if (!hasPermission(currentUser.role)) return null
+
+        repeat(RETRY_COUNT) { count ->
+            try {
+                // Create course with basic details
+                val newCourse = getBasicCourseDataFromUser()
+                val course = courseRepo.createCourse(newCourse, currentUser.id)
+
+                // Attach PriceDetails to Course
+                val courseId = course.id
+                if (newCourse.priceData != null)
+                    courseRepo.createPricing(newCourse.priceData, courseId)
+                println("${newCourse.title}(id-${courseId}) created successfully with basic details")
+
+                // Module & Lesson Creation
+                do {
+                    val module = createModuleInternal(courseId, course.modules.size + 1)
+                    if (module != null) {
+                        do {
+                            createLessonInternal(courseId, module.id, module.lessons.size + 1)
+                            print("Do you want to create another lesson(y/n) ?")
+                            val addAnotherLesson = readln().lowercase() == "y"
+                        } while (addAnotherLesson)
+                    }
+                    print("Do you want to create another module(y/n) ?")
+                    val addAnotherModule = readln().lowercase() == "y"
+                } while (addAnotherModule)
+
+                println("Course successfully created!!!")
+                return course
+            } catch (exp: Exception) {
+                println("Err:{${exp.message}}")
+                if (count < RETRY_COUNT - 1) println("Try again....\n")
+            }
         }
 
-        // Create course with basic details
-        val newCourse = getBasicCourseDataFromUser()
-        val course = courseRepo.createCourse(newCourse, currentUser.id)
-
-        // Attach PriceDetails to Course
-        val courseId = course.id
-        if (newCourse.priceData != null)
-            courseRepo.createPricing(newCourse.priceData, courseId)
-        println("${newCourse.title}(id-${courseId}) created successfully with basic details")
-
-        // Module & Lesson Creation
-        do {
-            val module = createModule(courseId, course.modules.size + 1)
-            do {
-                createLesson(courseId, module.id, module.lessons.size + 1)
-                print("Do you want to create another lesson(y/n) ?")
-                val addAnotherLesson = readln().lowercase() == "y"
-            } while (addAnotherLesson)
-            print("Do you want to create another module(y/n) ?")
-            val addAnotherModule = readln().lowercase() == "y"
-        } while (addAnotherModule)
-
-        println("Course successfully created!!!")
-        return course
+        println("Too many attempts, aborting...\n")
+        return null
     }
 
-    fun updateCourseBasicDetails(courseId: Int, updateData: UpdateCourseBasicData) {
+    /**
+     * Updates the basic details of a specific course.
+     *
+     * @param courseId The unique identifier of the course to be updated.
+     * @param updateData An [UpdateCourseBasicData] object containing the fields to update.
+     */
+    fun updateCourseBasicDetails(currentUser: UserData, courseId: Int, updateData: UpdateCourseBasicData) {
+        if (!hasPermission(currentUser.role)) return
+
         courseRepo.updateCourseBasicDetails(courseId, updateData)
         println("Course($courseId) basic details updated.")
     }
 
-    fun updateCoursePricing(courseId: Int, priceDetails: UpdatePriceDetailsData?) {
+    /**
+     * Updates or creates the pricing details for a specific course.
+     *
+     * This function can be used to change the price of a course, or to add pricing
+     *
+     * @param courseId The unique identifier of the course whose pricing will be updated.
+     * @param priceDetails An [UpdatePriceDetailsData] object with the new pricing information,
+     * or `null` to remove existing pricing details (e.g., making a course free).
+     */
+    fun updateCoursePricing(currentUser: UserData, courseId: Int, priceDetails: UpdatePriceDetailsData?) {
+        if (!hasPermission(currentUser.role)) return
+
         courseRepo.updateOrCreatePricing(priceDetails, courseId)
         println("Price Details Updated.")
     }
 
-    fun updateModuleDetails(moduleId: Int, updateData: UpdateModuleData) {
+    /**
+     * Updates the details of a specific module.
+     *
+     * @param moduleId The unique identifier of the module to be updated.
+     * @param updateData An [UpdateModuleData] object containing the new data for the module.
+     */
+    fun updateModuleDetails(currentUser: UserData, moduleId: Int, updateData: UpdateModuleData) {
+        if (!hasPermission(currentUser.role)) return
+
         courseRepo.updateModuleDetails(moduleId, updateData)
         println("Module($moduleId) details updated.")
     }
 
-    fun updateLessonDetails(lessonId: Int, updateData: UpdateLessonData) {
+    /**
+     * Updates the details of a specific lesson.
+     *
+     * @param lessonId The unique identifier of the lesson to be updated.
+     * @param updateData An [UpdateLessonData] object containing the new data for the lesson.
+     */
+    fun updateLessonDetails(currentUser: UserData, lessonId: Int, updateData: UpdateLessonData) {
+        if (!hasPermission(currentUser.role)) return
+
         courseRepo.updateLessonDetails(lessonId, updateData)
         println("Lesson($lessonId) details updated.")
-    }
-
-    fun deleteLesson(lessonId: Int): Boolean {
-        return courseRepo.deleteLesson(lessonId)
     }
 }

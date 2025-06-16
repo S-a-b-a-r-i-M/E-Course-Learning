@@ -31,6 +31,8 @@ interface AbstractCourseRepo {
     fun updateCourseBasicDetails(courseId: Int, updateData: UpdateCourseBasicData): Boolean
     fun updateModuleDetails(moduleId: Int, updateData: UpdateModuleData): Boolean
     fun updateLessonDetails(lessonId: Int, updateData: UpdateLessonData) : Boolean
+    fun updateModuleDuration(moduleId: Int, duration: Int) : Boolean
+    fun updateCourseDuration(courseId: Int, duration: Int): Boolean
 
     // ******************* DELETE *******************
     fun deleteLesson(lessonId: Int): Boolean
