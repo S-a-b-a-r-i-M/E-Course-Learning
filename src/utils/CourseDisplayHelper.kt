@@ -1,10 +1,11 @@
-package core.course.services
+package utils
 
 import core.course.schemas.CategoryData
 import core.course.schemas.DetailedCourseData
 import core.course.schemas.LessonData
 import core.course.schemas.ModuleData
 import core.course.schemas.ResourceStatus
+import core.course.services.capitalize
 import db.CompletionStatus
 import utils.formatDurationMinutes
 import kotlin.collections.forEach
@@ -12,7 +13,7 @@ import kotlin.collections.joinToString
 import kotlin.collections.take
 import kotlin.text.isNotEmpty
 
-object CourseDisplayService {
+object CourseDisplayHelper {
     /**
      * Displays a list of categories in a formatted table on the console.
      *
@@ -43,8 +44,6 @@ object CourseDisplayService {
         val cardWidth = 60
         val border = "═".repeat(cardWidth)
         val titleLine = "─".repeat(cardWidth)
-
-        course.modules.clear()
 
         // Format duration
         val durationText = when {

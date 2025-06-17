@@ -1,17 +1,21 @@
 import core.auth.services.AuthService
 import core.course.repositories.CourseRepo
 import core.course.repositories.StudentCourseRepo
+import core.course.schemas.CategoryData
+import core.course.schemas.CourseLevel
+import core.course.schemas.CourseType
 import core.course.schemas.DetailedCourseData
 import core.course.schemas.ModuleData
+import core.course.schemas.NewCourseBasicData
 import core.course.schemas.NewEnrollment
 import core.course.schemas.NewPaymentDetails
+import core.course.schemas.NewPriceData
 import core.course.schemas.PriceDetailsData
 import core.course.schemas.ResourceStatus
 import core.course.schemas.UpdateCourseBasicData
 import core.course.schemas.UpdateLessonData
 import core.course.schemas.UpdateModuleData
 import core.course.schemas.UpdatePriceDetailsData
-import core.course.services.CourseDisplayService
 import core.course.services.CourseService
 import core.course.services.StudentCourseService
 import core.course.services.capitalize
@@ -19,11 +23,12 @@ import core.user.repositories.UserRepo
 import core.user.schemas.BaseUser
 import core.user.schemas.UserData
 import core.user.schemas.UserRole
-import core.user.schemas.UserStatus
 import db.CompletionStatus
+import utils.CourseDisplayHelper
+import utils.InputValidator
 import utils.currencyMap
 import utils.getListInput
-import java.time.LocalDateTime
+import utils.hasPermission
 import java.util.UUID
 import kotlin.io.print
 import kotlin.io.println
@@ -211,7 +216,7 @@ fun editLesson(currentUser: UserData, lessonId: Int): Boolean {
 
     while (true) {
         println("\n===== Edit Lesson =====")
-        CourseDisplayService.displayDetailedLesson(existingLessonData, true)
+        CourseDisplayHelper.displayDetailedLesson(existingLessonData, true)
         println("\nOption to choose ⬇️")
         println("1 -> Edit Title")
         println("2 -> Edit Resource")
@@ -315,7 +320,7 @@ fun manageLessons(currentUser: UserData, courseId: Int, moduleId: Int) {
                 if (lesson == null) continue
 
                 println("New Lesson 👇")
-                CourseDisplayService.displayDetailedLesson(lesson, true)
+                CourseDisplayHelper.displayDetailedLesson(lesson, true)
                 module = fetchModule() ?: return // Refetch
             }
             // Edit Lesson
@@ -368,7 +373,7 @@ fun editModuleDetails(currentUser: UserData, courseId: Int, moduleId: Int): Bool
 
     while (true) {
         println("\n===== Edit Module =====")
-        CourseDisplayService.displayModule(module)
+        CourseDisplayHelper.displayModule(module)
         println("\nOption to choose ⬇️")
         println("1 -> Edit Title")
         println("2 -> Edit Description")
@@ -559,7 +564,7 @@ fun openCourseInLearningMode(course: DetailedCourseData, currentUser: UserData) 
         return
     } else
         for((index, module) in course.modules.withIndex()) {
-            CourseDisplayService.displayModule(
+            CourseDisplayHelper.displayModule(
                 module,
                 true,
                 2,
@@ -681,7 +686,7 @@ fun listCourses(pageTitle: PageNames, currentUser: UserData, onlyAssociated: Boo
             hasMore = false
             return courses
         }
-        courses.forEach { CourseDisplayService.displayCourse(it) }
+        courses.forEach { CourseDisplayHelper.displayCourse(it) }
         hasMore = courses.size == limit
         return courses
     }
@@ -724,7 +729,7 @@ fun listCourses(pageTitle: PageNames, currentUser: UserData, onlyAssociated: Boo
                         if (course == null)
                             continue
                         println()
-                        CourseDisplayService.displayCourse(course, true)
+                        CourseDisplayHelper.displayCourse(course, true)
                         println("\nOption to choose ⬇️")
                         println("0 -> Go Back")
                         println("1 -> Edit Basic Details")
@@ -752,7 +757,7 @@ fun listCourses(pageTitle: PageNames, currentUser: UserData, onlyAssociated: Boo
                                     currentUser, courseId, course.modules.size + 1
                                 ) ?: continue
                                 println("New Module 👇")
-                                CourseDisplayService.displayModule(module)
+                                CourseDisplayHelper.displayModule(module)
                                 // Add Lessons to New Module
                                 println("Let's add lessons to your module...")
                                 var lessonSeqNum = 1
@@ -794,7 +799,7 @@ fun listCourses(pageTitle: PageNames, currentUser: UserData, onlyAssociated: Boo
                 }
                 // If Student Then Show Enroll Option
                 else if (isStudent) {
-                    CourseDisplayService.displayCourse(course, true)
+                    CourseDisplayHelper.displayCourse(course, true)
                     // Get already enrolled courses ids
                     val enrolledCourseIds = studentCourseService.getEnrolledCourseIds(currentUser.id)
 
@@ -846,6 +851,164 @@ fun listCourses(pageTitle: PageNames, currentUser: UserData, onlyAssociated: Boo
     }
 }
 
+private fun getSelectedCategoryFromUser(): CategoryData {
+    /* Steps:
+      1. Show First 10.
+          1.1. Select Categories
+          1.2. Load More(based on limit and retrieved data)
+          1.3. Search
+               Go to step 1
+               1.3.1. If no categories found then create and ask user to search again to get the id
+     */
+    println("\n----- Choose Course Category -----")
+    var searchQuery = ""
+    var offset = 0
+    val limit = 10
+    var categories: List<CategoryData> = courseService.getCategories(searchQuery, offset, limit)
+
+    // Show 10 default categories
+    CourseDisplayHelper.displayCategories(categories, searchQuery)
+
+    while (true) {
+        println("\nOption to choose ⬇️")
+        println("1 -> Select Category")
+        println("2 -> Search 🔍")
+//            if (categories.size == limit) println("3 -> Load More ↻")
+        print("Enter your option: ")
+        val userInput = readln().toInt()
+
+        when (userInput) {
+            // Select
+            1 -> {
+                print("Enter a category name: ")
+                val input = readln().trim()
+                if (input.isEmpty()) {
+                    println("Invalid input. Please try again.")
+                    continue
+                }
+
+                val selectedCategory = categories.find { it.name.equals(input, true) }
+                if (selectedCategory == null) {
+                    println("Invalid category. Please try again.")
+                    continue
+                }
+                return selectedCategory
+            }
+            // Search
+            2 -> {
+                print("Enter Search Query:")
+                val newSearchQuery = readln().trim()
+                if (newSearchQuery == searchQuery) { // If there is no change no need to refetch
+                    println("Same search query - no changes made")
+                    continue
+                }
+
+                searchQuery = newSearchQuery
+                offset = 0 // Reset offset when searching
+                categories = courseService.getCategories(searchQuery, offset, limit)
+                CourseDisplayHelper.displayCategories(categories, searchQuery)
+            }
+            // Load More
+            /*
+            3 -> {
+                if (categories.size < limit) {
+                    println("No more categories to load")
+                    continue
+                }
+                offset += limit
+                categories = getCategories(searchQuery, offset, limit)
+                displayCategories()
+            }
+            */
+            else -> {
+                println("invalid option selected. Please try again.")
+            }
+        }
+    }
+}
+
+fun getBasicCourseDataFromUser(): NewCourseBasicData {
+    println("---------- Course Creation Section ----------")
+    print("Enter course title (min 3 char, max 50 char): ")
+    val title = InputValidator.validateName(readln(), "Title", 3, 50)
+    print("Enter course description (min 10 char): ")
+    val description = InputValidator.validateName(readln(), "Description", 10, 50)
+
+    // Skills & Prerequisites
+    val skills = getListInput("Enter skills(separate by comma): ", ",")
+    val prerequisites = getListInput(
+        "Enter prerequisites (separate by comma, or press enter to skip): ",
+        ","
+    )
+
+    // Course Level & Type
+    print("Enter Course Level(${CourseLevel.entries.joinToString(", ") { it.name.capitalize() }}):")
+    val courseLevel = readln().trim().let { CourseLevel.getFromStrValue(it) } // Reason for using let: Better readability and clarity
+    print("Enter Course Type(${CourseType.entries.joinToString(", ") { 
+        it.name.capitalize().replace("_", "-") 
+    }}):")
+    val courseType = readln().trim().let { CourseType.getFromStrValue(it) }
+
+    // Free course check with Price details
+    print("Is this a free course? (y/n): ")
+    val isFreeInput = readln().trim().lowercase()
+    val isFree = isFreeInput == "y"
+    var priceData: NewPriceData? = null
+    if (!isFree) {
+        println("\n----- Enter Price Details -----")
+        print("Enter currency code (${currencyMap.keys.joinToString(", ")}): ")
+        val currencyCode = readln().trim().uppercase()
+        val currencySymbol = currencyMap.getOrDefault(currencyCode, "₹")
+
+        print("Enter amount: ")
+        val amount = readln().trim().toDoubleOrNull() ?: run {
+            println("Invalid amount entered. Setting base price as 0(In edit mode you can change it)")
+            0.0
+        }
+        priceData = NewPriceData(currencyCode, currencySymbol, amount)
+    }
+
+    // Get Category
+    val category = getSelectedCategoryFromUser()
+
+    return NewCourseBasicData(
+        title=title,
+        description=description,
+        skills=skills,
+        courseLevel=courseLevel,
+        courseType=courseType,
+        category=category.name,
+        prerequisites=prerequisites,
+        priceData = priceData,
+    )
+}
+
+fun createCourse(currentUser: UserData, newCourseData: NewCourseBasicData): DetailedCourseData? {
+    // Create course with basic details
+    val course = courseService.createCourse(currentUser, newCourseData)
+
+    if (course == null) {
+        return null
+    }
+
+    // Module & Lesson Creation
+    do {
+        val module = courseService.createModule(currentUser, course.id, course.modules.size + 1)
+        if (module != null) {
+            do {
+                courseService.createLesson(currentUser, course.id, module.id, module.lessons.size + 1)
+                print("Do you want to create another lesson(y/n) ?")
+                val addAnotherLesson = readln().lowercase() == "y"
+            } while (addAnotherLesson)
+        }
+        print("Do you want to create another module(y/n) ?")
+        val addAnotherModule = readln().lowercase() == "y"
+    } while (addAnotherModule)
+
+    println("Course successfully created!!!")
+    return course
+}
+
 fun homePageFlow(currentUser: UserData) {
     val isAdmin = currentUser.role == UserRole.ADMIN
     val isStudent = currentUser.role == UserRole.STUDENT
@@ -867,12 +1030,13 @@ fun homePageFlow(currentUser: UserData) {
 
             2 -> if(isAdmin) {
                 // Create Course
-                val course = courseService.createCourse(currentUser)
+                val newCourseData = getBasicCourseDataFromUser()
+                val course = createCourse(currentUser, newCourseData)
                 if (course != null) {
                     println("Do you wanna open the course(y/n) ?")
                     val openCourse = readln().trim().lowercase() == "y"
                     if (openCourse) {
-                        CourseDisplayService.displayCourse(course, true)
+                        CourseDisplayHelper.displayCourse(course, true)
                     }
                 }
             } else if (isStudent) {
