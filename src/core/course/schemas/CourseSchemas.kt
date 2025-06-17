@@ -45,11 +45,10 @@ data class DetailedCourseData (
     val status: ResourceStatus,
     val prerequisites: List<String>? = null,
     val priceDetails: PriceDetailsData? = null,
-    val modules: MutableList<ModuleData> = mutableListOf(),
+    val modules: List<ModuleData> = listOf(),
     val parentCourseId: Int? = null // Used to connect this course with its parent course
 )
 
-// TODO: Needs to improve this to handle other field values
 data class UpdateCourseBasicData (
     var title: String? = null,
     var description: String? = null,
@@ -92,7 +91,7 @@ data class ModuleData (
     var duration: Int = 0,
     val sequenceNumber: Int = 0,
     val status: ResourceStatus = ResourceStatus.PUBLISHED,
-    val lessons: MutableList<LessonData> = mutableListOf(),
+    val lessons: List<LessonData> = listOf(),
 )
 
 data class UpdateModuleData (

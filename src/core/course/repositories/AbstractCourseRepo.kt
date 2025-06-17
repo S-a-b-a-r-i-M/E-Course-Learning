@@ -6,8 +6,8 @@ import java.util.UUID
 interface AbstractCourseRepo {
     // ******************* CREATE *******************
     fun createCategory(name: String): CategoryData
-    fun createLesson(newLessonData: NewLessonData, moduleId: Int): LessonData
-    fun createModule(newModuleData: NewModuleData, courseId: Int): ModuleData
+    fun createLesson(newLessonData: NewLessonData, moduleId: Int): LessonData?
+    fun createModule(newModuleData: NewModuleData, courseId: Int): ModuleData?
     fun createCourse(newCourseData: NewCourseBasicData, currentUserId: UUID): DetailedCourseData
     fun createPricing(newPriceData: NewPriceData, courseId: Int): PriceDetailsData
 
@@ -35,7 +35,6 @@ interface AbstractCourseRepo {
     fun updateCourseDuration(courseId: Int, duration: Int): Boolean
 
     // ******************* DELETE *******************
-    fun deleteLesson(lessonId: Int): Boolean
 
     // ******************* EXISTS *******************
     fun isCategoryExists(name: String): Boolean

@@ -64,7 +64,6 @@ class StudentCourseService (private val repo: AbstractStudentCourseRepo) {
         studentId: UUID,
         isCompleted: Boolean
     ): Boolean {
-        //TODO: If necessary: check if the user already having any in progress lesson status in the course
         val status = if (isCompleted) CompletionStatus.COMPLETED else CompletionStatus.IN_PROGRESS
         return repo.updateOrCreateStudentProgress(courseId, lessonId, studentId, status)
     }

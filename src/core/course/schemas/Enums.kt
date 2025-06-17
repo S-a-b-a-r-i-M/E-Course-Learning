@@ -43,8 +43,7 @@ enum class CourseType {
     companion object {
         fun getFromStrValue(value: String): CourseType = when {
             value.equals("LIVE", true) -> LIVE
-            value.equals("SELF_PACED", true) -> SELF_PACED
-            value.equals("SELF-PACED", true) -> SELF_PACED
+            value.contains("SELF", true) -> SELF_PACED
             else -> {
                 println("Invalid level, defaulting to SELF_PACED")
                 SELF_PACED

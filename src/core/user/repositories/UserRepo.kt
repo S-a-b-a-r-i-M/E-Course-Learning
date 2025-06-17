@@ -66,7 +66,6 @@ class UserRepo : AbstractUserRepo {
         val lastName = updateData.lastName ?: user.lastName
         val status = updateData.status ?: user.status
 
-        // TODO: If needs, split update functions specific to user roles
         when (user) {
             is UserData -> {
                 adminRecords[userId] = user.copy(

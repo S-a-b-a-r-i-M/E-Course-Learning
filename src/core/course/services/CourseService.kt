@@ -54,8 +54,6 @@ class CourseService (
         currentUser: UserData,
         onlyAssociated: Boolean = false,
     ): List<DetailedCourseData> {
-        // TODO: Get Courses based on roles
-
         var courseIds: List<Int>? = null
         if (currentUser.role != UserRole.ADMIN && onlyAssociated) {
             if (currentUser.role == UserRole.STUDENT)
@@ -64,6 +62,7 @@ class CourseService (
 //          else {
 //                // Get Trainer's Assigned Course Ids
 //          }
+
 
             // If no course found then return immediately
             if (courseIds != null && courseIds.isEmpty()) {
@@ -116,9 +115,9 @@ class CourseService (
         )
 
         // Course Level & Type
-        println("Enter Course Level(${CourseLevel.entries.joinToString(", ") { it.name.capitalize() }}):")
+        print("Enter Course Level(${CourseLevel.entries.joinToString(", ") { it.name.capitalize() }}):")
         val courseLevel = readln().trim().let { CourseLevel.getFromStrValue(it) } // Reason for using let: Better readability and clarity
-        println("Enter Course Type(${CourseType.entries.joinToString(", ") { it.name.capitalize().replace("_", "-") }}):")
+        print("Enter Course Type(${CourseType.entries.joinToString(", ") { it.name.capitalize().replace("_", "-") }}):")
         val courseType = readln().trim().let { CourseType.getFromStrValue(it) }
 
         // Free course check with Price details
@@ -263,7 +262,7 @@ class CourseService (
         print("Enter Lesson title (min 3 char, max 50 char): ")
         val title = InputValidator.validateName(readln(), "Title", 3, 50)
         print("Enter content (min 30 char): ")
-        val resource = InputValidator.validateName(readln(), "Content", 50)
+        val resource = InputValidator.validateName(readln(), "Content", 30)
         print("Enter duration(in minutes): ")
         val duration = readln().toInt()
 
@@ -294,7 +293,8 @@ class CourseService (
             try {
                 val newLessonData = getNewLessonDataFromUser(sequenceNumber)
                 newLessonData.sequenceNumber = sequenceNumber
-                val lesson = courseRepo.createLesson(newLessonData, moduleId)
+                val lesson = courseRepo.createLesson(newLessonData, moduleId) ?: return null
+                println("New lesson created(id-${lesson.id})")
                 // Update Durations in Module and Course
                 courseRepo.updateModuleDuration(moduleId, lesson.duration)
                 courseRepo.updateCourseDuration(courseId, lesson.duration)

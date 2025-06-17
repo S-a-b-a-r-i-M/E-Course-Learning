@@ -44,12 +44,13 @@ object CourseDisplayService {
         val border = "═".repeat(cardWidth)
         val titleLine = "─".repeat(cardWidth)
 
+        course.modules.clear()
+
         // Format duration
-//        val durationText = when {
-//            course.duration > 60 -> formatDurationMinutes(course.duration)
-//            else -> "${course.duration}m"
-//        }
-        val durationText = ""
+        val durationText = when {
+            course.duration > 60 -> formatDurationMinutes(course.duration)
+            else -> "${course.duration}m"
+        }
 
         // Format price
         val priceText = course.priceDetails?.let { "${it.currencySymbol}${it.amount}" } ?: "Free"

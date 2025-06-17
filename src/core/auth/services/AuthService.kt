@@ -2,6 +2,7 @@ package core.auth.services
 
 import core.auth.schemas.SignInData
 import core.auth.schemas.SignUpData
+import core.course.schemas.CURRENT_FILE_NAME
 import core.user.schemas.NewUserData
 import core.user.repositories.AbstractUserRepo
 import core.user.schemas.BaseUser
@@ -64,7 +65,7 @@ class AuthService (val userRepo: AbstractUserRepo) {
                 // Check email uniqueness
                 if (userRepo.isEmailExists(signUpData.email)){
                     println("AuthService(signUp): Email Already exists!!!")
-                    return null // TODO: Throw appropriate exception
+                    return null
                 }
 
                 // Create User
@@ -117,18 +118,18 @@ class AuthService (val userRepo: AbstractUserRepo) {
         val userData: BaseUser? = userRepo.getUserByEmail(signInData.email)
         if(userData == null){
             println("User with email(${signInData.email}) is not found!!!")
-            return null // TODO: Throw appropriate exception
+            return null
         }
 
         // Validate Password
         if (!PasswordHasher.checkPasswordMatch(signInData.password,userData.hashPassword)) {
             println("User with email(${signInData.email}) password is not matched!!!")
-            return null // TODO: Throw appropriate exception
+            return null
         }
 
         if (userData.status == UserStatus.SUSPENDED) {
             println("User(${userData.id}) account is suspended!!!")
-            return null // TODO: Throw appropriate exception
+            return null
         }
 
         return userData

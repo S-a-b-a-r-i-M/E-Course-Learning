@@ -33,8 +33,8 @@ fun authFlow(): BaseUser? {
         println("\n======== Auth Page =========")
         println("\nOption to choose ⬇️")
         println("0 -> Exit")
-        println("1 -> Sign In")
-        println("2 -> Sign Up")
+        println("1 -> Sign Up")
+        println("2 -> Sign In")
         val userInput = readln().toInt()
 
         // When - Auth Flow
@@ -871,8 +871,9 @@ fun homePageFlow(currentUser: UserData) {
                 if (course != null) {
                     println("Do you wanna open the course(y/n) ?")
                     val openCourse = readln().trim().lowercase() == "y"
-                    if (openCourse)
+                    if (openCourse) {
                         CourseDisplayService.displayCourse(course, true)
+                    }
                 }
             } else if (isStudent) {
                 // My Courses
@@ -886,23 +887,22 @@ fun main() {
     println("Welcome to grate kirigalan's show...")
 
     // App Flow
-//    val user: BaseUser? = authFlow()
-//    if (user == null) {
-//        println("User Login Error")
-//        return
-//    }
+    val user: BaseUser? = authFlow()
+    if (user == null) {
+        println("User Login Error")
+        return
+    }
 
-    val user = UserData(
-        id = UUID.randomUUID(),
-        firstName = "Sathrabathi",
-        lastName = "Sivaji",
-        email = "sivaji@gmail.com",
-        role = UserRole.ADMIN,
-        hashPassword = "PasswordHasher.getHashPassword(password)",
-        status = UserStatus.ACTIVE,
-        lastLoginAt = LocalDateTime.now()
-    )
-
+//    val user = UserData(
+//        id = UUID.randomUUID(),
+//        firstName = "Sathrabathi",
+//        lastName = "Sivaji",
+//        email = "sivaji@gmail.com",
+//        role = UserRole.ADMIN,
+//        hashPassword = "PasswordHasher.getHashPassword(password)",
+//        status = UserStatus.ACTIVE,
+//        lastLoginAt = LocalDateTime.now()
+//    )
 
     homePageFlow(UserData(
         user.id, user.firstName, user.lastName, user.email,
