@@ -160,6 +160,24 @@ class EditCoursePage (val courseService: CourseService) {
         }
     }
 
+    private fun getTitleFromUser(): String {
+        print("Enter New title or press Enter to keep current (min 3 char, max 50 char): ")
+        val input = readln().trim()
+
+        // Validate
+        if (input.isEmpty())
+            return ""
+        else if (input.length < 3) {
+            println("Title is too short...")
+            return ""
+        } else if (input.length > 50) {
+            println("Title is too big...")
+            return ""
+        }
+
+        return input
+    }
+
     fun editLesson(currentUser: UserData, lessonId: Int): Boolean {
         val existingLessonData = courseService.getLesson(lessonId) ?: return false
         val updateLessonData = UpdateLessonData()
@@ -180,29 +198,39 @@ class EditCoursePage (val courseService: CourseService) {
             when (readln().toIntOrNull()) {
                 1 -> {
                     println("Current: ${updateLessonData.title ?: existingLessonData.title}")
-                    print("New title (or press Enter to keep current): ")
-                    val newTitle = readln().trim()
-                    if (newTitle.isNotEmpty()) {
-                        updateLessonData.title = newTitle
-                        isModified = true
-                        println("New Title added")
-                    } else
-                        println("Title unchanged")
+                    print("Enter New title or press Enter to keep current (min 3 char, max 50 char): ")
+                    try {
+                        val newTitle = getTitleFromUser()
+                        if (newTitle.isNotEmpty()) {
+                            updateLessonData.title = newTitle
+                            isModified = true
+                            println("New Title added")
+                        }
+                        else
+                            println("Title unchanged")
+                    } catch (exp: Exception) {
+                        println("Err:{${exp.message}}")
+                        println("Try again....\n")
+                    }
+
                 }
                 2 -> {
                     println("Current: ${updateLessonData.resource ?: existingLessonData.resource}")
-                    print("New resource (or press Enter to keep current): ")
+                    print("New resource or press Enter to keep current (min 30 char): ")
                     val newResource = readln().trim()
-                    if (newResource.isNotEmpty()) {
+                    if (newResource.isEmpty())
+                        println("Resource unchanged")
+                    if (newResource.length < 30)
+                        println("Resource cannot be less than 30 characters...")
+                    else  {
                         updateLessonData.resource = newResource
                         isModified = true
                         println("New Resource added")
-                    } else
-                        println("Resource unchanged")
+                    }
                 }
                 3 -> {
                     println("Current: ${updateLessonData.duration ?: existingLessonData.duration} minutes")
-                    print("New duration (or press Enter to keep current): ")
+                    print("New duration or press Enter to keep current(ex: 30, 45): ")
                     val newDuration = readln().toIntOrNull()
                     if (newDuration != null && newDuration > 0) {
                         updateLessonData.duration = newDuration
@@ -219,6 +247,7 @@ class EditCoursePage (val courseService: CourseService) {
                         println("Status updated")
                     }
                 }
+                // Discard & Go Back
                 5 -> {
                     if (isModified) {
                         if (getYesOrNo("Warning: Changes wont get saved. Are you sure (y/n) ?"))
@@ -312,20 +341,21 @@ class EditCoursePage (val courseService: CourseService) {
             when (readln().toIntOrNull()) {
                 1 -> {
                     println("Current: ${updateModuleData.title ?: module.title}")
-                    print("Enter New title (or press Enter to keep current): ")
-                    val newTitle = readln().trim()
+                    print("Enter New title or press enter to keep current(min 3 char, max 50 char): ")
+                    val newTitle = getTitleFromUser()
                     if (newTitle.isNotEmpty()) {
                         updateModuleData.title = newTitle
                         isModified = true
                         println("New title added")
                     }
                     else
-                        println("Title unchanged.")
+                        println("Title unchanged")
                 }
                 2 -> {
                     println("Current: ${updateModuleData.description ?: module.description ?: "None"}")
                     print("Enter New description: ")
                     val input = readln().trim()
+
                     updateModuleData.description = input.ifEmpty { null }
                     isModified = true
                     println("New description added")
@@ -375,26 +405,28 @@ class EditCoursePage (val courseService: CourseService) {
                 // Title
                 1 -> {
                     println("Current: ${courseData.title}")
-                    print("Enter new title (or press Enter to keep current): ")
-                    val newTitle = readln().trim()
+                    print("Enter new title or press Enter to keep current(min 3 char, max 50 char): ")
+                    val newTitle = getTitleFromUser()
                     if (newTitle.isNotEmpty() && newTitle != courseData.title) {
                         updateCourseData.title = newTitle
                         isModified = true
                         println("New title added ☑️")
-                    } else
+                    }
+                    else
                         println("Title unchanged")
                 }
                 // Description
                 2 -> {
                     println("Current: ${courseData.description}")
-                    print("Enter new Description (or press Enter to keep current): ")
+                    print("Enter new Description or press Enter to keep current(min 10 char): ")
                     val newDescription = readln().trim()
-                    if (newDescription.isNotEmpty() && newDescription != courseData.description) {
+                    if (newDescription.isEmpty()) println("Description unchanged.")
+                    else if (newDescription.length < 10) println("Description is too small...")
+                    else if (newDescription != courseData.description) {
                         updateCourseData.description = newDescription
                         isModified = true
                         println("New description added.")
-                    } else
-                        println("Description unchanged.")
+                    }
                 }
                 // Skills
                 3 -> {

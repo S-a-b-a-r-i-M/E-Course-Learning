@@ -39,5 +39,4 @@ data class StudentProgress (
     val recentLessonId: Int,
     val courseId: Int,
     var status: CompletionStatus,
-//    var completedDateTime: LocalDateTime? = null
 )

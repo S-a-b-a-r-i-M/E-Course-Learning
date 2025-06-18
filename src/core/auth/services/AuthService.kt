@@ -1,5 +1,7 @@
 package core.auth.services
 
+import config.LogLevel
+import config.logInfo
 import core.auth.schemas.SignInData
 import core.auth.schemas.SignUpData
 import core.user.schemas.NewUserData
@@ -10,6 +12,8 @@ import core.user.schemas.UserRole
 import core.user.schemas.UserStatus
 import utils.PasswordHasher
 import java.util.UUID
+
+val CURRENT_FILE_NAME: String? = Throwable().stackTrace[0].fileName
 
 /**
  * Manages user authentication processes, including sign-up, sign-in, and sign-out.
@@ -29,7 +33,7 @@ class AuthService (val userRepo: AbstractUserRepo) {
     fun signUp(signUpData: SignUpData): StudentData? {
         // Check email uniqueness
         if (userRepo.isEmailExists(signUpData.email)){
-            println("AuthService(signUp): Email Already exists!!!")
+            logInfo("$CURRENT_FILE_NAME: Email Already exists!!!", LogLevel.EXCEPTION)
             return null
         }
 
@@ -43,7 +47,10 @@ class AuthService (val userRepo: AbstractUserRepo) {
             role = UserRole.STUDENT // Student only can sign up directly
         )
         val student: StudentData = userRepo.createStudentUser(newUserData)
-        println("New User(${newUserData.firstName} ${newUserData.lastName}) created.")
+        logInfo(
+            "$CURRENT_FILE_NAME: New User(${student.fullName}) created.",
+            LogLevel.INFO
+        )
         return student
     }
 
@@ -60,18 +67,24 @@ class AuthService (val userRepo: AbstractUserRepo) {
         // Get User
         val userData: BaseUser? = userRepo.getUserByEmail(signInData.email)
         if(userData == null){
-            println("User with email(${signInData.email}) is not found!!!")
+            logInfo(
+                "User with email(${signInData.email}) is not found!!!",
+                LogLevel.EXCEPTION
+            )
             return null
         }
 
         // Validate Password
         if (!PasswordHasher.checkPasswordMatch(signInData.password,userData.hashPassword)) {
-            println("User with email(${signInData.email}) password is not matched!!!")
+            logInfo(
+                "User with email(${signInData.email}) password is not matched!!!",
+                LogLevel.EXCEPTION
+            )
             return null
         }
 
         if (userData.status == UserStatus.SUSPENDED) {
-            println("User(${userData.id}) account is suspended!!!")
+            logInfo("User(${userData.id}) account is suspended!!!", LogLevel.WARNING)
             return null
         }
 

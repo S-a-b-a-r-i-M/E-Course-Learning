@@ -16,13 +16,18 @@ import core.course.services.capitalize
 fun getNewModuleDataFromUser(): NewModuleData {
     println("----- Module Creation ------")
     while (true) {
-        print("Enter module title (min 3 char, max 50 char): ")
-        val title = InputValidator.validateName(readln(), "Title", 3, 50)
+        try {
+            print("Enter module title (min 3 char, max 50 char): ")
+            val title = InputValidator.validateName(readln(), "Title", 3, 50)
 
-        print("Enter description (optional, press enter to skip): ")
-        val description = readln().trim().ifBlank { null }
+            print("Enter description (optional, press enter to skip): ")
+            val description = readln().trim().ifBlank { null }
 
-        return NewModuleData(title = title, description = description)
+            return NewModuleData(title = title, description = description)
+        } catch (exp: Exception) {
+            println("Err:{${exp.message}}")
+            println("Try again....\n")
+        }
     }
 }
 

@@ -29,7 +29,7 @@ enum class CourseLevel {
             value.equals("INTERMEDIATE", true) -> INTERMEDIATE
             value.equals("ADVANCED", true) -> ADVANCED
             else -> {
-                println("Invalid level, defaulting to BEGINNER")
+                println("Invalid level, defaulting to Beginner")
                 BEGINNER
             }
         }
@@ -45,7 +45,7 @@ enum class CourseType {
             value.equals("LIVE", true) -> LIVE
             value.contains("SELF", true) -> SELF_PACED
             else -> {
-                println("Invalid level, defaulting to SELF_PACED")
+                println("Invalid level, defaulting to self paced")
                 SELF_PACED
             }
         }

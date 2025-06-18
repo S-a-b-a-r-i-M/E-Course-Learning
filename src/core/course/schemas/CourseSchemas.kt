@@ -2,8 +2,6 @@ package core.course.schemas
 
 import java.util.UUID
 
-val CURRENT_FILE_NAME: String? = Throwable().stackTrace[0].fileName
-
 data class NewCourseBasicData (
     var title: String,
     var description: String,

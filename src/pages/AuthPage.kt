@@ -1,14 +1,13 @@
 package pages
 
+import config.LogLevel
+import config.exceptions.ValidationException
+import config.logInfo
 import core.auth.schemas.SignInData
 import core.auth.schemas.SignUpData
 import core.auth.services.AuthService
 import core.user.schemas.BaseUser
-import core.user.schemas.NewUserData
-import core.user.schemas.StudentData
-import core.user.schemas.UserRole
 import utils.InputValidator
-import utils.PasswordHasher
 
 class AuthPage (val authService: AuthService) {
     /**
@@ -46,9 +45,9 @@ class AuthPage (val authService: AuthService) {
      */
     fun getSignInDataFromUser(): SignInData {
         print("Enter email : ")
-        val email = readln().trim()
+        val email = InputValidator.validateEmailFormat(readln())
         print("Enter password : ")
-        val password = readln().trim()
+        val password = InputValidator.validatePassword(readln())
         return SignInData(email, password)
     }
 
@@ -70,14 +69,26 @@ class AuthPage (val authService: AuthService) {
             when (userInput) {
                 0 -> break // It will break the outer loop
                 1 -> {
-                    val signInData = getSignInDataFromUser()
-                    val userData: BaseUser? = authService.signIn(signInData)
-                    if (userData == null)
-                        println("login failed. Try again...")
-                    else {
-                        println("login success")
-                        return userData
+                    repeat(3) { count ->
+                        try {
+                            val signInData = getSignInDataFromUser()
+                            val userData: BaseUser? = authService.signIn(signInData)
+                            if (userData == null)
+                                logInfo("login failed. Try again...", LogLevel.INFO)
+                            else {
+                                logInfo("login success", LogLevel.INFO)
+                                return userData
+                            }
+                        } catch (exp: ValidationException) {
+                            logInfo("Err:{${exp.message}}", LogLevel.EXCEPTION)
+                            if (count < 2) logInfo("Try again....\n", LogLevel.INFO)
+                        } catch (_: Exception) {
+                            return null
+                        }
                     }
+
+                    println("Too many attempts, aborting...")
+                    return null
                 }
 
                 2 -> {
@@ -86,9 +97,9 @@ class AuthPage (val authService: AuthService) {
                             val signUpData = getSignUpDataFromUser()
                             val userData = authService.signUp(signUpData)
                             if (userData == null)
-                                println("sign up failed. Try again...")
+                                logInfo("sign up failed. Try again...", LogLevel.INFO)
                             else {
-                                println("sign up success")
+                                logInfo("sign up success", LogLevel.INFO)
                                 return userData as BaseUser
                             }
                         } catch (exp: Exception) {

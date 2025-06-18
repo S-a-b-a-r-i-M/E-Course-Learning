@@ -59,7 +59,6 @@ class CourseRepo : AbstractCourseRepo {
         )
 
         courseRecords[course.id] = course
-        println("New course created")
         return course
     }
 
@@ -95,7 +94,6 @@ class CourseRepo : AbstractCourseRepo {
             description = newModuleData.description,
             status = newModuleData.status,
         )
-        println("New module created(id-${newModule.id})")
 
         // Store
         val updatedModules = course.modules.toMutableList()

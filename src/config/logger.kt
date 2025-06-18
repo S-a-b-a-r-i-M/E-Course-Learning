@@ -6,6 +6,6 @@ enum class LogLevel(val colorCode: String) {
     EXCEPTION("\u001B[31m") // RED
 }
 
-fun log(message: String, level: LogLevel) {
+fun logInfo(message: String, level: LogLevel) {
     println("${level.colorCode} message")
 }

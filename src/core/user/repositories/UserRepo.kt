@@ -1,5 +1,7 @@
 package core.user.repositories
 
+import config.LogLevel
+import config.logInfo
 import core.user.schemas.BaseUser
 import core.user.schemas.NewUserData
 import core.user.schemas.StudentData
@@ -116,6 +118,6 @@ class UserRepo : AbstractUserRepo {
         adminRecords[adminUser.id] = adminUser
         userIdToRole[adminUser.id] = adminUser.role
         emailToIdMap[adminUser.email] = adminUser.id
-        println("Admin record added...${adminUser.fullName}")
+        logInfo("Admin record added...${adminUser.fullName}", LogLevel.INFO)
     }
 }
