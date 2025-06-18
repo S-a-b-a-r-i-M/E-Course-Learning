@@ -80,7 +80,6 @@ data class UpdatePriceDetailsData (
 data class NewModuleData (
     val title: String,
     val description: String?,
-    var sequenceNumber: Int = 0,
     var status: ResourceStatus = ResourceStatus.PUBLISHED,
 )
 
@@ -89,7 +88,6 @@ data class ModuleData (
     val title: String,
     val description: String?,
     var duration: Int = 0,
-    val sequenceNumber: Int = 0,
     val status: ResourceStatus = ResourceStatus.PUBLISHED,
     val lessons: List<LessonData> = listOf(),
 )
@@ -97,7 +95,6 @@ data class ModuleData (
 data class UpdateModuleData (
     var title: String? = null,
     var description: String? = null,
-//    var sequenceNumber: Int? = null,
     var status: ResourceStatus? = null,
 )
 
@@ -105,7 +102,6 @@ data class NewLessonData (
     val title: String,
     val resource: String,
     var duration: Int, // note: "duration in minutes"
-    var sequenceNumber: Int = 0,
     var status: ResourceStatus = ResourceStatus.PUBLISHED,
 )
 
@@ -114,7 +110,6 @@ data class LessonData (
     val title: String,
     val resource: String,
     val duration: Int, // note: "duration in minutes"
-    val sequenceNumber: Int = 0,
     val status: ResourceStatus = ResourceStatus.PUBLISHED,
 )
 
@@ -122,7 +117,6 @@ data class UpdateLessonData (
     var title: String? = null,
     var resource: String? = null,
     var duration: Int? = null, // note: "duration in minutes"
-//    var sequenceNumber: Int = 0,
     var status: ResourceStatus? = null,
 )
 

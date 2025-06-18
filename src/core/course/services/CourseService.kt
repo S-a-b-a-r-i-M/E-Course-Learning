@@ -14,11 +14,8 @@ import core.course.schemas.UpdateModuleData
 import core.course.schemas.UpdatePriceDetailsData
 import core.user.schemas.UserRole
 import core.user.schemas.UserData
-import utils.InputValidator
 import utils.hasPermission
 import kotlin.Int
-
-const val RETRY_COUNT = 2
 
 fun String.capitalize(): String = this[0].uppercase() + this.substring(1).lowercase()
 
@@ -91,99 +88,47 @@ class CourseService (
         courseRepo.getCategories(searchQuery, offset, limit)
 
     /**
-     * Prompts the user to enter the module details.
-     *
-     * @return A [NewModuleData] object containing the entered details.
-     */
-    private fun getNewModuleDataFromUser(): NewModuleData {
-        println("----- Module Creation ------")
-        print("Enter module title (min 3 char, max 50 char): ")
-        val title = InputValidator.validateName(readln(), "Title", 3, 50)
-
-        print("Enter description (optional, press enter to skip): ")
-        val description = readln().trim().ifBlank { null }
-
-        return NewModuleData(title = title, description = description)
-    }
-
-    /**
-     * Prompts the user to enter the details for a new lesson.
-     *
-     * @param sequenceNumber The sequential order of this lesson within its parent module.
-     * @return A [NewLessonData] object populated with the user's input and sequence number.
-     */
-    private fun getNewLessonDataFromUser(sequenceNumber: Int): NewLessonData {
-        println("----- Lesson Creation ------")
-        print("Enter Lesson title (min 3 char, max 50 char): ")
-        val title = InputValidator.validateName(readln(), "Title", 3, 50)
-        print("Enter content (min 30 char): ")
-        val resource = InputValidator.validateName(readln(), "Content", 30)
-        print("Enter duration(in minutes): ")
-        val duration = readln().toInt()
-
-        return NewLessonData(
-            title = title,
-            resource = resource,
-            duration = duration,
-            sequenceNumber = sequenceNumber,
-        )
-    }
-
-    /**
      * Creates a new lesson within a specific module and updates the duration of the parent module and course.
      *
      * @param courseId The ID of the parent course, used to update its total duration.
      * @param moduleId The ID of the module to which this lesson will be added.
-     * @param sequenceNumber The sequential order of this lesson within the module.
      * @return A [LessonData] object representing the newly created lesson.
      */
-    fun createLesson(currentUser: UserData, courseId: Int, moduleId: Int, sequenceNumber: Int):  LessonData? {
+    fun createLesson(
+        currentUser: UserData,
+        courseId: Int,
+        moduleId: Int,
+        newLessonData: NewLessonData
+    ):  LessonData? {
         if (!hasPermission(currentUser.role)) return null
 
-        return createLessonInternal(courseId, moduleId, sequenceNumber)
-    }
-
-    private fun createLessonInternal(courseId: Int, moduleId: Int, sequenceNumber: Int):  LessonData? {
-        repeat(RETRY_COUNT) { count ->
-            try {
-                val newLessonData = getNewLessonDataFromUser(sequenceNumber)
-                newLessonData.sequenceNumber = sequenceNumber
-                val lesson = courseRepo.createLesson(newLessonData, moduleId) ?: return null
-                println("New lesson created(id-${lesson.id})")
-                // Update Durations in Module and Course
-                courseRepo.updateModuleDuration(moduleId, lesson.duration)
-                courseRepo.updateCourseDuration(courseId, lesson.duration)
-                return lesson
-            } catch (exp: Exception) {
-                println("Err:{${exp.message}}")
-                if (count < RETRY_COUNT - 1) println("Try again....\n")
-            }
-        }
-
-        println("Too many attempts, aborting...\n")
-        return null
+        val lesson = courseRepo.createLesson(newLessonData, moduleId) ?: return null
+        println("New lesson created(id-${lesson.id})")
+        // Update Durations in Module and Course
+        courseRepo.updateModuleDuration(moduleId, lesson.duration)
+        courseRepo.updateCourseDuration(courseId, lesson.duration)
+        return lesson
     }
 
     /**
      * Creates a new module for a given course.
      *
      * @param courseId The ID of the course to which this module belongs.
-     * @param sequenceNumber The sequential order of this module within the course.
      * @return A [ModuleData] object for the newly created module.
      */
-    fun createModule(currentUser: UserData, courseId: Int, sequenceNumber: Int): ModuleData? {
+    fun createModule(currentUser: UserData, courseId: Int, newModuleData: NewModuleData): ModuleData? {
         if (!hasPermission(currentUser.role)) return null
 
-        return createModuleInternal(courseId, sequenceNumber)
+        val module = courseRepo.createModule(newModuleData, courseId)
+        return module
     }
 
-    private fun createModuleInternal(courseId: Int, sequenceNumber: Int): ModuleData? {
+//    private fun createModuleInternal(courseId: Int): ModuleData? {
 //        repeat(RETRY_COUNT) { count ->
 //            try {
-        val newModule = getNewModuleDataFromUser()
-        newModule.sequenceNumber = sequenceNumber
-        val module = courseRepo.createModule(newModule, courseId)
-        return module
+//        val newModule = getNewModuleDataFromUser()
+//        val module = courseRepo.createModule(newModule, courseId)
+//        return module
 //            }  catch (exp: Exception) {
 //                println("Err:{${exp.message}}")
 //                if (count < RETRY_COUNT - 1) println("Try again....\n")
@@ -192,7 +137,7 @@ class CourseService (
 //
 //        println("Too many attempts, aborting...\n")
 //        return null
-    }
+//    }
 
     /**
      * Orchestrates the end-to-end process of creating a new course.

@@ -93,7 +93,6 @@ class CourseRepo : AbstractCourseRepo {
             id = getNextModuleId(),
             title = newModuleData.title,
             description = newModuleData.description,
-            sequenceNumber = newModuleData.sequenceNumber,
             status = newModuleData.status,
         )
         println("New module created(id-${newModule.id})")
@@ -118,7 +117,6 @@ class CourseRepo : AbstractCourseRepo {
             title = newLessonData.title,
             resource = newLessonData.resource,
             duration = newLessonData.duration,
-            sequenceNumber = newLessonData.sequenceNumber,
             status = newLessonData.status,
         )
 
@@ -142,7 +140,7 @@ class CourseRepo : AbstractCourseRepo {
     override fun getCategory(categoryId: Int): CategoryData? {
         val category = categoryRecords[categoryId]
         if (category == null)
-            println("Course not available fo courseId($categoryId)")
+            println("Course not available for courseId($categoryId)")
 
         return category
     }
@@ -150,7 +148,7 @@ class CourseRepo : AbstractCourseRepo {
     override fun getCourse(courseId: Int): DetailedCourseData? {
         val course = courseRecords[courseId]
         if (course == null)
-            println("Course not available fo courseId($courseId)")
+            println("Course not available for courseId($courseId)")
 
         return course
     }
@@ -158,7 +156,7 @@ class CourseRepo : AbstractCourseRepo {
     override fun getPriceDetails(courseId: Int): PriceDetailsData? {
         val course = courseRecords[courseId]
         if (course == null) {
-            println("Course not available fo courseId($courseId)")
+            println("Course not available for courseId($courseId)")
             return null
         }
 
@@ -341,7 +339,7 @@ class CourseRepo : AbstractCourseRepo {
     override fun updateCourseDuration(courseId: Int, duration: Int): Boolean {
         val course = courseRecords[courseId]
         if (course == null) {
-            println("Course not available fo courseId($courseId)")
+            println("Course not available for courseId($courseId)")
             return false
         }
         courseRecords[courseId] = course.copy(duration = abs(course.duration + duration))
@@ -374,7 +372,6 @@ class CourseRepo : AbstractCourseRepo {
             title = "C++ Fundamentals",
             description = "Learn the basics of C++ programming language",
             duration = 240, // 4 hours
-            sequenceNumber = 1,
             status = ResourceStatus.PUBLISHED,
             lessons = mutableListOf(
                 LessonData(
@@ -382,7 +379,6 @@ class CourseRepo : AbstractCourseRepo {
                     title = "Introduction to C++",
                     resource = "cpp_intro_video.mp4",
                     duration = 30,
-                    sequenceNumber = 1,
                     status = ResourceStatus.PUBLISHED
                 ),
                 LessonData(
@@ -390,7 +386,6 @@ class CourseRepo : AbstractCourseRepo {
                     title = "Setting up Development Environment",
                     resource = "setup_guide.pdf",
                     duration = 25,
-                    sequenceNumber = 2,
                     status = ResourceStatus.PUBLISHED
                 ),
                 LessonData(
@@ -398,7 +393,6 @@ class CourseRepo : AbstractCourseRepo {
                     title = "Variables and Data Types",
                     resource = "variables_tutorial.mp4",
                     duration = 45,
-                    sequenceNumber = 3,
                     status = ResourceStatus.PUBLISHED
                 ),
                 LessonData(
@@ -406,7 +400,6 @@ class CourseRepo : AbstractCourseRepo {
                     title = "Input/Output Operations",
                     resource = "io_operations.cpp",
                     duration = 35,
-                    sequenceNumber = 4,
                     status = ResourceStatus.PUBLISHED
                 ),
                 LessonData(
@@ -414,7 +407,6 @@ class CourseRepo : AbstractCourseRepo {
                     title = "Control Structures",
                     resource = "control_structures.mp4",
                     duration = 50,
-                    sequenceNumber = 5,
                     status = ResourceStatus.PUBLISHED
                 ),
                 LessonData(
@@ -422,7 +414,6 @@ class CourseRepo : AbstractCourseRepo {
                     title = "Practice Exercises - Basics",
                     resource = "basic_exercises.pdf",
                     duration = 55,
-                    sequenceNumber = 6,
                     status = ResourceStatus.PUBLISHED
                 )
             )
@@ -433,7 +424,6 @@ class CourseRepo : AbstractCourseRepo {
             title = "Functions and Arrays",
             description = "Master functions, arrays, and memory management",
             duration = 185,
-            sequenceNumber = 2,
             status = ResourceStatus.PUBLISHED,
             lessons = mutableListOf(
                 LessonData(
@@ -441,7 +431,6 @@ class CourseRepo : AbstractCourseRepo {
                     title = "Function Basics",
                     resource = "functions_intro.mp4",
                     duration = 40,
-                    sequenceNumber = 1,
                     status = ResourceStatus.PUBLISHED
                 ),
                 LessonData(
@@ -449,7 +438,6 @@ class CourseRepo : AbstractCourseRepo {
                     title = "Function Overloading",
                     resource = "function_overloading.cpp",
                     duration = 35,
-                    sequenceNumber = 2,
                     status = ResourceStatus.PUBLISHED
                 ),
                 LessonData(
@@ -457,7 +445,6 @@ class CourseRepo : AbstractCourseRepo {
                     title = "Arrays and Pointers",
                     resource = "arrays_pointers.mp4",
                     duration = 60,
-                    sequenceNumber = 3,
                     status = ResourceStatus.PUBLISHED
                 ),
                 LessonData(
@@ -465,7 +452,6 @@ class CourseRepo : AbstractCourseRepo {
                     title = "Dynamic Memory Allocation",
                     resource = "memory_management.pdf",
                     duration = 50,
-                    sequenceNumber = 4,
                     status = ResourceStatus.PUBLISHED
                 )
             )
@@ -504,7 +490,6 @@ class CourseRepo : AbstractCourseRepo {
             title = "Kitchen Basics & Safety",
             description = "Learn essential kitchen skills, safety, and basic cooking techniques",
             duration = 45,
-            sequenceNumber = 1,
             status = ResourceStatus.PUBLISHED,
             lessons = mutableListOf(
                 LessonData(
@@ -512,7 +497,6 @@ class CourseRepo : AbstractCourseRepo {
                     title = "Kitchen Safety and Hygiene",
                     resource = "kitchen_safety.mp4",
                     duration = 25,
-                    sequenceNumber = 1,
                     status = ResourceStatus.PUBLISHED
                 ),
                 LessonData(
@@ -520,7 +504,6 @@ class CourseRepo : AbstractCourseRepo {
                     title = "Essential Kitchen Tools",
                     resource = "kitchen_tools_guide.pdf",
                     duration = 20,
-                    sequenceNumber = 2,
                     status = ResourceStatus.PUBLISHED
                 )
             )
@@ -532,7 +515,6 @@ class CourseRepo : AbstractCourseRepo {
             title = "Fundamental Recipes",
             description = "Master basic recipes that form the foundation of cooking",
             duration = 75, // 4 hours
-            sequenceNumber = 2,
             status = ResourceStatus.PUBLISHED,
             lessons = mutableListOf(
                 LessonData(
@@ -540,7 +522,6 @@ class CourseRepo : AbstractCourseRepo {
                     title = "Perfect Rice and Grains",
                     resource = "rice_grains_tutorial.mp4",
                     duration = 30,
-                    sequenceNumber = 1,
                     status = ResourceStatus.PUBLISHED
                 ),
                 LessonData(
@@ -548,7 +529,6 @@ class CourseRepo : AbstractCourseRepo {
                     title = "Basic Pasta Dishes",
                     resource = "pasta_basics.mp4",
                     duration = 45,
-                    sequenceNumber = 2,
                     status = ResourceStatus.PUBLISHED
                 )
             )

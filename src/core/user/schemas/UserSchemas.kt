@@ -79,3 +79,12 @@ data class WorkExperienceData (
     val endYear: Int?,
     val isCurrent: Boolean = false, // "by default false. If this is true, end dates will be null"
 )
+
+data class CurrentUserData (
+    val id: UUID,
+    val firstName: String,
+    val lastName: String,
+    val email: String,
+    val role: UserRole,
+    val status: UserStatus,
+)

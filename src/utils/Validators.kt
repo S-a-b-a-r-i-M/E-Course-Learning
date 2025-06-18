@@ -66,6 +66,26 @@ object InputValidator {
         }
     }
 
+    fun validatePositiveDouble(): Double {
+        val input = readln().toDoubleOrNull() ?:
+            throw ValidationException.InvalidInputException("Input is not a number")
+
+        if (input <= 0)
+            throw ValidationException.InvalidInputException("Input cannot be negative or 0")
+
+        return input
+    }
+
+    fun validatePositiveInt(): Int {
+        val input = readln().toIntOrNull() ?:
+            throw ValidationException.InvalidInputException("Input is not a number")
+
+        if (input <= 0)
+            throw ValidationException.InvalidInputException("Input cannot be negative or 0")
+
+        return input
+    }
+
     fun isValidEmailFormat(email: String): Boolean {
         val emailRegex = Regex("^[a-zA-Z0-9.+%-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$")
         return emailRegex.matches(email)
