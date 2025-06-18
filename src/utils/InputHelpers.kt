@@ -26,3 +26,18 @@ fun selectResourceStatus(onSelected: (ResourceStatus) -> Unit) {
     else
         println("Status unchanged")
 }
+
+fun selectFromOption(options: Map<Int, String>): Int {
+    while (true) {
+        println("\nOption to choose ⬇️")
+        options.forEach { (key, value) ->
+            println("$key -> $value")
+        }
+        print("Enter your option: ")
+        val input = readln().toIntOrNull()
+
+        if (input != null && options.keys.contains(input)) return input
+
+        println("Invalid input...Try again")
+    }
+}

@@ -19,6 +19,7 @@ import utils.getNewCourseBasicDataFromUser
 import utils.getNewLessonDataFromUser
 import utils.getNewModuleDataFromUser
 import utils.getYesOrNo
+import utils.selectFromOption
 import java.util.UUID
 
 class CoursePage (
@@ -36,15 +37,10 @@ class CoursePage (
         // Show 10 default categories
         displayCategories(categories, searchQuery)
 
+        val options = mutableMapOf(1 to "Select Category", 2 to "Search 🔍")
+//        if (categories.size == limit) options.put(3, "Load More ↻")
         while (true) {
-            println("\nOption to choose ⬇️")
-            println("1 -> Select Category")
-            println("2 -> Search 🔍")
-//            if (categories.size == limit) println("3 -> Load More ↻")
-            print("Enter your option: ")
-            val userInput = readln().toInt()
-
-            when (userInput) {
+            when (selectFromOption(options)) {
                 // Select
                 1 -> {
                     print("Enter a category name: ")
@@ -87,9 +83,6 @@ class CoursePage (
                     displayCategories()
                 }
                 */
-                else -> {
-                    println("invalid option selected. Please try again.")
-                }
             }
         }
     }
@@ -298,22 +291,22 @@ class CoursePage (
 
         // If Admin Then Show Edit Option
         if (isAdmin) {
+            val editOptions = mutableMapOf(
+                0 to "Go Back",
+                1 to "Edit Basic Details",
+                2 to "Edit Course Pricing",
+                3 to "Add New Module"
+            )
+            if (course.modules.isNotEmpty())
+                editOptions.put(4, "Edit Module Details")
+
             while (true) {
                 if (course == null)
                     continue
                 println()
                 displayCourse(course, true)
-                println("\nOption to choose ⬇️")
-                println("0 -> Go Back")
-                println("1 -> Edit Basic Details")
-                println("2 -> Edit Course Pricing")
-                println("3 -> Add New Module")
-                if (course.modules.isNotEmpty())
-                    println("4 -> Edit Module Details")
-
-                print("Enter your option: ")
                 var isRefetch = false
-                when (readln().toInt()) {
+                when (selectFromOption(editOptions)) {
                     0 -> break
                     1 -> {
                         if (editCoursePage.editCourseBasicDetails(currentUser, course))
@@ -347,7 +340,6 @@ class CoursePage (
                                 isRefetch = true // Refetch Course
                         }
                     }
-                    else -> println("Invalid option selected. Please try again.")
                 }
 
                 if (isRefetch) {

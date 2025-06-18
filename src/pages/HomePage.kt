@@ -7,6 +7,7 @@ import core.course.services.StudentCourseService
 import core.user.schemas.UserData
 import core.user.schemas.UserRole
 import utils.displayCourse
+import utils.selectFromOption
 
 class HomePage (val courseService: CourseService, val studentCourseService: StudentCourseService) {
     val editCoursePage = EditCoursePage(courseService)
@@ -40,17 +41,16 @@ class HomePage (val courseService: CourseService, val studentCourseService: Stud
         if (fetchCourses().isEmpty())
             return
 
+        val options =  mutableMapOf(
+            0 to "Go Back",
+            1 to "Open a course",
+            2 to "Search by Course name 🔍"
+        )
+        if (hasMore) options.put(3, "Load More ↻")
+
         while (true) {
             println("\n======== ${pageTitle.value} =========")
-            println("\nOption to choose ⬇️")
-            println("0 -> Go Back")
-            println("1 -> Open a course")
-            println("2 -> Search by Course name 🔍")
-            if (hasMore) println("3 -> Load More ↻")
-            print("Enter your option: ")
-            val userInput = readln().toInt()
-
-            when (userInput) {
+            when (selectFromOption(options)) {
                 // Go Back
                 0 -> break
                 // Open a Course
@@ -105,17 +105,15 @@ class HomePage (val courseService: CourseService, val studentCourseService: Stud
         val isAdmin = currentUser.role == UserRole.ADMIN
         val isStudent = currentUser.role == UserRole.STUDENT
 
+        val option2 = if (isAdmin) PageNames.CREATE_COURSE else PageNames.MY_COURSES
+        val options = mapOf(
+            0 to "Log out",
+            1 to "List Of Courses",
+            2 to option2.value
+        )
         while (true) {
             println("\n======== ${PageNames.HOME_PAGE.value} =========")
-            println("\nOption to choose ⬇️")
-            println("0 -> Log out")
-            println("1 -> List Of Courses")
-            val option2 = if (isAdmin) PageNames.CREATE_COURSE else PageNames.MY_COURSES
-            println("2 -> ${option2.value}")
-            print("Enter your option: ")
-
-            // When - Course Flow
-            when (readln().toIntOrNull()) {
+            when (selectFromOption(options)) {
                 0 -> break
 
                 1 -> listCourses(PageNames.LIST_COURSES, currentUser)

@@ -16,6 +16,7 @@ import utils.displayModule
 import utils.getListInput
 import utils.getNewLessonDataFromUser
 import utils.getYesOrNo
+import utils.selectFromOption
 import utils.selectResourceStatus
 
 class EditCoursePage (val courseService: CourseService) {
@@ -24,16 +25,15 @@ class EditCoursePage (val courseService: CourseService) {
         val updatedPriceData = UpdatePriceDetailsData(id=priceDetailsData.id)
         var isModified = false
 
+        val options = mapOf(
+            1 to "Currency Code",
+            2 to "Amount",
+            3 to "Discard & Go Back",
+            4 to "Save & Go Back"
+        )
         while (true) {
             println("\n===== Edit Price Details =====")
-            println("What would you like to edit?")
-            println("1 -> Currency Code")
-            println("2 -> Amount")
-            println("3 -> Discard & Go Back")
-            println("4 -> Save & Go Back")
-
-            print("Enter your choice: ")
-            when(readln().toIntOrNull()) {
+            when(selectFromOption(options)) {
                 1 -> {
                     print("Enter new currency code (${currencyMap.keys.joinToString(", ")}): ")
                     val currencyCode = readln().trim().uppercase()
@@ -104,6 +104,13 @@ class EditCoursePage (val courseService: CourseService) {
             priceDetails = courseService.getCoursePriceDetails(courseId)
         }
         fetchPriceDetails() // Initial fetch
+
+        val options = mutableMapOf(
+            0 to "Go Back",
+            1 to "Free/Paid Status"
+        )
+        val isFreeCourse = priceDetails != null
+        if (isFreeCourse) options[2] = "Price Details"
 
         while (true) {
             val isFreeCourse = priceDetails != null
@@ -183,19 +190,20 @@ class EditCoursePage (val courseService: CourseService) {
         val updateLessonData = UpdateLessonData()
         var isModified = false
 
+        val options = mapOf(
+            1 to "Edit Title",
+            2 to "Edit Resource",
+            3 to "Edit Duration",
+            4 to "Edit Status",
+            5 to "Discard & Go Back",
+            6 to "Save & Go Back"
+        )
+
         while (true) {
             println("\n===== Edit Lesson =====")
             displayDetailedLesson(existingLessonData, true)
-            println("\nOption to choose ⬇️")
-            println("1 -> Edit Title")
-            println("2 -> Edit Resource")
-            println("3 -> Edit Duration")
-            println("4 -> Edit Status")
-            println("5 -> Discard & Go Back")
-            println("6 -> Save & Go Back")
-            print("Choose option: ")
 
-            when (readln().toIntOrNull()) {
+            when (selectFromOption(options)) {
                 1 -> {
                     println("Current: ${updateLessonData.title ?: existingLessonData.title}")
                     print("Enter New title or press Enter to keep current (min 3 char, max 50 char): ")
@@ -273,19 +281,13 @@ class EditCoursePage (val courseService: CourseService) {
         fun fetchModule() = courseService.getModule(moduleId)
         var module: ModuleData = fetchModule() ?: return
 
+        val options = mutableMapOf(0 to "Go Back", 1 to "Add Lesson")
+        if (module.lessons.isNotEmpty()) options.put(2, "Edit Lesson")
+
         while (true) {
             // display lessons
             println("\n===== Manage Lessons =====")
-            println("Option to choose ⬇️")
-            println("0 -> Go Back")
-            println("1 -> Add Lesson")
-            if (module.lessons.isNotEmpty()) {
-                println("2 -> Edit Lesson")
-//            println("3 -> Delete Lesson")
-            }
-            print("Choose option: ")
-
-            when (readln().toIntOrNull()) {
+            when (selectFromOption(options)) {
                 // Go Back
                 0 -> break
                 // Add Lesson
@@ -326,19 +328,19 @@ class EditCoursePage (val courseService: CourseService) {
         val updateModuleData = UpdateModuleData()
         var isModified = false
 
+        val options = mapOf(
+            1 to "Edit Title",
+            2 to "Edit Description",
+            3 to "Edit Status",
+            4 to "Manage Lessons",
+            5 to "Discard & Go Back",
+            6 to "Save & Go Back"
+        )
         while (true) {
             println("\n===== Edit Module =====")
             displayModule(module)
-            println("\nOption to choose ⬇️")
-            println("1 -> Edit Title")
-            println("2 -> Edit Description")
-            println("3 -> Edit Status")
-            println("4 -> Manage Lessons")
-            println("5 -> Discard & Go Back")
-            println("6 -> Save & Go Back")
-            print("Choose option: ")
 
-            when (readln().toIntOrNull()) {
+            when (selectFromOption(options)) {
                 1 -> {
                     println("Current: ${updateModuleData.title ?: module.title}")
                     print("Enter New title or press enter to keep current(min 3 char, max 50 char): ")
@@ -379,7 +381,6 @@ class EditCoursePage (val courseService: CourseService) {
                     courseService.updateModuleDetails(currentUser, module.id, updateModuleData)
                     return true
                 }
-                else -> println("Invalid option, try again.")
             }
         }
     }
@@ -387,21 +388,19 @@ class EditCoursePage (val courseService: CourseService) {
     fun editCourseBasicDetails(currentUser: UserData, courseData: DetailedCourseData): Boolean {
         val updateCourseData = UpdateCourseBasicData()
         var isModified = false
+        val options = mapOf(
+            1 to "Title",
+            2 to "Description",
+            3 to "Skills",
+            4 to "Prerequisites",
+            5 to "Status",
+            6 to "Discard & Go Back",
+            7 to "Save & Go Back"
+        )
 
         while (true) {
             println("\n===== Edit Basic Details =====")
-            println("What would you like to edit?")
-            println("1 -> Title")
-            println("2 -> Description")
-            println("3 -> Skills")
-            println("4 -> Prerequisites")
-            println("5 -> Status")
-            println("6 -> Discard & Go Back")
-            println("7 -> Save & Go Back")
-
-            print("Enter your choice: ")
-
-            when (readln().toInt()) {
+            when (selectFromOption(options)) {
                 // Title
                 1 -> {
                     println("Current: ${courseData.title}")

@@ -8,6 +8,7 @@ import core.auth.schemas.SignUpData
 import core.auth.services.AuthService
 import core.user.schemas.BaseUser
 import utils.InputValidator
+import utils.selectFromOption
 
 class AuthPage (val authService: AuthService) {
     /**
@@ -57,16 +58,10 @@ class AuthPage (val authService: AuthService) {
      * return [BaseUser] or Null
      */
     fun authFlow(): BaseUser? {
+        val options = mapOf(0 to "Exit", 1 to "Sign In", 2 to "Sign Up")
         while (true) {
             println("\n======== Auth Page =========")
-            println("\nOption to choose ⬇️")
-            println("0 -> Exit")
-            println("1 -> Sign In")
-            println("2 -> Sign Up")
-            val userInput = readln().toInt()
-
-            // When - Auth Flow
-            when (userInput) {
+            when (selectFromOption(options)) {
                 0 -> break // It will break the outer loop
                 1 -> {
                     repeat(3) { count ->
@@ -111,8 +106,6 @@ class AuthPage (val authService: AuthService) {
                     println("Too many attempts, aborting...")
                     return null
                 }
-
-                else -> println("Invalid input. Try again")
             }
         }
 
