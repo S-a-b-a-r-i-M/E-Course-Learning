@@ -1,5 +1,7 @@
 package core.course.services
 
+import config.LogLevel
+import config.logInfo
 import core.course.repositories.AbstractCourseRepo
 import core.course.schemas.CategoryData
 import core.course.schemas.DetailedCourseData
@@ -58,7 +60,7 @@ class CourseService (
 
             // If no course found then return immediately
             if (courseIds != null && courseIds.isEmpty()) {
-                println("No course found for user(${currentUser.fullName})")
+                logInfo("No course found for user(${currentUser.fullName})", LogLevel.INFO)
                 return emptyList()
             }
         }
@@ -103,7 +105,7 @@ class CourseService (
         if (!hasPermission(currentUser.role)) return null
 
         val lesson = courseRepo.createLesson(newLessonData, moduleId) ?: return null
-        println("New lesson created(id-${lesson.id})")
+        logInfo("New lesson created(id-${lesson.id})", LogLevel.INFO)
         // Update Durations in Module and Course
         courseRepo.updateModuleDuration(moduleId, lesson.duration)
         courseRepo.updateCourseDuration(courseId, lesson.duration)
@@ -161,9 +163,9 @@ class CourseService (
         val courseId = course.id
         if (newCourseData.priceData != null)
             courseRepo.createPricing(newCourseData.priceData, courseId)
-        println("${newCourseData.title}(id-${courseId}) created successfully with basic details")
+        logInfo("${newCourseData.title}(id-${courseId}) created successfully with basic details",
+            LogLevel.INFO)
 
-        println("Course successfully created!!!")
         return course
     }
 
@@ -177,7 +179,7 @@ class CourseService (
         if (!hasPermission(currentUser.role)) return
 
         courseRepo.updateCourseBasicDetails(courseId, updateData)
-        println("Course($courseId) basic details updated.")
+        logInfo("Course($courseId) basic details updated.", LogLevel.INFO)
     }
 
     /**
@@ -193,7 +195,7 @@ class CourseService (
         if (!hasPermission(currentUser.role)) return
 
         courseRepo.updateOrCreatePricing(priceDetails, courseId)
-        println("Price Details Updated.")
+        logInfo("Price Details Updated.", LogLevel.INFO)
     }
 
     /**
@@ -206,7 +208,7 @@ class CourseService (
         if (!hasPermission(currentUser.role)) return
 
         courseRepo.updateModuleDetails(moduleId, updateData)
-        println("Module($moduleId) details updated.")
+        logInfo("Module($moduleId) details updated.", LogLevel.INFO)
     }
 
     /**
@@ -219,6 +221,6 @@ class CourseService (
         if (!hasPermission(currentUser.role)) return
 
         courseRepo.updateLessonDetails(lessonId, updateData)
-        println("Lesson($lessonId) details updated.")
+        logInfo("Lesson($lessonId) details updated.", LogLevel.INFO)
     }
 }

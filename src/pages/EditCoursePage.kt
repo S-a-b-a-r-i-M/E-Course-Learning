@@ -9,7 +9,6 @@ import core.course.schemas.UpdateModuleData
 import core.course.schemas.UpdatePriceDetailsData
 import core.course.services.CourseService
 import core.user.schemas.UserData
-import utils.InputValidator
 import utils.currencyMap
 import utils.displayDetailedLesson
 import utils.displayModule

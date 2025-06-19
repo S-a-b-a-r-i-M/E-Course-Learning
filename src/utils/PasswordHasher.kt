@@ -1,5 +1,7 @@
 package utils
 
+import config.LogLevel
+import config.logInfo
 import java.security.SecureRandom
 import java.util.Base64
 import javax.crypto.SecretKeyFactory
@@ -37,7 +39,7 @@ class PasswordHasher {
         fun checkPasswordMatch(plainPassword: String, hashPassword: String): Boolean {
             val parts = hashPassword.split(":")
             if (parts.size != 2) {
-                println("Invalid hash password format!!!")
+                logInfo("Invalid hash password format!!!", LogLevel.EXCEPTION)
                 return false
             }
 
