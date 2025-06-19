@@ -1,8 +1,6 @@
 package pages
 
-import config.LogLevel
 import config.exceptions.ValidationException
-import config.logInfo
 import core.auth.schemas.SignInData
 import core.auth.schemas.SignUpData
 import core.auth.services.AuthService
@@ -69,14 +67,14 @@ class AuthPage (val authService: AuthService) {
                             val signInData = getSignInDataFromUser()
                             val userData: BaseUser? = authService.signIn(signInData)
                             if (userData == null)
-                                logInfo("login failed. Try again...", LogLevel.INFO)
+                                println("login failed. Try again...")
                             else {
-                                logInfo("login success", LogLevel.INFO)
+                                println("login success")
                                 return userData
                             }
                         } catch (exp: ValidationException) {
-                            logInfo("Err:{${exp.message}}", LogLevel.EXCEPTION)
-                            if (count < 2) logInfo("Try again....\n", LogLevel.INFO)
+                            println("Err:{${exp.message}}")
+                            if (count < 2) println("Try again....\n")
                         } catch (_: Exception) {
                             return null
                         }
@@ -92,9 +90,9 @@ class AuthPage (val authService: AuthService) {
                             val signUpData = getSignUpDataFromUser()
                             val userData = authService.signUp(signUpData)
                             if (userData == null)
-                                logInfo("sign up failed. Try again...", LogLevel.INFO)
+                                println("sign up failed. Try again...")
                             else {
-                                logInfo("sign up success", LogLevel.INFO)
+                                println("sign up success")
                                 return userData as BaseUser
                             }
                         } catch (exp: Exception) {

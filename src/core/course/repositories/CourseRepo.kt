@@ -1,5 +1,7 @@
 package core.course.repositories
 
+import config.LogLevel
+import config.logInfo
 import core.course.schemas.CategoryData
 import core.course.schemas.DetailedCourseData
 import core.course.schemas.LessonData
@@ -16,6 +18,8 @@ import core.course.schemas.UpdateCourseBasicData
 import core.course.schemas.UpdateLessonData
 import core.course.schemas.UpdateModuleData
 import core.course.schemas.UpdatePriceDetailsData
+import utils.ErrorCode
+import utils.Result
 import java.util.UUID
 import kotlin.math.abs
 
@@ -151,6 +155,16 @@ class CourseRepo : AbstractCourseRepo {
         return course
     }
 
+    fun getCourseV2(courseId: Int): Result<DetailedCourseData> {
+        val course = courseRecords[courseId]
+        if (course == null) {
+            logInfo("Course not available for courseId($courseId)", LogLevel.EXCEPTION)
+            return Result.Error("Course not available for courseId($courseId)", ErrorCode.RESOURCE_NOT_FOUND)
+        }
+
+        return Result.Success(course)
+    }
+
     override fun getPriceDetails(courseId: Int): PriceDetailsData? {
         val course = courseRecords[courseId]
         if (course == null) {
@@ -168,6 +182,30 @@ class CourseRepo : AbstractCourseRepo {
             return null
         }
         return courseRecords.getValue(courseId)
+    }
+
+    private fun getCourseByModuleIdV2(moduleId: Int): Result<DetailedCourseData> {
+        val courseId = moduleIdToCourseId[moduleId]
+        if (courseId == null) {
+            logInfo("Course reference is not available fof moduleId($moduleId)", LogLevel.EXCEPTION)
+            return Result.Error(
+                "Course reference is not available fof moduleId($moduleId)",
+                ErrorCode.RESOURCE_NOT_FOUND
+            )
+        }
+        return Result.Success(courseRecords.getValue(courseId))
+    }
+
+    private fun getModuleIdFromLessonId(lessonId: Int): Result<Int> {
+        val moduleId = lessonIdToModuleId[lessonId]
+        if (moduleId == null) {
+            return Result.Error(
+                "Module reference is not available for lessonId($lessonId)",
+                ErrorCode.RESOURCE_NOT_FOUND
+            )
+        }
+
+        return Result.Success(moduleId)
     }
 
     override fun getModule(moduleId: Int): ModuleData? {
@@ -222,11 +260,14 @@ class CourseRepo : AbstractCourseRepo {
     }
 
     // ******************* UPDATE *******************
-    override fun updateOrCreatePricing(priceDetails: UpdatePriceDetailsData?, courseId: Int): Boolean {
+    override fun updateOrCreatePricing(priceDetails: UpdatePriceDetailsData?, courseId: Int): Result<Unit> {
         val course = courseRecords[courseId]
         if (course == null) {
-            println("There is no course found for courseId($courseId)")
-            return false
+            logInfo("There is no course found for courseId($courseId)", LogLevel.EXCEPTION)
+            return Result.Error(
+                "There is no course found for courseId($courseId)",
+                ErrorCode.RESOURCE_NOT_FOUND
+            )
         }
 
         val finalPriceDetails = if (priceDetails == null)
@@ -248,73 +289,83 @@ class CourseRepo : AbstractCourseRepo {
             )
 
         courseRecords[courseId] = course.copy(priceDetails=finalPriceDetails)
-        return true
+        return Result.Success<Unit>(Unit, "Price details updated successfully")
     }
 
-    override fun updateCourseBasicDetails(courseId: Int, updateData: UpdateCourseBasicData): Boolean {
-        val course = courseRecords.getValue(courseId)
-
-        courseRecords[courseId] = course.copy(
-            title = updateData.title ?: course.title,
-            description = updateData.description ?: course.description,
-            skills = updateData.skills ?: course.skills,
-            prerequisites = updateData.prerequisites ?: course.prerequisites,
-            status = updateData.status ?: course.status,
-        )
-        return true
-    }
-
-    override fun updateModuleDetails(moduleId: Int, updateData: UpdateModuleData): Boolean {
-        val course = getCourseByModuleId(moduleId)
-        if (course == null)
-            return false
-
-        val updatedModules = course.modules.map { module ->
-            if (module.id == moduleId)
-                module.copy(
-                    title = updateData.title ?: module.title,
-                    description = updateData.description ?: module.description,
-                    status = updateData.status ?: module.status
+    override fun updateCourseBasicDetails(courseId: Int, updateData: UpdateCourseBasicData): Result<Unit> {
+        return when (val courseResult = getCourseV2(courseId)) {
+            is Result.Error -> courseResult
+            is Result.Success -> {
+                val course = courseResult.data
+                courseRecords[courseId] = course.copy(
+                    title = updateData.title ?: course.title,
+                    description = updateData.description ?: course.description,
+                    skills = updateData.skills ?: course.skills,
+                    prerequisites = updateData.prerequisites ?: course.prerequisites,
+                    status = updateData.status ?: course.status,
                 )
-            else
-                module
+                Result.Success(Unit, "Course($courseId) basic details updated successfully")
+            }
         }
-
-        // Store
-        courseRecords[course.id] = course.copy(modules = updatedModules)
-        return true
     }
 
-    override fun updateLessonDetails(lessonId: Int, updateData: UpdateLessonData): Boolean {
-        val moduleId = lessonIdToModuleId[lessonId]
-        if (moduleId == null) {
-            println("Module reference is not available for lessonId($lessonId)")
-            return false
-        }
-        val courseId = moduleIdToCourseId.getValue(moduleId)
-        val course = courseRecords.getValue(courseId)
-
-        val updatedModules = course.modules.map { module ->
-            if (module.id == moduleId) {
-                val updatedLessons = module.lessons.map { lesson ->
-                    if (lesson.id == lessonId) {
-                        lesson.copy(
-                            title = updateData.title ?: lesson.title,
-                            resource = updateData.resource ?: lesson.resource,
-                            duration = updateData.duration ?: lesson.duration,
-                            status = updateData.status ?: lesson.status
+    override fun updateModuleDetails(moduleId: Int, updateData: UpdateModuleData): Result<Unit> {
+        return when (val courseResult = getCourseByModuleIdV2(moduleId)) {
+            is Result.Error -> courseResult
+            is Result.Success -> {
+                val course = courseResult.data
+                val updatedModules = course.modules.map { module ->
+                    if (module.id == moduleId)
+                        module.copy(
+                            title = updateData.title ?: module.title,
+                            description = updateData.description ?: module.description,
+                            status = updateData.status ?: module.status
                         )
-                    } else
-                        lesson
+                    else
+                        module
                 }
-                module.copy(lessons = updatedLessons)
-            } else
-                module
-        }
 
-        // Store
-        courseRecords[course.id] = course.copy(modules = updatedModules)
-        return false
+                // Store
+                courseRecords[course.id] = course.copy(modules = updatedModules)
+                Result.Success(Unit)
+            }
+        }
+    }
+
+    override fun updateLessonDetails(lessonId: Int, updateData: UpdateLessonData): Result<Unit> {
+        return when (val result = getModuleIdFromLessonId(lessonId)) {
+            is Result.Error -> {
+                logInfo(result.message, LogLevel.EXCEPTION)
+                Result.Error("Lesson($lessonId) is not found", ErrorCode.RESOURCE_NOT_FOUND)
+            }
+            is Result.Success -> {
+                val moduleId = result.data
+                val courseId = moduleIdToCourseId.getValue(moduleId)
+                val course = courseRecords.getValue(courseId)
+
+                val updatedModules = course.modules.map { module ->
+                    if (module.id == moduleId) {
+                        val updatedLessons = module.lessons.map { lesson ->
+                            if (lesson.id == lessonId) {
+                                lesson.copy(
+                                    title = updateData.title ?: lesson.title,
+                                    resource = updateData.resource ?: lesson.resource,
+                                    duration = updateData.duration ?: lesson.duration,
+                                    status = updateData.status ?: lesson.status
+                                )
+                            } else
+                                lesson
+                        }
+                        module.copy(lessons = updatedLessons)
+                    } else
+                        module
+                }
+
+                // Store
+                courseRecords[course.id] = course.copy(modules = updatedModules)
+                Result.Success(Unit, "Lesson($lessonId) updated successfully.")
+            }
+        }
     }
 
     override fun updateModuleDuration(moduleId: Int, duration: Int): Boolean {

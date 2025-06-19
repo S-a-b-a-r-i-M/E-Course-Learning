@@ -16,7 +16,9 @@ import core.course.schemas.UpdateModuleData
 import core.course.schemas.UpdatePriceDetailsData
 import core.user.schemas.UserRole
 import core.user.schemas.UserData
+import utils.Result
 import utils.hasPermission
+import utils.hasPermissionV2
 import kotlin.Int
 
 fun String.capitalize(): String = this[0].uppercase() + this.substring(1).lowercase()
@@ -191,11 +193,11 @@ class CourseService (
      * @param priceDetails An [UpdatePriceDetailsData] object with the new pricing information,
      * or `null` to remove existing pricing details (e.g., making a course free).
      */
-    fun updateCoursePricing(currentUser: UserData, courseId: Int, priceDetails: UpdatePriceDetailsData?) {
-        if (!hasPermission(currentUser.role)) return
-
-        courseRepo.updateOrCreatePricing(priceDetails, courseId)
-        logInfo("Price Details Updated.", LogLevel.INFO)
+    fun updateCoursePricing(currentUser: UserData, courseId: Int, priceDetails: UpdatePriceDetailsData?): Result<Unit> {
+        return when (val permissionResult = hasPermissionV2(currentUser.role)) {
+            is Result.Error -> permissionResult
+            is Result.Success -> courseRepo.updateOrCreatePricing(priceDetails, courseId)
+        }
     }
 
     /**
@@ -204,11 +206,11 @@ class CourseService (
      * @param moduleId The unique identifier of the module to be updated.
      * @param updateData An [UpdateModuleData] object containing the new data for the module.
      */
-    fun updateModuleDetails(currentUser: UserData, moduleId: Int, updateData: UpdateModuleData) {
-        if (!hasPermission(currentUser.role)) return
-
-        courseRepo.updateModuleDetails(moduleId, updateData)
-        logInfo("Module($moduleId) details updated.", LogLevel.INFO)
+    fun updateModuleDetails(currentUser: UserData, moduleId: Int, updateData: UpdateModuleData): Result<Unit> {
+        return when (val permissionResult = hasPermissionV2(currentUser.role)) {
+            is Result.Error -> permissionResult
+            is Result.Success -> courseRepo.updateModuleDetails(moduleId, updateData)
+        }
     }
 
     /**
@@ -217,10 +219,10 @@ class CourseService (
      * @param lessonId The unique identifier of the lesson to be updated.
      * @param updateData An [UpdateLessonData] object containing the new data for the lesson.
      */
-    fun updateLessonDetails(currentUser: UserData, lessonId: Int, updateData: UpdateLessonData) {
-        if (!hasPermission(currentUser.role)) return
-
-        courseRepo.updateLessonDetails(lessonId, updateData)
-        logInfo("Lesson($lessonId) details updated.", LogLevel.INFO)
+    fun updateLessonDetails(currentUser: UserData, lessonId: Int, updateData: UpdateLessonData): Result<Unit> {
+        return when (val permissionResult = hasPermissionV2(currentUser.role)) {
+            is Result.Error -> permissionResult
+            is Result.Success -> courseRepo.updateLessonDetails(lessonId, updateData)
+        }
     }
 }

@@ -114,3 +114,16 @@ fun hasPermission(
     
     return true
 }
+
+fun hasPermissionV2(
+    currentUserRole: UserRole,
+    allowedUserRoles: List<UserRole> = listOf(UserRole.ADMIN),
+    errMessage: String = "User doesn't have permission to perform this action"
+): Result<Unit> {
+    if (!allowedUserRoles.contains(currentUserRole)) {
+        println(errMessage)
+        return Result.Error(errMessage, ErrorCode.PERMISSION_DENIED)
+    }
+
+    return Result.Success(Unit)
+}

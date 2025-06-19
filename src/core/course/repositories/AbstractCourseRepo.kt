@@ -1,6 +1,7 @@
 package core.course.repositories
 
 import core.course.schemas.*
+import utils.Result
 import java.util.UUID
 
 interface AbstractCourseRepo {
@@ -27,10 +28,10 @@ interface AbstractCourseRepo {
     fun getCoursesByIds(courseIds: List<Int>): List<DetailedCourseData>
 
     // ******************* UPDATE *******************
-    fun updateOrCreatePricing(priceDetails: UpdatePriceDetailsData?, courseId: Int): Boolean
-    fun updateCourseBasicDetails(courseId: Int, updateData: UpdateCourseBasicData): Boolean
-    fun updateModuleDetails(moduleId: Int, updateData: UpdateModuleData): Boolean
-    fun updateLessonDetails(lessonId: Int, updateData: UpdateLessonData) : Boolean
+    fun updateOrCreatePricing(priceDetails: UpdatePriceDetailsData?, courseId: Int): Result<Unit>
+    fun updateCourseBasicDetails(courseId: Int, updateData: UpdateCourseBasicData): Result<Unit>
+    fun updateModuleDetails(moduleId: Int, updateData: UpdateModuleData): Result<Unit>
+    fun updateLessonDetails(lessonId: Int, updateData: UpdateLessonData) : Result<Unit>
     fun updateModuleDuration(moduleId: Int, duration: Int) : Boolean
     fun updateCourseDuration(courseId: Int, duration: Int): Boolean
 

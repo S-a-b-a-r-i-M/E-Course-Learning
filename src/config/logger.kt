@@ -7,5 +7,5 @@ enum class LogLevel(val colorCode: String) {
 }
 
 fun logInfo(message: String, level: LogLevel) {
-    println("${level.colorCode} message")
+    println("${level.colorCode}$message\u001B[0m") // "\u001B[0m" -- code for reset the color
 }

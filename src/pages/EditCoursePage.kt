@@ -1,5 +1,7 @@
 package pages
 
+import config.LogLevel
+import config.logInfo
 import core.course.schemas.DetailedCourseData
 import core.course.schemas.ModuleData
 import core.course.schemas.PriceDetailsData
@@ -9,6 +11,7 @@ import core.course.schemas.UpdateModuleData
 import core.course.schemas.UpdatePriceDetailsData
 import core.course.services.CourseService
 import core.user.schemas.UserData
+import utils.Result
 import utils.currencyMap
 import utils.displayDetailedLesson
 import utils.displayModule
@@ -74,10 +77,17 @@ class EditCoursePage (val courseService: CourseService) {
                         return false
                 }
                 4 -> {
-                    courseService.updateCoursePricing(currentUser, courseId, updatedPriceData)
-                    return true
+                    return when(val result = courseService.updateCoursePricing(currentUser, courseId, updatedPriceData)){
+                        is Result.Error -> {
+                            println("⚠️: ${result.message}")
+                            false
+                        }
+                        is Result.Success -> {
+                            println("Price details updated successfully")
+                            true
+                        }
+                    }
                 }
-                else -> println("Invalid input")
             }
         }
     }
@@ -264,14 +274,19 @@ class EditCoursePage (val courseService: CourseService) {
                 }
                 // Save & Go Back
                 6 -> {
-                    courseService.updateLessonDetails(
-                        currentUser,
-                        existingLessonData.id,
-                        updateLessonData
-                    )
-                    return true
+                    return when (val result = courseService.updateLessonDetails(
+                        currentUser, existingLessonData.id, updateLessonData
+                    )) {
+                        is Result.Error -> {
+                            println("⚠️: ${result.message}")
+                            false
+                        }
+                        is Result.Success -> {
+                            println("Lesson details updated successfully ✅")
+                            true
+                        }
+                    }
                 }
-                else -> println("Invalid option")
             }
         }
     }
@@ -377,8 +392,18 @@ class EditCoursePage (val courseService: CourseService) {
                 }
                 // Save & Go Back
                 6 -> {
-                    courseService.updateModuleDetails(currentUser, module.id, updateModuleData)
-                    return true
+                    return when(val result = courseService.updateModuleDetails(
+                            currentUser, module.id, updateModuleData
+                        )) {
+                        is Result.Error -> {
+                            println("⚠️: ${result.message}")
+                            false
+                        }
+                        is Result.Success -> {
+                            println("Module($moduleId) details updated.")
+                            true
+                        }
+                    }
                 }
             }
         }
