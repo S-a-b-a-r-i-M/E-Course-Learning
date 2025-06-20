@@ -75,7 +75,7 @@ class AuthPage (val authService: AuthService) {
                         } catch (exp: ValidationException) {
                             println("Err:{${exp.message}}")
                             if (count < 2) println("Try again....\n")
-                        } catch (_: Exception) {
+                        } catch (exp: Exception) {
                             return null
                         }
                     }

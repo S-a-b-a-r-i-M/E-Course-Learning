@@ -3,6 +3,7 @@ import core.course.repositories.CourseRepo
 import core.course.repositories.StudentCourseRepo
 import core.course.services.CourseService
 import core.course.services.StudentCourseService
+import core.user.repositories.PersistableUserRepo
 import core.user.repositories.UserRepo
 import core.user.schemas.BaseUser
 import core.user.schemas.UserData
@@ -42,7 +43,8 @@ fun main() {
 }
 
 // Object Creation
-val userRepo = UserRepo()
+val isPersistableStorage = true
+val userRepo = if (isPersistableStorage) PersistableUserRepo() else UserRepo()
 val authService = AuthService(userRepo)
 val authPage = AuthPage(authService)
 

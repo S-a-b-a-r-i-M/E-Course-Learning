@@ -9,11 +9,11 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 interface AbstractUserRepo {
-    // ******************* READ *******************
-    fun getUserByEmail(email: String): BaseUser?
-
     // ******************* CREATE *******************
     fun createStudentUser(newUserData: NewUserData): StudentData
+
+    // ******************* READ *******************
+    fun getUserByEmail(email: String): BaseUser?
 
     // ******************* UPDATE *******************
     fun updateUser(userId: UUID, updateData: UserUpdateData): Boolean

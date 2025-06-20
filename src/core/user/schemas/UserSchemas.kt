@@ -35,7 +35,7 @@ data class StudentData (
     override val email: String,
     override val role: UserRole,
     override val status: UserStatus,
-    override val hashPassword: String,
+    override val hashPassword: String, // TODO(doubt): Do i need to include this ?
     override val lastLoginAt: LocalDateTime,
     val gitHubUrl: String? = null,
     val linkedInUrl: String? = null,
@@ -50,10 +50,10 @@ data class TrainerData (
     override val status: UserStatus,
     override val hashPassword: String,
     override val lastLoginAt: LocalDateTime,
-    val educations: List<EducationData> = mutableListOf(),
-    val workExperiences: List<WorkExperienceData> = mutableListOf(),
-    val technicalSkills: List<String>,
-    val softSkills: List<String> = mutableListOf(),
+    val educations: List<EducationData> = listOf(),
+    val workExperiences: List<WorkExperienceData> = listOf(),
+    val technicalSkills: List<String> = listOf(),
+    val softSkills: List<String> = listOf(),
 ) : BaseUser()
 
 data class EducationData (
