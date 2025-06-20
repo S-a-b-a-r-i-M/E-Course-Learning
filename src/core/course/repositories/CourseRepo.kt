@@ -2,6 +2,7 @@ package core.course.repositories
 
 import config.LogLevel
 import config.logInfo
+import core.auth.services.CURRENT_FILE_NAME
 import core.course.schemas.CategoryData
 import core.course.schemas.DetailedCourseData
 import core.course.schemas.LessonData
@@ -23,7 +24,7 @@ import utils.Result
 import java.util.UUID
 import kotlin.math.abs
 
-val CURRENT_FILE_NAME: String? = Throwable().stackTrace[0].fileName
+val CURRENT_FILE_NAME: String = Throwable().stackTrace[0].fileName ?: ""
 
 class CourseRepo : AbstractCourseRepo {
     companion object {
@@ -158,7 +159,8 @@ class CourseRepo : AbstractCourseRepo {
     fun getCourseV2(courseId: Int): Result<DetailedCourseData> {
         val course = courseRecords[courseId]
         if (course == null) {
-            logInfo("Course not available for courseId($courseId)", LogLevel.EXCEPTION)
+            logInfo("Course not available for courseId($courseId)", LogLevel.EXCEPTION, CURRENT_FILE_NAME
+            )
             return Result.Error("Course not available for courseId($courseId)", ErrorCode.RESOURCE_NOT_FOUND)
         }
 
@@ -187,7 +189,7 @@ class CourseRepo : AbstractCourseRepo {
     private fun getCourseByModuleIdV2(moduleId: Int): Result<DetailedCourseData> {
         val courseId = moduleIdToCourseId[moduleId]
         if (courseId == null) {
-            logInfo("Course reference is not available fof moduleId($moduleId)", LogLevel.EXCEPTION)
+            logInfo("Course reference is not available fof moduleId($moduleId)", LogLevel.EXCEPTION, CURRENT_FILE_NAME)
             return Result.Error(
                 "Course reference is not available fof moduleId($moduleId)",
                 ErrorCode.RESOURCE_NOT_FOUND
@@ -263,7 +265,8 @@ class CourseRepo : AbstractCourseRepo {
     override fun updateOrCreatePricing(priceDetails: UpdatePriceDetailsData?, courseId: Int): Result<Unit> {
         val course = courseRecords[courseId]
         if (course == null) {
-            logInfo("There is no course found for courseId($courseId)", LogLevel.EXCEPTION)
+            logInfo("There is no course found for courseId($courseId)", LogLevel.EXCEPTION, CURRENT_FILE_NAME
+            )
             return Result.Error(
                 "There is no course found for courseId($courseId)",
                 ErrorCode.RESOURCE_NOT_FOUND
@@ -335,7 +338,7 @@ class CourseRepo : AbstractCourseRepo {
     override fun updateLessonDetails(lessonId: Int, updateData: UpdateLessonData): Result<Unit> {
         return when (val result = getModuleIdFromLessonId(lessonId)) {
             is Result.Error -> {
-                logInfo(result.message, LogLevel.EXCEPTION)
+                logInfo(result.message, LogLevel.EXCEPTION, CURRENT_FILE_NAME)
                 Result.Error("Lesson($lessonId) is not found", ErrorCode.RESOURCE_NOT_FOUND)
             }
             is Result.Success -> {

@@ -13,7 +13,7 @@ import core.user.schemas.UserStatus
 import utils.PasswordHasher
 import java.util.UUID
 
-val CURRENT_FILE_NAME: String? = Throwable().stackTrace[0].fileName
+val CURRENT_FILE_NAME: String = Throwable().stackTrace[0].fileName ?: ""
 
 /**
  * Manages user authentication processes, including sign-up, sign-in, and sign-out.
@@ -33,7 +33,7 @@ class AuthService (val userRepo: AbstractUserRepo) {
     fun signUp(signUpData: SignUpData): StudentData? {
         // Check email uniqueness
         if (userRepo.isEmailExists(signUpData.email)){
-            logInfo("$CURRENT_FILE_NAME: Email Already exists!!!", LogLevel.EXCEPTION)
+            logInfo("Email Already exists!!!", LogLevel.EXCEPTION, CURRENT_FILE_NAME)
             return null
         }
 
@@ -48,8 +48,9 @@ class AuthService (val userRepo: AbstractUserRepo) {
         )
         val student: StudentData = userRepo.createStudentUser(newUserData)
         logInfo(
-            "$CURRENT_FILE_NAME: New User(${student.fullName}) created.",
-            LogLevel.INFO
+            "New User(${student.fullName}) created.",
+            LogLevel.INFO,
+            CURRENT_FILE_NAME
         )
         return student
     }
@@ -69,7 +70,8 @@ class AuthService (val userRepo: AbstractUserRepo) {
         if(userData == null){
             logInfo(
                 "User with email(${signInData.email}) is not found!!!",
-                LogLevel.EXCEPTION
+                LogLevel.EXCEPTION,
+                CURRENT_FILE_NAME
             )
             return null
         }
@@ -78,13 +80,14 @@ class AuthService (val userRepo: AbstractUserRepo) {
         if (!PasswordHasher.checkPasswordMatch(signInData.password,userData.hashPassword)) {
             logInfo(
                 "User with email(${signInData.email}) password is not matched!!!",
-                LogLevel.EXCEPTION
+                LogLevel.EXCEPTION,
+                CURRENT_FILE_NAME
             )
             return null
         }
 
         if (userData.status == UserStatus.SUSPENDED) {
-            logInfo("User(${userData.id}) account is suspended!!!", LogLevel.WARNING)
+            logInfo("User(${userData.id}) account is suspended!!!", LogLevel.WARNING, CURRENT_FILE_NAME)
             return null
         }
 

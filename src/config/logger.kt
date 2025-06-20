@@ -6,6 +6,6 @@ enum class LogLevel(val colorCode: String) {
     EXCEPTION("\u001B[31m") // RED
 }
 
-fun logInfo(message: String, level: LogLevel) {
-    println("${level.colorCode}$message\u001B[0m") // "\u001B[0m" -- code for reset the color
+fun logInfo(message: String, level: LogLevel, fileName: String = "") {
+    println("${level.colorCode}${if (fileName.isEmpty()) "" else "$fileName: "}$message\u001B[0m") // "\u001B[0m" -- code for reset the color
 }
