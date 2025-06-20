@@ -50,17 +50,10 @@ class CourseRepo : AbstractCourseRepo {
     }
     // ******************* CREATE *******************
     override fun createCourse(newCourseData: NewCourseBasicData, currentUserId: UUID): DetailedCourseData {
-        val course = DetailedCourseData(
-            id = getNextCourseId(),
-            title = newCourseData.title,
-            description = newCourseData.description,
-            createdBy = currentUserId,
-            skills = newCourseData.skills,
-            courseLevel = newCourseData.courseLevel,
-            courseType = newCourseData.courseType,
-            status = ResourceStatus.DRAFT,
-            prerequisites = newCourseData.prerequisites,
-            category = newCourseData.category
+        val course = DetailedCourseData.fromNewCourseBasicData(
+            getNextCourseId(),
+            currentUserId,
+            newCourseData
         )
 
         courseRecords[course.id] = course
@@ -76,12 +69,7 @@ class CourseRepo : AbstractCourseRepo {
     override fun createPricing(newPriceData: NewPriceData, courseId: Int): PriceDetailsData {
         val course = courseRecords.getValue(courseId)
         // Add price-details id into course
-        val priceDetails = PriceDetailsData(
-            id = getNextPriceDetailsId(),
-            currencyCode = newPriceData.currencyCode,
-            currencySymbol = newPriceData.currencySymbol,
-            amount = newPriceData.amount
-        )
+        val priceDetails = PriceDetailsData.from(getNextPriceDetailsId(), newPriceData)
         courseRecords[courseId] = course.copy(priceDetails=priceDetails)
         return priceDetails
     }
@@ -92,20 +80,14 @@ class CourseRepo : AbstractCourseRepo {
             println("There is no course found for courseId($courseId)")
             return null
         }
-
-        val newModule = ModuleData(
-            id = getNextModuleId(),
-            title = newModuleData.title,
-            description = newModuleData.description,
-            status = newModuleData.status,
-        )
+        val module = ModuleData.from(getNextModuleId(), newModuleData)
 
         // Store
         val updatedModules = course.modules.toMutableList()
-        updatedModules.add(newModule)
+        updatedModules.add(module)
         courseRecords[course.id] = course.copy(modules = updatedModules)
-        moduleIdToCourseId[newModule.id] = courseId
-        return newModule
+        moduleIdToCourseId[module.id] = courseId
+        return module
     }
 
     override fun createLesson(newLessonData: NewLessonData, moduleId: Int): LessonData? {
@@ -115,13 +97,7 @@ class CourseRepo : AbstractCourseRepo {
             return null
         }
 
-        val newLesson = LessonData (
-            id = getNextLessonId(),
-            title = newLessonData.title,
-            resource = newLessonData.resource,
-            duration = newLessonData.duration,
-            status = newLessonData.status,
-        )
+        val newLesson = LessonData.from (getNextLessonId(), newLessonData)
 
         // Store
         val course = courseRecords.getValue(courseId)

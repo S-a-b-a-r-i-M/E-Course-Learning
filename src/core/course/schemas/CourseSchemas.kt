@@ -45,7 +45,23 @@ data class DetailedCourseData (
     val priceDetails: PriceDetailsData? = null,
     val modules: List<ModuleData> = listOf(),
     val parentCourseId: Int? = null // Used to connect this course with its parent course
-)
+) {
+    companion object {
+        fun fromNewCourseBasicData(courseId: Int, createdBy: UUID, newCourseData: NewCourseBasicData) =
+            DetailedCourseData(
+                id = courseId,
+                title = newCourseData.title,
+                description = newCourseData.description,
+                createdBy = createdBy,
+                skills = newCourseData.skills,
+                courseLevel = newCourseData.courseLevel,
+                courseType = newCourseData.courseType,
+                status = ResourceStatus.PUBLISHED,
+                prerequisites = newCourseData.prerequisites,
+                category = newCourseData.category
+            )
+    }
+}
 
 data class UpdateCourseBasicData (
     var title: String? = null,
@@ -66,7 +82,17 @@ data class PriceDetailsData (
     val currencyCode: String,
     val currencySymbol: String,
     val amount: Double,
-)
+) {
+    companion object {
+        fun from(priceDetailsId: Int, newPriceData: NewPriceData) =
+            PriceDetailsData(
+                id = priceDetailsId,
+                currencyCode = newPriceData.currencyCode,
+                currencySymbol = newPriceData.currencySymbol,
+                amount = newPriceData.amount
+            )
+    }
+}
 
 data class UpdatePriceDetailsData (
     var id: Int = 0,
@@ -88,7 +114,17 @@ data class ModuleData (
     var duration: Int = 0,
     val status: ResourceStatus = ResourceStatus.PUBLISHED,
     val lessons: List<LessonData> = listOf(),
-)
+) {
+    companion object {
+        fun from(moduleId: Int, newModuleData: NewModuleData) =
+            ModuleData(
+                id = moduleId,
+                title = newModuleData.title,
+                description = newModuleData.description,
+                status = newModuleData.status,
+            )
+    }
+}
 
 data class UpdateModuleData (
     var title: String? = null,
@@ -109,7 +145,18 @@ data class LessonData (
     val resource: String,
     val duration: Int, // note: "duration in minutes"
     val status: ResourceStatus = ResourceStatus.PUBLISHED,
-)
+) {
+    companion object {
+        fun from(lessonId: Int, newLessonData: NewLessonData) =
+            LessonData (
+                id = lessonId,
+                title = newLessonData.title,
+                resource = newLessonData.resource,
+                duration = newLessonData.duration,
+                status = newLessonData.status,
+            )
+    }
+}
 
 data class UpdateLessonData (
     var title: String? = null,

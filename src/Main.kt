@@ -1,5 +1,6 @@
 import core.auth.services.AuthService
 import core.course.repositories.CourseRepo
+import core.course.repositories.PersistableCourseRepo
 import core.course.repositories.StudentCourseRepo
 import core.course.services.CourseService
 import core.course.services.StudentCourseService
@@ -51,7 +52,7 @@ val authPage = AuthPage(authService)
 val studentCourseRepo = StudentCourseRepo()
 val studentCourseService = StudentCourseService(studentCourseRepo)
 
-val courseRepo = CourseRepo()
+val courseRepo = if (isPersistableStorage) PersistableCourseRepo() else CourseRepo()
 val courseService = CourseService(courseRepo, studentCourseService)
 
 val homePage = HomePage(courseService, studentCourseService)

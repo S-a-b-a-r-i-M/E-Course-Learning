@@ -12,7 +12,11 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 class PersistableUserRepo : AbstractUserRepo {
-    val conn = DatabaseManager.getDBConnection()
+    companion object {
+        val conn = DatabaseManager.getDBConnection()
+
+
+    }
 
     // ******************* CREATE *******************
     private fun createUser(newUserData: NewUserData): Pair<UUID, LocalDateTime> {

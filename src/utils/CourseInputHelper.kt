@@ -99,6 +99,7 @@ fun getNewCourseBasicDataFromUser(): NewCourseBasicData {
                 val currencySymbol = currencyMap.getOrDefault(currencyCode, "₹")
 
                 print("Enter amount(should be positive): ")
+                // TODO: if validation error occur it should only ask price details
                 val amount = InputValidator.validatePositiveDouble()
                 priceData = NewPriceData(currencyCode, currencySymbol, amount)
             }
