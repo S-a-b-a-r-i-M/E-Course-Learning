@@ -39,19 +39,12 @@ class PersistableCourseRepo : AbstractCourseRepo {
         }
     }
 
-    fun asd() {
-        val list: List<NewLessonData> = emptyList()
-
-
-    }
-
     override fun createLesson(newLessonData: NewLessonData, moduleId: Int): LessonData? {
         val sql = """
             INSERT INTO Lesson (title, resourse, duration, status, module_id)
             VALUES (?, ?, ?, ?::ResourseStatus, ?)
             RETURNING id
         """.trimIndent()
-        val conn = DatabaseManager.getDBConnection()
 
         try {
             conn.prepareStatement(sql).use { pstmt ->
@@ -78,7 +71,7 @@ class PersistableCourseRepo : AbstractCourseRepo {
             VALUES (?, ?, ?, ?::ResourseStatus, ?)
             RETURNING id
         """.trimIndent()
-        val conn = DatabaseManager.getDBConnection()
+
         try {
             conn.prepareStatement(sql).use { pstmt ->
                 pstmt.setString(1, newModuleData.title)
@@ -114,7 +107,6 @@ class PersistableCourseRepo : AbstractCourseRepo {
             ) VALUES (?, ?, ?, ?, ?::CourseLevel, ?::CourseType, ?::ResourseStatus, ?, ?, ?)
             RETURNING id
         """.trimIndent()
-        val conn = DatabaseManager.getDBConnection()
 
         conn.prepareStatement(sql).use { pstmt ->
             // Add Values
@@ -151,7 +143,6 @@ class PersistableCourseRepo : AbstractCourseRepo {
             VALUES (?, ?, ?, ?)
             RETURNING id
         """.trimIndent()
-        val conn = DatabaseManager.getDBConnection()
 
         conn.prepareStatement(sql).use { pstmt ->
             pstmt.setString(1, newPriceData.currencyCode)
@@ -169,7 +160,6 @@ class PersistableCourseRepo : AbstractCourseRepo {
     // ******************* READ *******************
     override fun getCategory(categoryId: Int): CategoryData? {
         val sql = "SELECT * FROM Category WHERE id=$categoryId"
-        val conn = DatabaseManager.getDBConnection()
 
         conn.createStatement().use { stmt ->
             stmt.executeQuery(sql).use { rs ->
@@ -195,7 +185,6 @@ class PersistableCourseRepo : AbstractCourseRepo {
 
     private fun getLessonsByModuleId(moduleId: Int): List<LessonData> {
         val sql = """SELECT * FROM lesson WHERE module_id=$moduleId"""
-        val conn = DatabaseManager.getDBConnection()
         val lessons = mutableListOf<LessonData>()
 
         conn.createStatement().use { stmt ->
@@ -208,9 +197,34 @@ class PersistableCourseRepo : AbstractCourseRepo {
         }
     }
 
+    private fun getModulesByCourseId(courseId: Int): List<ModuleData> {
+        val sql = """SELECT * FROM "Module" WHERE course_id=$courseId"""
+
+        conn.createStatement().use { stmt ->
+            stmt.executeQuery(sql).use { rs ->
+                if (rs.next()){
+                    getModule()
+                    // Get All lessons
+                    val moduleId = rs.getInt("id")
+                    val lessons = getLessonsByModuleId(moduleId)
+
+                    return ModuleData(
+                        id = rs.getInt("id"),
+                        title = rs.getString("title"),
+                        description = rs.getString("description"),
+                        duration = rs.getInt("duration"),
+                        status = ResourceStatus.getFromStrValue(rs.getString("status")),
+                        lessons = lessons
+                    )
+                }
+
+                return null
+            }
+        }
+    }
+
     override fun getModule(moduleId: Int): ModuleData? {
         val sql = """SELECT * FROM "Module" WHERE id=$moduleId"""
-        val conn = DatabaseManager.getDBConnection()
 
         conn.createStatement().use { stmt ->
             stmt.executeQuery(sql).use { rs ->
@@ -236,29 +250,54 @@ class PersistableCourseRepo : AbstractCourseRepo {
 
     override fun getLesson(lessonId: Int): LessonData? {
         val sql = """SELECT * FROM lesson WHERE id=$lessonId"""
-        val conn = DatabaseManager.getDBConnection()
-        try {
-            conn.createStatement().use { stmt ->
-                stmt.executeQuery(sql).use { rs ->
-//                    while (rs.next())
-//                        lessons.add(parseLessonFromResult(rs))
-//
-//                    return lessons
-                }
-            }
-        } catch (exp: SQLException) {
-            logInfo("No lesson fo", LogLevel.EXCEPTION)
-        }
 
+        conn.createStatement().use { stmt ->
+            stmt.executeQuery(sql).use { rs ->
+                if (rs.next())
+                    return parseLessonFromResult(rs)
+
+                logInfo("No lesson found ", LogLevel.EXCEPTION)
+                return null
+            }
+        }
     }
 
-    // ******************* READ *********************
     override fun getCourse(courseId: Int): DetailedCourseData? {
-        TODO("Not yet implemented")
+        val sql = """SELECT * FROM course WHERE id=$courseId"""
+
+        conn.createStatement().use { stmt ->
+            stmt.executeQuery(sql).use { rs ->
+                if (!rs.next()) {
+                    logInfo("No lesson found ", LogLevel.EXCEPTION)
+                    return null
+                }
+
+                // Get Module by Course Id
+//                getModule()
+            }
+        }
+
+        return null
     }
 
     override fun getPriceDetails(courseId: Int): PriceDetailsData? {
-        TODO("Not yet implemented")
+        val sql = """SELECT * FROM PriceDetails WHERE id=$courseId"""
+
+        conn.createStatement().use { stmt ->
+            stmt.executeQuery(sql).use { rs ->
+                if (rs.next())
+                    return PriceDetailsData(
+                        id = rs.getInt("id"),
+                        currencyCode = rs.getString("currencycode"),
+                        currencySymbol = rs.getString("currencysymbol"),
+                        amount = rs.getDouble("amount")
+                    )
+
+                logInfo("No PriceDetails found for Course($courseId)", LogLevel.EXCEPTION)
+                return null
+            }
+        }
+
     }
 
     override fun getCategories(searchQuery: String, offset: Int, limit: Int): List<CategoryData> {
@@ -279,18 +318,49 @@ class PersistableCourseRepo : AbstractCourseRepo {
     }
 
     // ******************* UPDATE *******************
-    override fun updateOrCreatePricing(
-        priceDetails: UpdatePriceDetailsData?,
-        courseId: Int
-    ): Result<Unit> {
-        TODO("Not yet implemented")
+    override fun updateOrCreatePricing(priceDetails: UpdatePriceDetailsData?, courseId: Int): Result<Unit> {
+        if (priceDetails == null) {
+            val sql = "DELETE FROM PriceDetails WHERE course_id=$courseId"
+            conn.createStatement().use { stmt ->
+                val count = stmt.executeUpdate(sql)
+                return Result.Success(Unit, "Price details deleted successfully")
+            }
+        }
+        val sql = if (priceDetails.id == 0) // Create
+            """
+            INSERT INTO PriceDetails(currencyCode, currencySymbol, amount) 
+            VALUES (?, ?, ?)
+        """.trimIndent()
+        else // Update
+            """
+            UPDATE PriceDetails
+            SET currencycode=?, currencysymbol=?, amount=?
+            WHERE id=${priceDetails.id}
+        """.trimIndent()
+
+        conn.prepareStatement(sql).use { pstmt ->
+            pstmt.setString(1, priceDetails.currencyCode)
+            pstmt.setString(1, priceDetails.currencySymbol)
+            pstmt.setDouble(1, priceDetails.amount as Double)
+
+            // Execute
+            pstmt.executeUpdate()
+            return Result.Success(Unit, "Price details updated/created successfully")
+        }
     }
 
-    override fun updateCourseBasicDetails(
-        courseId: Int,
-        updateData: UpdateCourseBasicData
-    ): Result<Unit> {
-        TODO("Not yet implemented")
+    override fun updateCourseBasicDetails(courseId: Int, updateData: UpdateCourseBasicData): Result<Unit> {
+        var sql = "UPDATE Course SET "
+        if (updateData.title != null)
+            sql += "title=${updateData.title},"
+        if (updateData.description != null)
+            sql += "description=${updateData.description},"
+        if (updateData.skills != null)
+            sql += "skills=${updateData.skills},"
+        if (updateData.prerequisites != null)
+            sql += "prerequisites=${updateData.prerequisites},"
+        if (updateData.status != null)
+            sql += "status=${updateData.status}"
     }
 
     override fun updateModuleDetails(moduleId: Int, updateData: UpdateModuleData): Result<Unit> {
@@ -305,7 +375,6 @@ class PersistableCourseRepo : AbstractCourseRepo {
         val sql = """UPDATE "Module" 
             |SET duration=$duration + (SELECT duration FROM "Module" WHERE id=$moduleId)
             |WHERE id=$moduleId""".trimMargin()
-        val conn = DatabaseManager.getDBConnection()
 
         conn.createStatement().use { stmt ->
             val count = stmt.executeUpdate(sql)
@@ -318,7 +387,6 @@ class PersistableCourseRepo : AbstractCourseRepo {
         val sql = """UPDATE Course 
             |SET duration=$duration + (SELECT duration FROM Course WHERE id=$courseId) 
             |WHERE id=$courseId""".trimMargin()
-        val conn = DatabaseManager.getDBConnection()
 
         conn.createStatement().use { stmt ->
             val count = stmt.executeUpdate(sql)
