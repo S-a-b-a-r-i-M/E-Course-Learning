@@ -111,8 +111,10 @@ class CoursePage (
 
         println("Course successfully created!!!")
 
-        if (getYesOrNo("Do you wanna open the course(y/n) ?"))
-            displayCourse(course, true)
+        if (getYesOrNo("Do you wanna open the course(y/n) ?")) {
+            val detailedCourse = courseService.getCourse(course.id)
+            if (detailedCourse != null) displayCourse(detailedCourse, true)
+        }
         return course
     }
 
@@ -342,9 +344,8 @@ class CoursePage (
                     }
                 }
 
-                if (isRefetch) {
+                if (isRefetch)
                     course = courseService.getCourse(courseId)
-                }
             }
         }
         // If Student Then Show Enroll Option
@@ -356,7 +357,7 @@ class CoursePage (
             if (enrolledCourseIds.contains(courseId))
                 println("Already Enrolled ✅")
             else {
-                if (getYesOrNo(
+                if (!getYesOrNo(
                         "Are you ready to learn new skills by enrolling this course (y/n) ? "
                     )) {
                     println("📚 No problem! You can start enroll anytime.")

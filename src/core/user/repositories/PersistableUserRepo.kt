@@ -12,11 +12,8 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 class PersistableUserRepo : AbstractUserRepo {
-    companion object {
-        val conn = DatabaseManager.getDBConnection()
-
-
-    }
+    private val conn
+        get() = DatabaseManager.getDBConnection()
 
     // ******************* CREATE *******************
     private fun createUser(newUserData: NewUserData): Pair<UUID, LocalDateTime> {
@@ -26,7 +23,7 @@ class PersistableUserRepo : AbstractUserRepo {
             VALUES (gen_random_uuid(), ?, ?, ?, ?::UserRole, ?, CURRENT_TIMESTAMP, ?::UserStatus)
             RETURNING id, lastLoginAt;
         """
-//        val conn = DatabaseManager.getDBConnection()
+
         // Execute
         conn.prepareStatement(sql).use { pstmt ->
             // Add values
@@ -51,10 +48,10 @@ class PersistableUserRepo : AbstractUserRepo {
         // Prepare
         val (userId, lastLoginAt) = createUser(newUserData)
         val sql = """
-            INSERT INTO Student (studentId, gitHubUrl, linkedInUrl)
+            INSERT INTO Student (student_id, gitHubUrl, linkedInUrl)
             VALUES ('$userId', '', '')
         """
-//        val conn = DatabaseManager.getDBConnection()
+
         // Execute
         conn.createStatement().use { stmt ->
             stmt.executeUpdate(sql)
@@ -75,7 +72,6 @@ class PersistableUserRepo : AbstractUserRepo {
     // ******************* READ *******************
     override fun getUserByEmail(email: String): BaseUser? {
         val sql = """SELECT * FROM "User" WHERE email='sabarinithi2002@gmail.com'"""
-//        val conn = DatabaseManager.getDBConnection()
 
         conn.prepareStatement(sql).use { pstmt ->
 //            pstmt.setString(1, email)
@@ -118,7 +114,7 @@ class PersistableUserRepo : AbstractUserRepo {
         val sql = """SELECT EXISTS (
             SELECT 1 FROM "User" WHERE email=?
         )"""
-//        val conn = DatabaseManager.getDBConnection()
+
         // Execute
         conn.prepareStatement(sql).use { pstmt ->
             pstmt.setString(1, email)

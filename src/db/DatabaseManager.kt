@@ -10,7 +10,7 @@ fun main() {
 
 object DatabaseManager {
     // DATABASE CONFIGS
-    private const val DB_NAME = "learning_db"
+    private const val DB_NAME = "e_learning_db"
     private const val DB_PASSWORD = "root"
     private const val DB_USER_NAME = "postgres"
     private const val DB_URL = "jdbc:postgresql://localhost:5432/$DB_NAME"

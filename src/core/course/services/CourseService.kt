@@ -219,10 +219,21 @@ class CourseService (
      * @param lessonId The unique identifier of the lesson to be updated.
      * @param updateData An [UpdateLessonData] object containing the new data for the lesson.
      */
-    fun updateLessonDetails(currentUser: UserData, lessonId: Int, updateData: UpdateLessonData): Result<Unit> {
+    fun updateLessonDetails(currentUser: UserData, courseId: Int, moduleId: Int, lessonId: Int, updateData: UpdateLessonData): Result<Unit> {
         return when (val permissionResult = hasPermissionV2(currentUser.role)) {
             is Result.Error -> permissionResult
-            is Result.Success -> courseRepo.updateLessonDetails(lessonId, updateData)
+            is Result.Success -> {
+                val result = courseRepo.updateLessonDetails(lessonId, updateData)
+                updateData.duration?.let{
+                    courseRepo.updateModuleDuration(moduleId, it)
+                    courseRepo.updateCourseDuration(courseId, it)
+                    logInfo(
+                        "Lesson($lessonId) related module and course duration also updated",
+                        LogLevel.INFO
+                    )
+                }
+                return result
+            }
         }
     }
 }

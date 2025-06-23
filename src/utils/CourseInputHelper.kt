@@ -66,7 +66,7 @@ fun getNewCourseBasicDataFromUser(): NewCourseBasicData {
             print("Enter course title (min 3 char, max 50 char): ")
             val title = InputValidator.validateName(readln(), "Title", 3, 50)
             print("Enter course description (min 10 char): ")
-            val description = InputValidator.validateName(readln(), "Description", 10, 50)
+            val description = InputValidator.validateName(readln(), "Description", 10)
 
             // Skills & Prerequisites
             val skills = getListInput("Enter skills(separate by comma): ", ",")

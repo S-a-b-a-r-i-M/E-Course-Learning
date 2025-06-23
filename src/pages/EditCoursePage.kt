@@ -194,11 +194,10 @@ class EditCoursePage (val courseService: CourseService) {
         return input
     }
 
-    fun editLesson(currentUser: UserData, lessonId: Int): Boolean {
+    fun editLesson(currentUser: UserData, lessonId: Int, courseId: Int, moduleId: Int): Boolean {
         val existingLessonData = courseService.getLesson(lessonId) ?: return false
         val updateLessonData = UpdateLessonData()
         var isModified = false
-
         val options = mapOf(
             1 to "Edit Title",
             2 to "Edit Resource",
@@ -208,20 +207,19 @@ class EditCoursePage (val courseService: CourseService) {
             6 to "Save & Go Back"
         )
 
+        displayDetailedLesson(existingLessonData, true)
         while (true) {
             println("\n===== Edit Lesson =====")
-            displayDetailedLesson(existingLessonData, true)
 
             when (selectFromOption(options)) {
                 1 -> {
                     println("Current: ${updateLessonData.title ?: existingLessonData.title}")
-                    print("Enter New title or press Enter to keep current (min 3 char, max 50 char): ")
                     try {
                         val newTitle = getTitleFromUser()
                         if (newTitle.isNotEmpty()) {
                             updateLessonData.title = newTitle
                             isModified = true
-                            println("New Title added")
+                            println("New Title added ☑️")
                         }
                         else
                             println("Title unchanged")
@@ -275,7 +273,11 @@ class EditCoursePage (val courseService: CourseService) {
                 // Save & Go Back
                 6 -> {
                     return when (val result = courseService.updateLessonDetails(
-                        currentUser, existingLessonData.id, updateLessonData
+                        currentUser,
+                        courseId,
+                        moduleId,
+                        existingLessonData.id,
+                        updateLessonData
                     )) {
                         is Result.Error -> {
                             println("⚠️: ${result.message}")
@@ -329,7 +331,7 @@ class EditCoursePage (val courseService: CourseService) {
                     }
                     // Find the lesson
                     val lessonData = module.lessons[inputIdx]
-                    if (editLesson(currentUser, lessonData.id))
+                    if (editLesson(currentUser, lessonData.id, courseId, moduleId))
                         module = fetchModule() ?: return
                 }
                 else -> println("Invalid option selected. Please try again.")
@@ -350,14 +352,13 @@ class EditCoursePage (val courseService: CourseService) {
             5 to "Discard & Go Back",
             6 to "Save & Go Back"
         )
+        displayModule(module) // Display selected module
         while (true) {
             println("\n===== Edit Module =====")
-            displayModule(module)
 
             when (selectFromOption(options)) {
                 1 -> {
                     println("Current: ${updateModuleData.title ?: module.title}")
-                    print("Enter New title or press enter to keep current(min 3 char, max 50 char): ")
                     val newTitle = getTitleFromUser()
                     if (newTitle.isNotEmpty()) {
                         updateModuleData.title = newTitle
@@ -427,8 +428,7 @@ class EditCoursePage (val courseService: CourseService) {
             when (selectFromOption(options)) {
                 // Title
                 1 -> {
-                    println("Current: ${courseData.title}")
-                    print("Enter new title or press Enter to keep current(min 3 char, max 50 char): ")
+                    println("Current: ${updateCourseData.title ?: courseData.title}")
                     val newTitle = getTitleFromUser()
                     if (newTitle.isNotEmpty() && newTitle != courseData.title) {
                         updateCourseData.title = newTitle
@@ -440,7 +440,7 @@ class EditCoursePage (val courseService: CourseService) {
                 }
                 // Description
                 2 -> {
-                    println("Current: ${courseData.description}")
+                    println("Current: ${updateCourseData.description ?: courseData.description}")
                     print("Enter new Description or press Enter to keep current(min 10 char): ")
                     val newDescription = readln().trim()
                     if (newDescription.isEmpty()) println("Description unchanged.")
@@ -453,7 +453,7 @@ class EditCoursePage (val courseService: CourseService) {
                 }
                 // Skills
                 3 -> {
-                    println("Current: ${courseData.skills.joinToString(", ")}")
+                    println("Current: ${(updateCourseData.skills ?: courseData.skills).joinToString(", ")}")
                     val newSkills = getListInput(
                         "Enter skills(separate by comma) or press enter to keep old skills: ",
                         ","
@@ -467,7 +467,10 @@ class EditCoursePage (val courseService: CourseService) {
                 }
                 // Prerequisites
                 4 -> {
-                    println("Current: ${courseData.prerequisites?.joinToString(", ") ?: "None"}")
+                    println("Current: ${
+                        (updateCourseData.prerequisites ?: courseData.prerequisites)?.joinToString(", ") 
+                            ?: "None"}"
+                    )
                     val newData = getListInput("Enter prerequisites (separate by comma, or press enter to skip): ", ",")
 
                     if (newData.isNotEmpty() && newData != courseData.prerequisites) {

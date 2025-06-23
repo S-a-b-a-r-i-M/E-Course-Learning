@@ -44,7 +44,6 @@ data class DetailedCourseData (
     val prerequisites: List<String>? = null,
     val priceDetails: PriceDetailsData? = null,
     val modules: List<ModuleData> = listOf(),
-    val parentCourseId: Int? = null // Used to connect this course with its parent course
 ) {
     companion object {
         fun fromNewCourseBasicData(courseId: Int, createdBy: UUID, newCourseData: NewCourseBasicData) =

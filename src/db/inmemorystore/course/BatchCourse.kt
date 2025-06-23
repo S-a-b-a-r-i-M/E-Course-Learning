@@ -7,7 +7,6 @@ import java.util.Date
 
 class BatchCourse(
     val id: Int,
-    val parentCourseId: Int, // Foreign Key
     val totalDays: Int,
     val startDate: Date,
     val endDate: Date,
