@@ -2,9 +2,6 @@ package core.user.schemas
 
 import config.LogLevel
 import config.logInfo
-import core.user.schemas.UserRole.ADMIN
-import core.user.schemas.UserRole.STUDENT
-import core.user.schemas.UserRole.TRAINER
 
 val CURRENT_FILE_NAME: String? = Throwable().stackTrace[0].fileName
 enum class UserRole() {

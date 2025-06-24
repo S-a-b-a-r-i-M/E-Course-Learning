@@ -44,7 +44,7 @@ fun main() {
 }
 
 // Object Creation
-val isPersistableStorage = true
+const val isPersistableStorage = true
 val userRepo = if (isPersistableStorage) PersistableUserRepo() else UserRepo()
 val authService = AuthService(userRepo)
 val authPage = AuthPage(authService)
