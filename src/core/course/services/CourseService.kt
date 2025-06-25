@@ -127,21 +127,11 @@ class CourseService (
         return module
     }
 
-//    private fun createModuleInternal(courseId: Int): ModuleData? {
-//        repeat(RETRY_COUNT) { count ->
-//            try {
-//        val newModule = getNewModuleDataFromUser()
-//        val module = courseRepo.createModule(newModule, courseId)
-//        return module
-//            }  catch (exp: Exception) {
-//                println("Err:{${exp.message}}")
-//                if (count < RETRY_COUNT - 1) println("Try again....\n")
-//            }
-//        }
-//
-//        println("Too many attempts, aborting...\n")
-//        return null
-//    }
+    fun createCategory(currentUser: UserData, categoryName: String): CategoryData? {
+        if (!hasPermission(currentUser.role)) return null
+
+        return courseRepo.getCategoryByName(categoryName) ?: courseRepo.createCategory(categoryName)
+    }
 
     /**
      * Orchestrates the end-to-end process of creating a new course.
@@ -224,9 +214,10 @@ class CourseService (
             is Result.Error -> permissionResult
             is Result.Success -> {
                 val result = courseRepo.updateLessonDetails(lessonId, updateData)
-                updateData.duration?.let{
-                    courseRepo.updateModuleDuration(moduleId, it)
-                    courseRepo.updateCourseDuration(courseId, it)
+                if (updateData.newDuration != null && updateData.oldDuration != null) {
+                    val durationDifference = updateData.newDuration!! - updateData.oldDuration!!
+                    courseRepo.updateModuleDuration(moduleId, durationDifference)
+                    courseRepo.updateCourseDuration(courseId, durationDifference)
                     logInfo(
                         "Lesson($lessonId) related module and course duration also updated",
                         LogLevel.INFO

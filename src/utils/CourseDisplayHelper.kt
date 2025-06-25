@@ -20,15 +20,15 @@ import kotlin.text.isNotEmpty
  *
  * @param categories A list of [CategoryData] objects to display.
  */
-fun displayCategories(categories: List<CategoryData>, searchQuery: String) {
+fun displayCategories(categories: List<CategoryData>, searchQuery: String, startIndex: Int) {
     // handle empty
-    println(String.format("%-5s | %-20s", "ID", "Category"))
+    println(String.format("%-5s | %-20s", "NO", "Category"))
     println("-".repeat(35))
-    categories.forEach {
-        println(String.format("%-5d | %-20s", it.id, it.name))
+    categories.forEachIndexed { idx, category ->
+        println(String.format("%-5d | %-20s", startIndex + idx + 1, category.name))
     }
-    println("\nTotal ${categories.size} categories" +
-            if (searchQuery.isNotEmpty()) " for '$searchQuery'" else "")
+    if (searchQuery.isNotEmpty())
+        println("\nTotal ${categories.size} categories for '$searchQuery'")
 }
 
 /**
@@ -76,7 +76,7 @@ fun displayCourse(course: DetailedCourseData, isDetailedView: Boolean = false) {
     println(" ID: ${course.id}")
     println(" Description: ${course.description}")
     println(" Level: ${course.courseLevel.toString().capitalize()}")
-    println(" Type: ${course.courseType.toString().capitalize()}")
+    println(" Type: ${course.courseType.toString().capitalize().replace("_", " ")}")
     println(" Duration: $durationText")
     println(" Price: $priceText")
     println(" Status: ${course.status.toString().capitalize()}")

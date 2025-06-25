@@ -161,22 +161,31 @@ class PersistableCourseRepo : AbstractCourseRepo {
     }
 
     // ******************* READ *******************
+    private fun parseCategoryFromResult(rs: ResultSet) = if (rs.next()) {
+        CategoryData(id=rs.getInt("id"), name=rs.getString("name"))
+    } else null
+
     override fun getCategory(categoryId: Int): CategoryData? {
         val sql = "SELECT * FROM Category WHERE id=$categoryId"
 
         conn.createStatement().use { stmt ->
             stmt.executeQuery(sql).use { rs ->
-                if (rs.next()){
-                   return CategoryData(
-                       id=rs.getInt("id"),
-                       name=rs.getString("name")
-                   )
-                }
-
-                return null
+               return parseCategoryFromResult(rs)
             }
         }
     }
+
+    override fun getCategoryByName(name: String): CategoryData? {
+        val sql = "SELECT * FROM Category WHERE name ILIKE ?"
+
+        conn.prepareStatement(sql).use { pstmt ->
+            pstmt.setString(1, name)
+            pstmt.executeQuery().use { rs ->
+                return parseCategoryFromResult(rs)
+            }
+        }
+    }
+
 
     private fun parseLessonFromResult(rs: ResultSet) = LessonData(
         id = rs.getInt("id"),
@@ -321,7 +330,7 @@ class PersistableCourseRepo : AbstractCourseRepo {
 
     override fun getCategories(searchQuery: String, offset: Int, limit: Int): List<CategoryData> {
         var sql = "SELECT * FROM category"
-        if (searchQuery.isNotEmpty()) sql += "WHERE name ILIKE '%$searchQuery%'"
+        if (searchQuery.isNotEmpty()) sql += " WHERE name ILIKE '%$searchQuery%' "
         sql += " OFFSET $offset LIMIT $limit"
         val categories: MutableList<CategoryData> = mutableListOf()
 
@@ -346,7 +355,7 @@ class PersistableCourseRepo : AbstractCourseRepo {
         limit: Int,
         courseIds: List<Int>?
     ): List<DetailedCourseData> {
-        val sql = "SELECT id FROM course"
+        var sql = "SELECT id FROM course"
         val whereQueries = mutableListOf<String>()
         // Apply Course ids
         if (courseIds != null && courseIds.isNotEmpty())
@@ -354,11 +363,11 @@ class PersistableCourseRepo : AbstractCourseRepo {
         // Apply Search
         if (searchQuery.isNotEmpty())
             whereQueries.add(" title ILIKE '%$searchQuery%' ")
+        if (whereQueries.isNotEmpty())
+            sql = sql + " WHERE ${whereQueries.joinToString(" and ")}"
 
         conn.createStatement().use { stmt ->
-            stmt.executeQuery(sql + if (whereQueries.isEmpty()) ""
-                else " WHERE ${whereQueries.joinToString(" and ")}"
-                + "OFFSET $offset LIMIT $limit"
+            stmt.executeQuery("$sql ORDER BY id OFFSET $offset LIMIT $limit"
             ).use { rs ->
                 val courses = mutableListOf<DetailedCourseData>()
                 while (rs.next()) {
@@ -453,7 +462,7 @@ class PersistableCourseRepo : AbstractCourseRepo {
             SET
                 title = COALESCE(?, title),
                 description = COALESCE(?, description),
-                status = COALESCE(?::ResourseStatus, status),
+                status = COALESCE(?::ResourseStatus, status)
             WHERE id=?
         """.trimIndent()
 
@@ -490,7 +499,7 @@ class PersistableCourseRepo : AbstractCourseRepo {
             pstmt.setString(1, updateData.title)
             pstmt.setString(2, updateData.resource)
             pstmt.setString(3, updateData.status?.name)
-            pstmt.setObject(4, updateData.duration, Types.INTEGER)
+            pstmt.setObject(4, updateData.newDuration, Types.INTEGER)
             pstmt.setInt(5, lessonId)
 
             // Execute

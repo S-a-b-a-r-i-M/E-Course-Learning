@@ -61,7 +61,11 @@ class CourseRepo : AbstractCourseRepo {
     }
 
     override fun createCategory(name: String): CategoryData {
-        val category = CategoryData(getNextCategoryId(), name)
+        // Check If Exists
+        var category = categoryRecords.values.find { it.name.equals(name.trim(), true) }
+        if (category != null) return category
+        // Else Create
+        category = CategoryData(getNextCategoryId(), name)
         categoryRecords[category.id] = category
         return category
     }
@@ -153,6 +157,9 @@ class CourseRepo : AbstractCourseRepo {
         return course.priceDetails
     }
 
+    override fun getCategoryByName(name: String) =
+        categoryRecords.values.find { it -> it.name.equals(name.trim(), true) }
+
     private fun getCourseByModuleId(moduleId: Int): DetailedCourseData? {
         val courseId = moduleIdToCourseId[moduleId]
         if (courseId == null) {
@@ -218,7 +225,6 @@ class CourseRepo : AbstractCourseRepo {
         limit: Int,
         courseIds: List<Int>?
     ): List<DetailedCourseData> {
-        val endIndex = (offset + 1) * limit
         val courses = courseRecords.values.toList()
         var result: List<DetailedCourseData> = courses
 
@@ -230,7 +236,7 @@ class CourseRepo : AbstractCourseRepo {
         // Apply Search
         result = result.filter { it.title.contains(searchQuery, true) }
         // Apply Pagination
-        return result.subList(offset, endIndex.coerceAtMost(result.size))
+        return result.subList(offset, (offset + limit).coerceAtMost(result.size))
     }
 
     override fun getCoursesByIds(courseIds: List<Int>): List<DetailedCourseData> {
@@ -329,7 +335,7 @@ class CourseRepo : AbstractCourseRepo {
                                 lesson.copy(
                                     title = updateData.title ?: lesson.title,
                                     resource = updateData.resource ?: lesson.resource,
-                                    duration = updateData.duration ?: lesson.duration,
+                                    duration = updateData.newDuration ?: lesson.duration,
                                     status = updateData.status ?: lesson.status
                                 )
                             } else

@@ -1,7 +1,5 @@
 package pages
 
-import config.LogLevel
-import config.logInfo
 import core.course.schemas.DetailedCourseData
 import core.course.schemas.ModuleData
 import core.course.schemas.PriceDetailsData
@@ -207,6 +205,7 @@ class EditCoursePage (val courseService: CourseService) {
             6 to "Save & Go Back"
         )
 
+        println("\nSelected Lesson to Edit 👇")
         displayDetailedLesson(existingLessonData, true)
         while (true) {
             println("\n===== Edit Lesson =====")
@@ -219,7 +218,7 @@ class EditCoursePage (val courseService: CourseService) {
                         if (newTitle.isNotEmpty()) {
                             updateLessonData.title = newTitle
                             isModified = true
-                            println("New Title added ☑️")
+                            println("New Title added ✅")
                         }
                         else
                             println("Title unchanged")
@@ -244,11 +243,12 @@ class EditCoursePage (val courseService: CourseService) {
                     }
                 }
                 3 -> {
-                    println("Current: ${updateLessonData.duration ?: existingLessonData.duration} minutes")
+                    println("Current: ${updateLessonData.newDuration ?: existingLessonData.duration} minutes")
                     print("New duration or press Enter to keep current(ex: 30, 45): ")
                     val newDuration = readln().toIntOrNull()
                     if (newDuration != null && newDuration > 0) {
-                        updateLessonData.duration = newDuration
+                        updateLessonData.newDuration = newDuration
+                        updateLessonData.oldDuration = existingLessonData.duration
                         isModified = true
                         println("Duration updated")
                     } else {
@@ -323,7 +323,7 @@ class EditCoursePage (val courseService: CourseService) {
                         continue
                     }
 
-                    print("Enter lesson serial number to edit:")
+                    print("Enter lesson number to edit:")
                     val inputIdx = readln().toInt() - 1
                     if (inputIdx < 0 || inputIdx > module.lessons.size) {
                         println("Invalid input, try again.")
@@ -352,6 +352,7 @@ class EditCoursePage (val courseService: CourseService) {
             5 to "Discard & Go Back",
             6 to "Save & Go Back"
         )
+        println("\nSelected Module to Edit 👇")
         displayModule(module) // Display selected module
         while (true) {
             println("\n===== Edit Module =====")
@@ -433,7 +434,7 @@ class EditCoursePage (val courseService: CourseService) {
                     if (newTitle.isNotEmpty() && newTitle != courseData.title) {
                         updateCourseData.title = newTitle
                         isModified = true
-                        println("New title added ☑️")
+                        println("New title added ✅")
                     }
                     else
                         println("Title unchanged")

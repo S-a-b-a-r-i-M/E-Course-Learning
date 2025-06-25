@@ -4,10 +4,6 @@ import java.sql.Connection
 import java.sql.DriverManager
 import java.sql.SQLException
 
-fun main() {
-    DatabaseManager.displaySomething()
-}
-
 object DatabaseManager {
     // DATABASE CONFIGS
     private const val DB_NAME = "e_learning_db"
@@ -17,20 +13,25 @@ object DatabaseManager {
     // CONNECTION
     private var connection: Connection? = null
 
-    private var connection2: Connection = createConnection()
-
-    fun displaySomething() {
-
-    }
-
     /** Gets a database connection, creating one if needed or if current is invalid */
     fun getDBConnection(): Connection {
-//        if (connection.isValid(5) != true) { closeConnection(); connection = createConnection() }
-        if (connection == null) {
+//        if (connection?.isValid(5) != true) {
+//            closeConnection();
+        if (connection == null)
             connection = createConnection()
-        }
+//        }
         return connection!!
     }
+
+//    suspend fun agetDBConnection(): Connection {
+//        return withContext(Dispatchers.IO) {
+//            if (connection?.isValid(5) != true) {
+//                closeConnection();
+//                connection = createConnection()
+//            }
+//            connection!!
+//        }
+//    }
 
     /** Creates a new database connection */
     private fun createConnection(): Connection {
@@ -48,6 +49,7 @@ object DatabaseManager {
     /** Closes existing database connection */
     fun closeConnection() {
         connection?.close()
+        println("Connection Closed... ${connection?.isClosed}")
         connection = null
     }
 }

@@ -42,7 +42,7 @@ class HomePage (val courseService: CourseService, val studentCourseService: Stud
             return
 
         val options =  mutableMapOf(
-            0 to "Go Back",
+            0 to "Go Back to ${PageNames.HOME_PAGE.value}",
             1 to "Open a course",
             2 to "Search by Course name 🔍"
         )

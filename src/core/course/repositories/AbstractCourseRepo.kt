@@ -14,6 +14,7 @@ interface AbstractCourseRepo {
 
     // ******************* READ *********************
     fun getCategory(categoryId: Int): CategoryData?
+    fun getCategoryByName(name: String): CategoryData?
     fun getModule(moduleId: Int): ModuleData?
     fun getLesson(lessonId: Int): LessonData?
     fun getCourse(courseId: Int): DetailedCourseData?

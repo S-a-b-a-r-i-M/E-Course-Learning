@@ -69,7 +69,7 @@ class AuthPage (val authService: AuthService) {
                             if (userData == null)
                                 println("login failed. Try again...")
                             else {
-                                println("login success")
+                                println("login success ✨")
                                 return userData
                             }
                         } catch (exp: ValidationException) {

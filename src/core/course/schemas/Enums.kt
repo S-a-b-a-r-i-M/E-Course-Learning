@@ -1,5 +1,9 @@
 package core.course.schemas
 
+import config.LogLevel
+import config.logInfo
+import core.user.schemas.CURRENT_FILE_NAME
+
 enum class ResourceStatus {
     DRAFT,
     PUBLISHED,
@@ -56,5 +60,20 @@ enum class CourseType {
 enum class EnrollmentStatus {
     ASSIGNED,
     NOT_ASSIGNED,
-    PAYMENT_FAILED
+    PAYMENT_FAILED;
+
+    companion object {
+        fun getFromString(str: String): EnrollmentStatus = when (str.trim().uppercase()) {
+            "ASSIGNED" -> ASSIGNED
+            "NOT_ASSIGNED" -> NOT_ASSIGNED
+            "PAYMENT_FAILED" -> PAYMENT_FAILED
+            else -> {
+                logInfo(
+                    "$CURRENT_FILE_NAME: given user status is not found.So assigning 'Student' by default",
+                    LogLevel.WARNING
+                )
+                ASSIGNED
+            }
+        }
+    }
 }

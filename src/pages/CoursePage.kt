@@ -27,7 +27,7 @@ class CoursePage (
     val studentCourseService: StudentCourseService,
     val editCoursePage: EditCoursePage
 ) {
-    fun getSelectedCategory(): CategoryData {
+    fun getSelectedCategory(currentUser: UserData): CategoryData {
         println("\n----- Choose Course Category -----")
         var searchQuery = ""
         var offset = 0
@@ -35,10 +35,24 @@ class CoursePage (
         var categories: List<CategoryData> = courseService.getCategories(searchQuery, offset, limit)
 
         // Show 10 default categories
-        displayCategories(categories, searchQuery)
+        displayCategories(categories, searchQuery, offset)
 
-        val options = mutableMapOf(1 to "Select Category", 2 to "Search 🔍")
-//        if (categories.size == limit) options.put(3, "Load More ↻")
+        val options = mutableMapOf(1 to "Select Category", 2 to "Search 🔍", 3 to "Create")
+        if (categories.size == limit) options[4] = "Load More ↻"
+
+        fun createCategory(name: String): CategoryData? {
+            val category = courseService.createCategory(currentUser, name)
+            if (category == null) {
+                println("⚠️ Category creation failed!!!")
+                return null
+            }
+
+            if (getYesOrNo("Do you want to attach to this course (y/n) ? "))
+                return category
+
+            return null
+        }
+
         while (true) {
             when (selectFromOption(options)) {
                 // Select
@@ -50,12 +64,17 @@ class CoursePage (
                         continue
                     }
 
-                    val selectedCategory = categories.find { it.name.equals(input, true) }
-                    if (selectedCategory == null) {
-                        println("Invalid category. Please try again.")
-                        continue
+                    var selectedCategory = categories.find { it.name.equals(input, true) }
+                    if (selectedCategory != null)
+                        return selectedCategory
+                    else {
+                        println("The given category not found .")
+                        if (getYesOrNo("Do you want to create it (y/n) ?")) {
+                            selectedCategory = createCategory(input)
+                            if (selectedCategory != null)
+                                return selectedCategory
+                        }
                     }
-                    return selectedCategory
                 }
                 // Search
                 2 -> {
@@ -69,34 +88,46 @@ class CoursePage (
                     searchQuery = newSearchQuery
                     offset = 0 // Reset offset when searching
                     categories = courseService.getCategories(searchQuery, offset, limit)
-                    displayCategories(categories, searchQuery)
+                    displayCategories(categories, searchQuery, offset)
+                }
+                // Create
+                3 -> {
+                    print("Enter new category name: ")
+                    val name = readln().trim()
+                    if (name.isEmpty()) {
+                        println("New category name cannot be empty ∅.")
+                        continue
+                    }
+
+                    val category = createCategory(name)
+                    if (category != null) return category
                 }
                 // Load More
-                /*
-                3 -> {
+                4 -> {
                     if (categories.size < limit) {
                         println("No more categories to load")
+                        options.remove(4)
                         continue
                     }
                     offset += limit
-                    categories = getCategories(searchQuery, offset, limit)
-                    displayCategories()
+                    categories = courseService.getCategories(searchQuery, offset, limit)
+                    println()
+                    displayCategories(categories, searchQuery, offset)
                 }
-                */
             }
         }
     }
 
-    fun buildNewCourseData(): NewCourseBasicData {
+    fun buildNewCourseData(currentUser: UserData): NewCourseBasicData {
         val newCourseBasicData = getNewCourseBasicDataFromUser()
         // Get Category
-        newCourseBasicData.category = getSelectedCategory().name
+        newCourseBasicData.category = getSelectedCategory(currentUser).name
         return newCourseBasicData
     }
 
     fun createCourse(currentUser: UserData): DetailedCourseData? {
         // Create course with basic details
-        val newCourseData = buildNewCourseData()
+        val newCourseData = buildNewCourseData(currentUser)
 
         val course = courseService.createCourse(currentUser, newCourseData)
         if (course == null) {
@@ -189,10 +220,7 @@ class CoursePage (
         println(" ==================== ")
 
         // Ask for start
-        if (getYesOrNo(
-                "Are you ready to ${if (progress != null) "resume" else "start"} learning (y/n) ? "
-            )
-        ) {
+        if (getYesOrNo("Are you ready (y/n) ? ")) {
             var recentModuleIndex = 0
             var recentLessonIndex = 0
 
@@ -252,7 +280,7 @@ class CoursePage (
                     // Update Student Progress
                     if (readln().trim().lowercase() == "y") {
                         updateStudentProgress(true)
-                        println("Lesson completed ☑️!")
+                        println("Lesson completed ✅!")
                     }
                     else {
                         print("Have you completed the current lesson (y/n) ? ")
@@ -343,6 +371,7 @@ class CoursePage (
                         }
                     }
                 }
+
 
                 if (isRefetch)
                     course = courseService.getCourse(courseId)

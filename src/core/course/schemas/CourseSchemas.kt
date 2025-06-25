@@ -11,7 +11,7 @@ data class NewCourseBasicData (
     var category: String,
     var prerequisites: List<String>? = null,
     val priceData: NewPriceData? = null,
-    var status: ResourceStatus = ResourceStatus.DRAFT,
+    var status: ResourceStatus = ResourceStatus.PUBLISHED,
 )
 
 data class CourseBasicData(
@@ -160,7 +160,8 @@ data class LessonData (
 data class UpdateLessonData (
     var title: String? = null,
     var resource: String? = null,
-    var duration: Int? = null, // note: "duration in minutes"
+    var newDuration: Int? = null, // note: "duration in minutes"
+    var oldDuration: Int? = null,
     var status: ResourceStatus? = null,
 )
 

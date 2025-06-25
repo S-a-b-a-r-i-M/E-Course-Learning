@@ -34,7 +34,7 @@ object InputValidator {
                 throw ValidationException.EmailFormatException("Email cannot be empty")
             !isValidEmailFormat(trimmedEmail) ->
                 throw ValidationException.EmailFormatException("Invalid email format")
-            else -> return email
+            else -> return trimmedEmail
         }
     }
 
