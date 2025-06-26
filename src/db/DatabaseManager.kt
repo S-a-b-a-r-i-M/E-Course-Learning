@@ -1,5 +1,7 @@
 package db
 
+import config.LogLevel
+import config.logInfo
 import java.sql.Connection
 import java.sql.DriverManager
 import java.sql.SQLException
@@ -15,23 +17,11 @@ object DatabaseManager {
 
     /** Gets a database connection, creating one if needed or if current is invalid */
     fun getDBConnection(): Connection {
-//        if (connection?.isValid(5) != true) {
-//            closeConnection();
+//        if (connection?.isValid(5) != true) {  closeConnection();
         if (connection == null)
             connection = createConnection()
-//        }
         return connection!!
     }
-
-//    suspend fun agetDBConnection(): Connection {
-//        return withContext(Dispatchers.IO) {
-//            if (connection?.isValid(5) != true) {
-//                closeConnection();
-//                connection = createConnection()
-//            }
-//            connection!!
-//        }
-//    }
 
     /** Creates a new database connection */
     private fun createConnection(): Connection {
@@ -49,7 +39,7 @@ object DatabaseManager {
     /** Closes existing database connection */
     fun closeConnection() {
         connection?.close()
-        println("Connection Closed... ${connection?.isClosed}")
+        logInfo("Connection Closed... ${connection?.isClosed}", LogLevel.INFO)
         connection = null
     }
 }

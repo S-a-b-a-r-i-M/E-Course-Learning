@@ -27,7 +27,7 @@ class StudentCourseRepo : AbstractStudentCourseRepo {
     }
 
     // ******************* CREATE *******************
-    override fun enrollCourse(newEnrollment: NewEnrollment, status: EnrollmentStatus): CourseEnrollment {
+    override fun createCourseEnrollment(newEnrollment: NewEnrollment, status: EnrollmentStatus): CourseEnrollment {
         val enrollment = CourseEnrollment(
             id = getNextCourseEnrollmentId(),
             courseId = newEnrollment.courseId,
@@ -98,7 +98,4 @@ class StudentCourseRepo : AbstractStudentCourseRepo {
 
         return true
     }
-
-    // ******************* DELETE *******************
-
 }

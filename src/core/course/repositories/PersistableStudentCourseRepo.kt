@@ -14,7 +14,7 @@ class PersistableStudentCourseRepo : AbstractStudentCourseRepo {
     private val conn = DatabaseManager.getDBConnection()
 
     // ******************* CREATE *******************
-    override fun enrollCourse(newEnrollment: NewEnrollment, status: EnrollmentStatus): CourseEnrollment {
+    override fun createCourseEnrollment(newEnrollment: NewEnrollment, status: EnrollmentStatus): CourseEnrollment {
         val sql = """
             INSERT INTO course_enrollment(course_id, student_id, status) 
             VALUES (?, ?, ?::EnrollmentStatus) 

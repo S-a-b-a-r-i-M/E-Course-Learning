@@ -22,17 +22,6 @@ fun main() {
             break
         }
 
-//    val user = UserData(
-//        id = UUID.randomUUID(),
-//        firstName = "Sathrabathi",
-//        lastName = "Sivaji",
-//        email = "sivaji@gmail.com",
-//        role = UserRole.ADMIN,
-//        hashPassword = "PasswordHasher.getHashPassword(password)",
-//        status = UserStatus.ACTIVE,
-//        lastLoginAt = LocalDateTime.now()
-//    )
-
         homePage.start(
             UserData(
                 user.id, user.firstName, user.lastName, user.email,

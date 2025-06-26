@@ -2,13 +2,13 @@ package core.course.schemas
 import db.CompletionStatus
 import java.util.UUID
 
-data class PaymentDetails(
+data class PaymentDetails (
     val id: Int,
     val currencyCode: String,
     val amount: Double
 )
 
-data class NewPaymentDetails(
+data class NewPaymentDetails (
     val currencyCode: String,
     val amount: Double
 )
@@ -19,11 +19,6 @@ data class CourseEnrollment (
     val studentId: UUID,
     val status: EnrollmentStatus,
     val paymentDetails: PaymentDetails? = null
-)
-
-data class EnrolledCourse (
-    val course: DetailedCourseData,
-    val enrollmentData: CourseEnrollment,
 )
 
 data class NewEnrollment (

@@ -9,7 +9,7 @@ import java.util.UUID
 
 interface AbstractStudentCourseRepo {
     // ******************* CREATE *******************
-    fun enrollCourse(newEnrollment: NewEnrollment, status: EnrollmentStatus): CourseEnrollment
+    fun createCourseEnrollment(newEnrollment: NewEnrollment, status: EnrollmentStatus): CourseEnrollment
 
     // ******************* READ *********************
     fun getEnrolledCourseIds(studentId: UUID): List<Int>
@@ -23,9 +23,4 @@ interface AbstractStudentCourseRepo {
         studentId: UUID,
         status: CompletionStatus
     ): Boolean
-
-    // ******************* DELETE *******************
-
-    // ******************* EXISTS *******************
-
 }

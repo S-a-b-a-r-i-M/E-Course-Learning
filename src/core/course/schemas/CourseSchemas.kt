@@ -14,22 +14,6 @@ data class NewCourseBasicData (
     var status: ResourceStatus = ResourceStatus.PUBLISHED,
 )
 
-data class CourseBasicData(
-    val id : Int,
-    val createdBy: UUID, // By which admin
-    val category: String,
-    var title: String,
-    var description: String,
-    var duration : Int, //note: "duration in minutes"
-    var skills: List<String>,
-    var courseLevel: CourseLevel,
-    var courseType: CourseType,
-    var status: ResourceStatus,
-    var prerequisites: List<String>? = null,
-    var priceDetails: PriceDetailsData? = null,
-    val moduleIds: List<Int>? = null,
-)
-
 data class DetailedCourseData (
     val id : Int,
     val createdBy: UUID, // By which admin

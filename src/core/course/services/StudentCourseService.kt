@@ -27,13 +27,12 @@ class StudentCourseService (private val repo: AbstractStudentCourseRepo) {
      * @return The created [CourseEnrollment] object.
      */
     fun enrollCourse(newEnrollment: NewEnrollment): CourseEnrollment? {
-        // TODO: Based on course type split the enrollment
         val status = if (newEnrollment.courseType == CourseType.LIVE)
             EnrollmentStatus.NOT_ASSIGNED
         else
             EnrollmentStatus.ASSIGNED
 
-        val enrollment: CourseEnrollment = repo.enrollCourse(newEnrollment, status)
+        val enrollment: CourseEnrollment = repo.createCourseEnrollment(newEnrollment, status)
         return enrollment
     }
 

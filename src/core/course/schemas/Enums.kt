@@ -1,8 +1,15 @@
 package core.course.schemas
 
-import config.LogLevel
-import config.logInfo
-import core.user.schemas.CURRENT_FILE_NAME
+import utils.capitalize
+import kotlin.enums.EnumEntries
+
+// Extension function on EnumEntries
+fun <T: Enum<T>> EnumEntries<T>.fromString(inputValue: String, default: T): T {
+    return find { it.name == inputValue.trim().uppercase() } ?: run {
+        println("given value is not valid.Hence, assigning '${default.name.capitalize()}' by default")
+        default
+    }
+}
 
 enum class ResourceStatus {
     DRAFT,
@@ -10,15 +17,7 @@ enum class ResourceStatus {
     ARCHIVE;
 
     companion object {
-        fun getFromStrValue(value: String): ResourceStatus = when {
-            value.equals("DRAFT", true) -> DRAFT
-            value.equals("PUBLISHED", true) -> PUBLISHED
-            value.equals("ARCHIVE", true) -> ARCHIVE
-            else -> {
-                println("Invalid level, defaulting to Published")
-                PUBLISHED
-            }
-        }
+        fun getFromString(value: String): ResourceStatus = entries.fromString(value, PUBLISHED)
     }
 }
 
@@ -28,15 +27,7 @@ enum class CourseLevel {
     ADVANCED;
 
     companion object {
-        fun getFromStrValue(value: String): CourseLevel = when {
-            value.equals("BEGINNER", true) -> INTERMEDIATE
-            value.equals("INTERMEDIATE", true) -> INTERMEDIATE
-            value.equals("ADVANCED", true) -> ADVANCED
-            else -> {
-                println("Invalid level, defaulting to Beginner")
-                BEGINNER
-            }
-        }
+        fun getFromString(value: String): CourseLevel = entries.fromString(value, BEGINNER)
     }
 }
 
@@ -45,14 +36,7 @@ enum class CourseType {
     SELF_PACED;
 
     companion object {
-        fun getFromStrValue(value: String): CourseType = when {
-            value.equals("LIVE", true) -> LIVE
-            value.contains("SELF", true) -> SELF_PACED
-            else -> {
-                println("Invalid level, defaulting to self paced")
-                SELF_PACED
-            }
-        }
+        fun getFromString(value: String): CourseType = entries.fromString(value, SELF_PACED)
     }
 }
 
@@ -63,17 +47,12 @@ enum class EnrollmentStatus {
     PAYMENT_FAILED;
 
     companion object {
-        fun getFromString(str: String): EnrollmentStatus = when (str.trim().uppercase()) {
-            "ASSIGNED" -> ASSIGNED
-            "NOT_ASSIGNED" -> NOT_ASSIGNED
-            "PAYMENT_FAILED" -> PAYMENT_FAILED
-            else -> {
-                logInfo(
-                    "$CURRENT_FILE_NAME: given user status is not found.So assigning 'Student' by default",
-                    LogLevel.WARNING
-                )
-                ASSIGNED
-            }
-        }
+        fun getFromString(str: String): EnrollmentStatus = entries.fromString(str, ASSIGNED)
     }
+}
+
+enum class CompletionStatus {
+    NOT_STARTED,
+    IN_PROGRESS,
+    COMPLETED;
 }

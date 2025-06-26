@@ -2,7 +2,6 @@ package core.course.repositories
 
 import config.LogLevel
 import config.logInfo
-import core.auth.services.CURRENT_FILE_NAME
 import core.course.schemas.CategoryData
 import core.course.schemas.DetailedCourseData
 import core.course.schemas.LessonData
@@ -79,11 +78,7 @@ class CourseRepo : AbstractCourseRepo {
     }
 
     override fun createModule(newModuleData: NewModuleData, courseId: Int): ModuleData? {
-        val course = courseRecords[courseId]
-        if (course == null) {
-            println("There is no course found for courseId($courseId)")
-            return null
-        }
+        val course = getCourse(courseId) ?: return null
         val module = ModuleData.from(getNextModuleId(), newModuleData)
 
         // Store
@@ -97,7 +92,7 @@ class CourseRepo : AbstractCourseRepo {
     override fun createLesson(newLessonData: NewLessonData, moduleId: Int): LessonData? {
         val courseId = moduleIdToCourseId[moduleId]
         if (courseId == null) {
-            println("There is no course reference found for moduleId($moduleId)")
+            logInfo("There is no course reference found for moduleId($moduleId)", LogLevel.EXCEPTION)
             return null
         }
 
@@ -123,7 +118,7 @@ class CourseRepo : AbstractCourseRepo {
     override fun getCategory(categoryId: Int): CategoryData? {
         val category = categoryRecords[categoryId]
         if (category == null)
-            println("Course not available for courseId($categoryId)")
+            logInfo("Category not available for categoryId($categoryId)", LogLevel.EXCEPTION)
 
         return category
     }
@@ -131,29 +126,23 @@ class CourseRepo : AbstractCourseRepo {
     override fun getCourse(courseId: Int): DetailedCourseData? {
         val course = courseRecords[courseId]
         if (course == null)
-            println("Course not available for courseId($courseId)")
+            logInfo("No course found for course id($courseId)", LogLevel.EXCEPTION)
 
         return course
     }
 
     fun getCourseV2(courseId: Int): Result<DetailedCourseData> {
-        val course = courseRecords[courseId]
-        if (course == null) {
-            logInfo("Course not available for courseId($courseId)", LogLevel.EXCEPTION, CURRENT_FILE_NAME
+        val course = getCourse(courseId) ?:
+            return Result.Error(
+                "Course not available for courseId($courseId)",
+                ErrorCode.RESOURCE_NOT_FOUND
             )
-            return Result.Error("Course not available for courseId($courseId)", ErrorCode.RESOURCE_NOT_FOUND)
-        }
 
         return Result.Success(course)
     }
 
     override fun getPriceDetails(courseId: Int): PriceDetailsData? {
-        val course = courseRecords[courseId]
-        if (course == null) {
-            println("Course not available for courseId($courseId)")
-            return null
-        }
-
+        val course = getCourse(courseId) ?: return null
         return course.priceDetails
     }
 
@@ -163,7 +152,7 @@ class CourseRepo : AbstractCourseRepo {
     private fun getCourseByModuleId(moduleId: Int): DetailedCourseData? {
         val courseId = moduleIdToCourseId[moduleId]
         if (courseId == null) {
-            println("Course reference is not available fof moduleId($moduleId)")
+            logInfo("Course reference is not available fof moduleId($moduleId)", LogLevel.EXCEPTION)
             return null
         }
         return courseRecords.getValue(courseId)
@@ -172,7 +161,11 @@ class CourseRepo : AbstractCourseRepo {
     private fun getCourseByModuleIdV2(moduleId: Int): Result<DetailedCourseData> {
         val courseId = moduleIdToCourseId[moduleId]
         if (courseId == null) {
-            logInfo("Course reference is not available fof moduleId($moduleId)", LogLevel.EXCEPTION, CURRENT_FILE_NAME)
+            logInfo(
+                "Course reference is not available fof moduleId($moduleId)",
+                LogLevel.EXCEPTION,
+                CURRENT_FILE_NAME
+            )
             return Result.Error(
                 "Course reference is not available fof moduleId($moduleId)",
                 ErrorCode.RESOURCE_NOT_FOUND
@@ -201,7 +194,7 @@ class CourseRepo : AbstractCourseRepo {
     override fun getLesson(lessonId: Int): LessonData? {
         val moduleId = lessonIdToModuleId[lessonId]
         if (moduleId == null) {
-            println("Module reference is not available for lessonId($lessonId)")
+            logInfo("Module reference is not available for lessonId($lessonId)", LogLevel.EXCEPTION)
             return null
         }
 
@@ -245,15 +238,10 @@ class CourseRepo : AbstractCourseRepo {
 
     // ******************* UPDATE *******************
     override fun updateOrCreatePricing(priceDetails: UpdatePriceDetailsData?, courseId: Int): Result<Unit> {
-        val course = courseRecords[courseId]
-        if (course == null) {
-            logInfo("There is no course found for courseId($courseId)", LogLevel.EXCEPTION, CURRENT_FILE_NAME
-            )
-            return Result.Error(
+        val course = getCourse(courseId) ?: return Result.Error(
                 "There is no course found for courseId($courseId)",
                 ErrorCode.RESOURCE_NOT_FOUND
             )
-        }
 
         val finalPriceDetails = if (priceDetails == null)
             null
@@ -354,10 +342,7 @@ class CourseRepo : AbstractCourseRepo {
     }
 
     override fun updateModuleDuration(moduleId: Int, duration: Int): Boolean {
-        val course = getCourseByModuleId(moduleId)
-        if (course == null)
-            return false
-
+        val course = getCourseByModuleId(moduleId) ?: return false
         val updatedModules = course.modules.map { module ->
             if(module.id == moduleId)
                 module.copy(duration = abs(module.duration + duration))
@@ -371,11 +356,7 @@ class CourseRepo : AbstractCourseRepo {
     }
 
     override fun updateCourseDuration(courseId: Int, duration: Int): Boolean {
-        val course = courseRecords[courseId]
-        if (course == null) {
-            println("Course not available for courseId($courseId)")
-            return false
-        }
+        val course = getCourse(courseId) ?: return false
         courseRecords[courseId] = course.copy(duration = abs(course.duration + duration))
         return true
     }

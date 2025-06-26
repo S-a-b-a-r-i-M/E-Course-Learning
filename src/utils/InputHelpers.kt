@@ -1,7 +1,6 @@
 package utils
 
 import core.course.schemas.ResourceStatus
-import core.course.services.capitalize
 
 fun getListInput(prompt: String, delimiter: String): List<String> {
     print(prompt)
@@ -22,7 +21,7 @@ fun selectResourceStatus(onSelected: (ResourceStatus) -> Unit) {
     println("Enter status (${ResourceStatus.entries.joinToString(", ") {it.name.capitalize()}}")
     val input = readln().trim()
     if (input.isNotEmpty())
-        onSelected(ResourceStatus.getFromStrValue(input))
+        onSelected(ResourceStatus.getFromString(input))
     else
         println("Status unchanged")
 }

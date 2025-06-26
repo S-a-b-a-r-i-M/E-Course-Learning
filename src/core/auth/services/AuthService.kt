@@ -24,7 +24,6 @@ class AuthService (val userRepo: AbstractUserRepo) {
     /**
      * Handles the complete user sign-up process for new students.
      *
-     * It gathers user input, validates that the email is not already in use,
      * hashes the password, and creates a new student user in the system.
      *
      * @return The newly created [StudentData] object on success, or `null` if the
@@ -58,7 +57,6 @@ class AuthService (val userRepo: AbstractUserRepo) {
     /**
      * Authenticates a user based on their email and password.
      *
-     * It retrieves user credentials and validates it,
      * On success, it updates the user's last login time.
      *
      * @return The authenticated [BaseUser] object on success. Returns `null` if the user

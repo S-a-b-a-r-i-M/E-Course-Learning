@@ -9,5 +9,3 @@ sealed class ValidationException(message: String) : Exception(message) {
     class WeakPasswordException(message: String) : ValidationException(message)
 }
 
-class UserPermissionException(message: String) : Exception(message)
-

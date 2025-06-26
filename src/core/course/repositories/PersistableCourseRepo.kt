@@ -192,7 +192,7 @@ class PersistableCourseRepo : AbstractCourseRepo {
         title = rs.getString("title"),
         resource = rs.getString("resource"),
         duration = rs.getInt("duration"),
-        status = ResourceStatus.getFromStrValue(rs.getString("status")),
+        status = ResourceStatus.getFromString(rs.getString("status")),
     )
 
     private fun getLessonsByModuleId(moduleId: Int): List<LessonData> {
@@ -228,7 +228,7 @@ class PersistableCourseRepo : AbstractCourseRepo {
         title = rs.getString("title"),
         description = rs.getString("description"),
         duration = rs.getInt("duration"),
-        status = ResourceStatus.getFromStrValue(rs.getString("status")),
+        status = ResourceStatus.getFromString(rs.getString("status")),
         lessons = lessons
     )
 
@@ -295,9 +295,9 @@ class PersistableCourseRepo : AbstractCourseRepo {
                         .toList()
                     ,
                     duration = rs.getInt("duration"),
-                    courseLevel = CourseLevel.getFromStrValue(rs.getString("courseLevel")),
-                    courseType = CourseType.getFromStrValue(rs.getString("courseType")),
-                    status = ResourceStatus.getFromStrValue(rs.getString("status")),
+                    courseLevel = CourseLevel.getFromString(rs.getString("courseLevel")),
+                    courseType = CourseType.getFromString(rs.getString("courseType")),
+                    status = ResourceStatus.getFromString(rs.getString("status")),
                     prerequisites = rs.getArray("prerequisites")
                         ?.array
                         ?.let { it as Array<String> }
@@ -322,7 +322,6 @@ class PersistableCourseRepo : AbstractCourseRepo {
                         amount = rs.getDouble("amount")
                     )
 
-//                logInfo("No PriceDetails found for Course($courseId)", LogLevel.INFO)
                 return null
             }
         }

@@ -10,7 +10,6 @@ import core.user.schemas.UserUpdateData
 import db.DatabaseManager
 import java.time.LocalDateTime
 import java.util.UUID
-import kotlin.system.measureTimeMillis
 import kotlin.use
 
 import kotlinx.coroutines.*
@@ -208,47 +207,4 @@ class AsyncUserRepo {
             }
         }
     }
-}
-
-fun main() {
-    val repo = AsyncUserRepo()
-    val numberOfRecords = 10000
-    val timeTaken = measureTimeMillis {
-        runBlocking(Dispatchers.IO) {
-            for (i in 0 until numberOfRecords) {
-                launch {
-                    val newUser = NewUserData(
-                        firstName = "firstName$i",
-                        lastName = "lastName$i",
-                        email = "email$i",
-                        hashedPassword = "hashedPassword$i",
-                        role = UserRole.STUDENT,
-                    )
-                    repo.createStudentUser(newUser)
-                }
-            }
-        }
-    }
-    println("$numberOfRecords records inserted in ${timeTaken / 1000.0} sec")
-
-    /*
-    val repo = PersistableUserRepo()
-    val numberOfRecords = 10000
-    val timeTaken = measureTimeMillis {
-        for (i in 1 until numberOfRecords) {
-            val newUser = NewUserData (
-                firstName="firstName$i",
-                lastName="lastName$i",
-                email="email$i",
-                hashedPassword="hashedPassword$i",
-                role=UserRole.STUDENT,
-            )
-            repo.createStudentUser(newUser)
-        }
-    }
-    // 10000 records inserted in 3.358 sec
-    println("$numberOfRecords records inserted in ${timeTaken / 1000.0} sec")
-    */
-
-    DatabaseManager.closeConnection()
 }

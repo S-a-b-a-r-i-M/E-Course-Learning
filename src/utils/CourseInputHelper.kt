@@ -6,7 +6,6 @@ import core.course.schemas.NewCourseBasicData
 import core.course.schemas.NewLessonData
 import core.course.schemas.NewModuleData
 import core.course.schemas.NewPriceData
-import core.course.services.capitalize
 
 /**
  * Prompts the user to enter the module details.
@@ -77,15 +76,13 @@ fun getNewCourseBasicDataFromUser(): NewCourseBasicData {
             // Course Level & Type
             print("Enter Course Level(${CourseLevel.entries.joinToString(", ") { it.name.capitalize() }}):")
             val courseLevel = readln().trim()
-                .let { CourseLevel.getFromStrValue(it) } // Reason for using let: Better readability and clarity
+                .let { CourseLevel.getFromString(it) } // Reason for using let: Better readability and clarity
             print(
                 "Enter Course Type(${
-                    CourseType.entries.joinToString(", ") {
-                        it.name.capitalize().replace("_", "-")
-                    }
+                    CourseType.entries.joinToString(", ") { it.name.capitalize() }
                 }):"
             )
-            val courseType = readln().trim().let { CourseType.getFromStrValue(it) }
+            val courseType = readln().trim().let { CourseType.getFromString(it) }
 
             // Free course check with Price details
             print("Is this a free course? (y/n): ")
@@ -99,7 +96,6 @@ fun getNewCourseBasicDataFromUser(): NewCourseBasicData {
                 val currencySymbol = currencyMap.getOrDefault(currencyCode, "₹")
 
                 print("Enter amount(should be positive): ")
-                // TODO: if validation error occur it should only ask price details
                 val amount = InputValidator.validatePositiveDouble()
                 priceData = NewPriceData(currencyCode, currencySymbol, amount)
             }

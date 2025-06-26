@@ -5,7 +5,6 @@ import core.course.schemas.DetailedCourseData
 import core.course.schemas.LessonData
 import core.course.schemas.ModuleData
 import core.course.schemas.ResourceStatus
-import core.course.services.capitalize
 import db.CompletionStatus
 import kotlin.collections.forEach
 import kotlin.collections.joinToString
@@ -38,7 +37,6 @@ fun displayCategories(categories: List<CategoryData>, searchQuery: String, start
  * @param isDetailedView Whether to include wrapping with counts or showing only partial content.
  */
 fun displayCourse(course: DetailedCourseData, isDetailedView: Boolean = false) {
-    // TODO: Based on user role show different data in the card
     val cardWidth = 60
     val border = "═".repeat(cardWidth)
     val titleLine = "─".repeat(cardWidth)

@@ -1,6 +1,8 @@
 package utils
 
+import config.LogLevel
 import config.exceptions.ValidationException
+import config.logInfo
 import core.user.schemas.UserRole
 
 object InputValidator {
@@ -108,7 +110,7 @@ fun hasPermission(
     errMessage: String = "User doesn't have permission to perform this action"
 ): Boolean {
     if (!allowedUserRoles.contains(currentUserRole)) {
-        println(errMessage)
+        logInfo(errMessage, LogLevel.EXCEPTION)
         return false
     }
     
@@ -121,7 +123,7 @@ fun hasPermissionV2(
     errMessage: String = "User doesn't have permission to perform this action"
 ): Result<Unit> {
     if (!allowedUserRoles.contains(currentUserRole)) {
-        println(errMessage)
+        logInfo(errMessage, LogLevel.EXCEPTION)
         return Result.Error(errMessage, ErrorCode.PERMISSION_DENIED)
     }
 

@@ -21,8 +21,6 @@ import utils.hasPermission
 import utils.hasPermissionV2
 import kotlin.Int
 
-fun String.capitalize(): String = this[0].uppercase() + this.substring(1).lowercase()
-
 class CourseService (
     private val courseRepo: AbstractCourseRepo,
     private val studentCourseService: StudentCourseService
@@ -55,10 +53,6 @@ class CourseService (
             if (currentUser.role == UserRole.STUDENT)
                 // Get Student's Enrolled Course Ids
                 courseIds = studentCourseService.getEnrolledCourseIds(currentUser.id)
-//          else {
-//                // Get Trainer's Assigned Course Ids
-//          }
-
 
             // If no course found then return immediately
             if (courseIds != null && courseIds.isEmpty()) {
@@ -70,14 +64,28 @@ class CourseService (
         return courseRepo.getCourses(searchQuery, offset, limit, courseIds)
     }
 
-    fun getCoursesByIds(courseIds: List<Int>): List<DetailedCourseData> {
-        return courseRepo.getCoursesByIds(courseIds)
-    }
-
+    /**
+     * Fetches a lesson.
+     *
+     * @param lessonId The lesson's primary id.
+     * @return [LessonData] or null
+     */
     fun getLesson(lessonId: Int) = courseRepo.getLesson(lessonId)
 
+    /**
+     * Fetches a module.
+     *
+     * @param moduleId The module's primary id.
+     * @return [ModuleData] or null
+     */
     fun getModule(moduleId: Int) = courseRepo.getModule(moduleId)
 
+    /**
+     * Fetches a price details.
+     *
+     * @param courseId The course's primary id.
+     * @return [core.course.schemas.PriceDetailsData] or null
+     */
     fun getCoursePriceDetails(courseId: Int) = courseRepo.getPriceDetails(courseId)
 
     /**
@@ -123,10 +131,15 @@ class CourseService (
     fun createModule(currentUser: UserData, courseId: Int, newModuleData: NewModuleData): ModuleData? {
         if (!hasPermission(currentUser.role)) return null
 
-        val module = courseRepo.createModule(newModuleData, courseId)
-        return module
+        return courseRepo.createModule(newModuleData, courseId)
     }
 
+    /**
+     * Creates a new course category.
+     *
+     * @param categoryName name of the category.
+     * @return A [CategoryData] or null.
+     */
     fun createCategory(currentUser: UserData, categoryName: String): CategoryData? {
         if (!hasPermission(currentUser.role)) return null
 
@@ -155,9 +168,10 @@ class CourseService (
         val courseId = course.id
         if (newCourseData.priceData != null)
             courseRepo.createPricing(newCourseData.priceData, courseId)
-        logInfo("${newCourseData.title}(id-${courseId}) created successfully with basic details",
-            LogLevel.INFO)
-
+        logInfo(
+            "${newCourseData.title}(id-${courseId}) created successfully with basic details",
+            LogLevel.INFO
+        )
         return course
     }
 
