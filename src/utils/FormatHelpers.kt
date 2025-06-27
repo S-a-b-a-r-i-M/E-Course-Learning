@@ -12,7 +12,8 @@ fun String.capitalize(): String = this[0].uppercase() + this.substring(1).lowerc
 
 // Extension function on EnumEntries
 fun <T: Enum<T>> EnumEntries<T>.fromString(inputValue: String, default: T): T {
-    return find { it.name == inputValue.trim().uppercase() } ?: run {
+    val trimmedValue = inputValue.trim().uppercase()
+    return find { it.name == trimmedValue } ?: run {
         println("given value is not valid.Hence, assigning '${default.name.capitalize()}' by default")
         default
     }

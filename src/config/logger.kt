@@ -7,5 +7,6 @@ enum class LogLevel(val colorCode: String) {
 }
 
 fun logInfo(message: String, level: LogLevel, fileName: String = "") {
-    println("${level.colorCode}${if (fileName.isEmpty()) "" else "$fileName: "}$message\u001B[0m") // "\u001B[0m" -- code for reset the color
+//    println("${level.colorCode}${if (fileName.isEmpty()) "" else "$fileName: "}$message\u001B[0m") // "\u001B[0m" -- code for reset the color
+    println("${level.colorCode}$message\u001B[0m")
 }

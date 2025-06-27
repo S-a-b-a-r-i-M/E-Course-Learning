@@ -6,7 +6,7 @@ import core.course.schemas.NewEnrollment
 import core.course.schemas.NewPaymentDetails
 import core.course.schemas.PaymentDetails
 import core.course.schemas.StudentProgress
-import db.CompletionStatus
+import core.course.schemas.CompletionStatus
 import db.DatabaseManager
 import java.util.UUID
 

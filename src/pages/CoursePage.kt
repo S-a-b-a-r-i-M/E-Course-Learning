@@ -11,7 +11,7 @@ import core.course.services.CourseService
 import core.course.services.StudentCourseService
 import core.user.schemas.UserData
 import core.user.schemas.UserRole
-import db.CompletionStatus
+import core.course.schemas.CompletionStatus
 import utils.displayCategories
 import utils.displayCourse
 import utils.displayModule

@@ -13,6 +13,7 @@ import pages.AuthPage
 import pages.HomePage
 import kotlin.io.println
 
+const val isPersistableStorage = true
 
 fun main() {
     while (true) {
@@ -34,7 +35,6 @@ fun main() {
 }
 
 // Object Creation
-const val isPersistableStorage = true
 val userRepo = if (isPersistableStorage) PersistableUserRepo() else UserRepo()
 val authService = AuthService(userRepo)
 val authPage = AuthPage(authService)
@@ -46,13 +46,3 @@ val courseRepo = if (isPersistableStorage) PersistableCourseRepo() else CourseRe
 val courseService = CourseService(courseRepo, studentCourseService)
 
 val homePage = HomePage(courseService, studentCourseService)
-
-// ENUM Class
-enum class PageNames(val value: String) {
-    HOME_PAGE("Home Page"),
-    AUTH_FLOW("Auth Flow"),
-    CREATE_COURSE("Create Course"),
-    LIST_COURSES("List Of Courses"),
-    MY_COURSES("My Courses"),
-    USER_MANAGEMENT("User Management"),
-}

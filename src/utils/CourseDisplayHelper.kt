@@ -5,8 +5,7 @@ import core.course.schemas.DetailedCourseData
 import core.course.schemas.LessonData
 import core.course.schemas.ModuleData
 import core.course.schemas.ResourceStatus
-import db.CompletionStatus
-import kotlin.collections.forEach
+import core.course.schemas.CompletionStatus
 import kotlin.collections.joinToString
 import kotlin.collections.take
 import kotlin.text.isNotEmpty

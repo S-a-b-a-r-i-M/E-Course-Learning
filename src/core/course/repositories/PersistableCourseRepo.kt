@@ -196,7 +196,7 @@ class PersistableCourseRepo : AbstractCourseRepo {
     )
 
     private fun getLessonsByModuleId(moduleId: Int): List<LessonData> {
-        val sql = """SELECT * FROM lesson WHERE module_id=$moduleId"""
+        val sql = """SELECT * FROM lesson WHERE module_id=$moduleId ORDER BY id"""
         val lessons = mutableListOf<LessonData>()
 
         conn.createStatement().use { stmt ->
@@ -233,7 +233,7 @@ class PersistableCourseRepo : AbstractCourseRepo {
     )
 
     private fun getModulesByCourseId(courseId: Int): List<ModuleData> {
-        val sql = """SELECT * FROM "Module" WHERE course_id=$courseId"""
+        val sql = """SELECT * FROM "Module" WHERE course_id=$courseId ORDER BY id"""
         val modules: MutableList<ModuleData> = mutableListOf()
 
         conn.createStatement().use { stmt ->
@@ -552,9 +552,4 @@ class PersistableCourseRepo : AbstractCourseRepo {
             }
         }
     }
-}
-
-fun main() {
-    PersistableCourseRepo().getCourses("fas", 0, 10, null)
-    PersistableCourseRepo().getCourses("java", 0, 10, listOf(1))
 }

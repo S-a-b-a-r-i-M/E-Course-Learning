@@ -5,7 +5,7 @@ import core.course.schemas.CourseEnrollment
 import core.course.schemas.CourseType
 import core.course.schemas.EnrollmentStatus
 import core.course.schemas.NewEnrollment
-import db.CompletionStatus
+import core.course.schemas.CompletionStatus
 import java.util.UUID
 
 /* Student Course Service

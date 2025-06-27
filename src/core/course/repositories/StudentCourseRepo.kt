@@ -5,7 +5,7 @@ import core.course.schemas.EnrollmentStatus
 import core.course.schemas.NewEnrollment
 import core.course.schemas.PaymentDetails
 import core.course.schemas.StudentProgress
-import db.CompletionStatus
+import core.course.schemas.CompletionStatus
 import java.util.UUID
 
 class StudentCourseRepo : AbstractStudentCourseRepo {

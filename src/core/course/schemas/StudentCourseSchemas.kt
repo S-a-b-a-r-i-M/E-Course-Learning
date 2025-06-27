@@ -1,5 +1,4 @@
 package core.course.schemas
-import db.CompletionStatus
 import java.util.UUID
 
 data class PaymentDetails (

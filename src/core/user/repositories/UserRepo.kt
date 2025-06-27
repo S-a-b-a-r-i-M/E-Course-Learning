@@ -102,7 +102,7 @@ class UserRepo : AbstractUserRepo {
 
     init {
         // Add New Admin User
-        val password = "p@ssword998877"
+        val password = "P@ssword99999"
         val adminUser = UserData(
             id = UUID.randomUUID(),
             firstName = "Sathrabathi",
@@ -118,6 +118,10 @@ class UserRepo : AbstractUserRepo {
         adminRecords[adminUser.id] = adminUser
         userIdToRole[adminUser.id] = adminUser.role
         emailToIdMap[adminUser.email] = adminUser.id
-        logInfo("Admin record added...${adminUser.fullName}", LogLevel.INFO)
+        logInfo(
+            "Admin record added...${adminUser.fullName}\n" +
+                    "Email: ${adminUser.email}, Password: $password",
+            LogLevel.INFO
+        )
     }
 }

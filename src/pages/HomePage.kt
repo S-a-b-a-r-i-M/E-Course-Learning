@@ -1,6 +1,5 @@
 package pages
 
-import PageNames
 import core.course.schemas.DetailedCourseData
 import core.course.services.CourseService
 import core.course.services.StudentCourseService
@@ -65,7 +64,6 @@ class HomePage (val courseService: CourseService, val studentCourseService: Stud
                             ).contains(courseId)
                         ) {
                             println("The selected course id is not yet enrolled by you.")
-                            println("aborting to previous menu...")
                             continue
                         }
                     }

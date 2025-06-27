@@ -1,15 +1,6 @@
 package core.course.schemas
 
-import utils.capitalize
-import kotlin.enums.EnumEntries
-
-// Extension function on EnumEntries
-fun <T: Enum<T>> EnumEntries<T>.fromString(inputValue: String, default: T): T {
-    return find { it.name == inputValue.trim().uppercase() } ?: run {
-        println("given value is not valid.Hence, assigning '${default.name.capitalize()}' by default")
-        default
-    }
-}
+import utils.fromString
 
 enum class ResourceStatus {
     DRAFT,
@@ -55,4 +46,8 @@ enum class CompletionStatus {
     NOT_STARTED,
     IN_PROGRESS,
     COMPLETED;
+
+    companion object {
+        fun getFromString(str: String): CompletionStatus = entries.fromString(str, NOT_STARTED)
+    }
 }

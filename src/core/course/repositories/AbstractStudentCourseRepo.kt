@@ -4,7 +4,7 @@ import core.course.schemas.CourseEnrollment
 import core.course.schemas.EnrollmentStatus
 import core.course.schemas.NewEnrollment
 import core.course.schemas.StudentProgress
-import db.CompletionStatus
+import core.course.schemas.CompletionStatus
 import java.util.UUID
 
 interface AbstractStudentCourseRepo {
