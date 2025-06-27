@@ -9,6 +9,7 @@ import core.user.repositories.PersistableUserRepo
 import core.user.repositories.UserRepo
 import core.user.schemas.BaseUser
 import core.user.schemas.UserData
+import db.DatabaseManager
 import pages.AuthPage
 import pages.HomePage
 import kotlin.io.println
@@ -30,6 +31,10 @@ fun main() {
             )
         )
     }
+
+    // Close the DB connection
+    if (isPersistableStorage)
+        DatabaseManager.closeConnection()
 
     println("Welcome..visit again 😊")
 }

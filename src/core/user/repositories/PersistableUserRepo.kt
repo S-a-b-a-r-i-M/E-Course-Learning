@@ -13,6 +13,7 @@ import java.util.UUID
 import kotlin.use
 
 import kotlinx.coroutines.*
+import kotlin.system.measureTimeMillis
 
 class PersistableUserRepo : AbstractUserRepo {
     private val conn
@@ -130,11 +131,11 @@ class PersistableUserRepo : AbstractUserRepo {
     }
 }
 
-class AsyncUserRepo {
+class Repo {
     private val conn
         get() = DatabaseManager.getDBConnection()
 
-    private suspend fun createUser(newUserData: NewUserData): Pair<UUID, LocalDateTime> {
+    fun createUser(newUserData: NewUserData): Pair<UUID, LocalDateTime> {
         // Prepare
         val sql = """
             INSERT INTO "User" (id, firstName, lastName, email, role, hashedPassword, lastLoginAt, status)
@@ -143,68 +144,66 @@ class AsyncUserRepo {
         """
 
         // Execute
-        return withContext(Dispatchers.IO) {
-            conn.prepareStatement(sql).use { pstmt ->
-                // Add values
-                pstmt.setString(1, newUserData.firstName)
-                pstmt.setString(2, newUserData.lastName)
-                pstmt.setString(3, newUserData.email)
-                pstmt.setString(4, newUserData.role.name)
-                pstmt.setString(5, newUserData.hashedPassword)
-                pstmt.setString(6, UserStatus.ACTIVE.name)
-                //Execute
-                pstmt.executeQuery().use { rs ->
-                    rs.next()
-                    Pair(
-                        rs.getObject("id", UUID::class.java),
-                        rs.getTimestamp("lastLoginAt").toLocalDateTime()
-                    )
-                }
+        conn.prepareStatement(sql).use { pstmt ->
+            // Add values
+            pstmt.setString(1, newUserData.firstName)
+            pstmt.setString(2, newUserData.lastName)
+            pstmt.setString(3, newUserData.email)
+            pstmt.setString(4, newUserData.role.name)
+            pstmt.setString(5, newUserData.hashedPassword)
+            pstmt.setString(6, UserStatus.ACTIVE.name)
+            //Execute
+            pstmt.executeQuery().use { rs ->
+                rs.next()
+                return Pair(
+                    rs.getObject("id", UUID::class.java),
+                    rs.getTimestamp("lastLoginAt").toLocalDateTime()
+                )
             }
         }
     }
+}
 
-    suspend fun createStudentUser(newUserData: NewUserData): StudentData {
-        // Prepare
-        return withContext(Dispatchers.IO) {
-            val (userId, lastLoginAt) = createUser(newUserData)
-            val sql = """
-                INSERT INTO Student (student_id, gitHubUrl, linkedInUrl)
-                VALUES ('$userId', '', '')
-            """
-
-            // Execute
-            conn.createStatement().use { stmt ->
-                stmt.executeUpdate(sql)
+fun main() {
+    val numberOfRecords = 10000
+    val repo = Repo()
+    val timeTaken = measureTimeMillis {
+        runBlocking {
+            val users = 0.until(numberOfRecords).map { i ->
+                NewUserData(
+                    firstName = "firstName$i",
+                    lastName = "lastName$i",
+                    email = "email$i",
+                    hashedPassword = "hashedPassword$i",
+                    role = UserRole.STUDENT,
+                )
             }
 
-            StudentData(
-                id = userId,
-                firstName = newUserData.firstName,
-                lastName = newUserData.lastName,
-                email = newUserData.email,
-                role = newUserData.role,
-                status = UserStatus.ACTIVE,
-                hashPassword = newUserData.hashedPassword,
-                lastLoginAt = lastLoginAt,
-            )
-        }
-    }
-
-    suspend fun isEmailExists(email: String): Boolean {
-        return withContext(Dispatchers.IO) {
-            val sql = """SELECT EXISTS (
-                SELECT 1 FROM "User" WHERE email=?
-            )"""
-
-            // Execute
-            conn.prepareStatement(sql).use { pstmt ->
-                pstmt.setString(1, email)
-                pstmt.executeQuery().use { rs ->
-                    rs.next()
-                    rs.getBoolean(1)
-                }
+            // Controlled Chunked Concurrency
+            users.chunked(100).forEachIndexed { idx, batch ->
+                batch.map { userData ->
+                    async(Dispatchers.IO) {
+                        repo.createUser(userData)
+                    }
+                }.awaitAll()
             }
         }
     }
+    println("$numberOfRecords records inserted using async repo in ${timeTaken / 1000.0} sec") // 10000 records inserted in 2.57 sec
+
+//    val timeTaken2 = measureTimeMillis {
+//        for (i in 0 until numberOfRecords) {
+//            val newUser = NewUserData (
+//                firstName = "firstName$i",
+//                lastName = "lastName$i",
+//                email = "email$i",
+//                hashedPassword = "hashedPassword$i",
+//                role = UserRole.STUDENT,
+//            )
+//            repo.createUser(newUser)
+//        }
+//    }
+//    println("$numberOfRecords records inserted using normal repo in ${timeTaken2 / 1000.0} sec") // 10000 records inserted using normal repo in 1.57 sec
+
+    DatabaseManager.closeConnection()
 }
